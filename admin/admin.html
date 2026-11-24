@@ -143,7 +143,7 @@
 
 <script src="../data/instruments.js?v=10"></script>
 <script src="../assets/store.js?v=12"></script>
-<script src="../assets/cloud.js?v=3"></script>
+<script src="../assets/cloud.js?v=5"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function tryLogin(){
@@ -282,6 +282,10 @@
         </div>
         <div style="font-size:30px;font-weight:800;margin:10px 0 2px">${Oryx.money(r.amount)}</div>
         <div style="opacity:.92;font-size:13px">Paid via: <b>${Oryx.esc(r.method)}</b>${r.note ? ' · ' + Oryx.esc(r.note) : ''}</div>
+        ${a ? (() => { const u = us.find(x => x.id === a.userId) || {}; return `<div style="margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.35);font-size:12.5px;line-height:1.6;opacity:.95">
+          <div>🆔 User ID: <b>${Oryx.esc(clientEmail(a.userId))}</b></div>
+          <div>📱 Contact: <b>${Oryx.esc(u.phone || '—')}</b> &nbsp;·&nbsp; 🌍 Country: <b>${Oryx.esc(u.country || '—')}</b></div>
+        </div>`; })() : ''}
         ${r.proof ? `<div style="margin-top:10px"><img src="${r.proof}" class="proof-thumb" title="Payment proof — click to verify" onclick="viewProof('${r.id}')"><div style="font-size:11.5px;opacity:.85;margin-top:4px">🔍 Click the proof to verify it</div></div>` : '<div style="margin-top:10px;font-size:12.5px;opacity:.85">No proof attached</div>'}
         ${r.status === 'pending' ? `<div style="display:flex;gap:9px;margin-top:14px">
           <button class="btn" style="flex:1;background:#fff;color:#065F46;font-weight:800" onclick="decideRq('${r.id}', true)">✔ Approve &amp; Credit</button>
@@ -347,7 +351,8 @@
     const r = Oryx.requests().find(x => x.id === id); if (!r) return;
     const a = Oryx.accounts().find(v => v.id === r.accountId);
     document.getElementById('pfName').textContent = a ? clientName(a.userId) : 'Unknown client';
-    document.getElementById('pfMeta').textContent = `Account ${a ? a.login : '—'} · Sent ${new Date(r.at).toLocaleString()} · Status: ${r.status.toUpperCase()}`;
+    const pu = a ? (Oryx.users().find(x => x.id === a.userId) || {}) : {};
+    document.getElementById('pfMeta').textContent = `Account ${a ? a.login : '—'} · User ID: ${a ? clientEmail(a.userId) : '—'} · Contact: ${pu.phone || '—'} · Country: ${pu.country || '—'} · Sent ${new Date(r.at).toLocaleString()} · Status: ${r.status.toUpperCase()}`;
     document.getElementById('pfAmt').textContent = Oryx.money(r.amount);
     document.getElementById('pfMethod').innerHTML = `Paid via: <b>${Oryx.esc(r.method)}</b>${r.note ? ' · ' + Oryx.esc(r.note) : ''}<br><span style="color:#93A1C4;font-size:12.5px">Verify this proof really matches the payment before you approve.</span>`;
     document.getElementById('pfImg').src = r.proof || '';
