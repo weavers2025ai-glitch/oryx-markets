@@ -1,7 +1,7 @@
 /* Oryx Markets service worker — app shell caching for the installable web app.
    Pages: network-first (always fresh when online). Assets: cache-first
    (they are versioned with ?v= in the HTML, so updates arrive as new URLs). */
-const CACHE = 'oryx-v1';
+const CACHE = 'oryx-v2';
 const SHELL = [
   './', './index.html', './markets.html', './accounts.html', './about.html', './contact.html',
   './login.html', './register.html', './dashboard.html', './trade.html',
