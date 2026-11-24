@@ -142,7 +142,7 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=11"></script>
+<script src="../assets/store.js?v=12"></script>
 <script src="../assets/cloud.js?v=3"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
@@ -338,7 +338,8 @@
     const a = r ? Oryx.accounts().find(v => v.id === r.accountId) : null;
     if (Oryx.decideRequest(id, approve)){
       Oryx.logAdmin(approve ? 'Request approved' : 'Request rejected',
-        `${a ? clientName(a.userId) : 'Client'} · ${r ? Oryx.money(r.amount) : ''} · ${r ? r.method : ''}`);
+        `${a ? clientName(a.userId) : 'Client'} · ${r ? Oryx.money(r.amount) : ''} · ${r ? r.method : ''}`,
+        { clientId: a ? a.userId : null, amount: r ? r.amount : null });
     }
     renderAll();
   }
@@ -364,7 +365,8 @@
     if (r.error){ ok.style.display = 'block'; ok.style.background = '#FDECEC'; ok.style.color = '#A11'; ok.textContent = r.error; return; }
     ok.style.display = 'block'; ok.style.background = '#E7F8F0'; ok.style.color = '#0B6B43';
     ok.textContent = '✔ Balance issued. New balance: ' + Oryx.money(r.account.balance);
-    Oryx.logAdmin('Balance issued', `${clientName(r.account.userId)} · ${Oryx.money(parseFloat(document.getElementById('ibAmt').value) || 0)} · new balance ${Oryx.money(r.account.balance)}`);
+    Oryx.logAdmin('Balance issued', `${clientName(r.account.userId)} · ${Oryx.money(parseFloat(document.getElementById('ibAmt').value) || 0)} · new balance ${Oryx.money(r.account.balance)}`,
+      { clientId: r.account.userId, amount: parseFloat(document.getElementById('ibAmt').value) || 0 });
     document.getElementById('ibAmt').value = ''; document.getElementById('ibNote').value = '';
     renderAll();
   }
