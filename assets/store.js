@@ -39,6 +39,9 @@ const Oryx = (() => {
     const K30 = 30000, k = Math.floor(t / K30), f = (t - k * K30) / K30, u = f * f * (3 - 2 * f);
     const n0 = hashN(sym + '@' + k) - 0.5, n1 = hashN(sym + '@' + (k + 1)) - 0.5;
     v += (n0 + (n1 - n0) * u) * 0.55;
+    const K5 = 5000, k5 = Math.floor(t / K5), f5 = (t - k5 * K5) / K5, u5 = f5 * f5 * (3 - 2 * f5);
+    const m0 = hashN(sym + '#' + k5) - 0.5, m1 = hashN(sym + '#' + (k5 + 1)) - 0.5;
+    v += (m0 + (m1 - m0) * u5) * 0.30;
     return Math.max(base * (1 + v * scale), base * 0.5);
   }
   INSTRUMENTS.forEach(i => {
@@ -65,14 +68,19 @@ const Oryx = (() => {
   let bucketStart = Math.floor(Date.now() / BUCKET) * BUCKET;
   INSTRUMENTS.forEach(i => {
     CANDLES[i.symbol] = [];
+    let prevC = null;
     for (let n = 89; n >= 1; n--){
       const t0 = bucketStart - n * BUCKET;
-      const o = priceAt(i.symbol, t0), c = priceAt(i.symbol, t0 + BUCKET);
+      const o = prevC === null ? priceAt(i.symbol, t0) : prevC;
+      const c = priceAt(i.symbol, t0 + BUCKET) + (hashN(i.symbol + 'B' + t0) - 0.5) * i.base * 0.0011;
       let h = Math.max(o, c), l = Math.min(o, c);
       for (let q = 1; q <= 3; q++){ const px = priceAt(i.symbol, t0 + q * 1250); if (px > h) h = px; if (px < l) l = px; }
+      h += hashN(i.symbol + 'H' + t0) * i.base * 0.00020;
+      l -= hashN(i.symbol + 'L' + t0) * i.base * 0.00020;
       CANDLES[i.symbol].push({ o, h, l, c });
+      prevC = c;
     }
-    const o0 = priceAt(i.symbol, bucketStart), px = prices[i.symbol];
+    const o0 = prevC === null ? priceAt(i.symbol, bucketStart) : prevC, px = prices[i.symbol];
     CANDLES[i.symbol].push({ o: o0, h: Math.max(o0, px), l: Math.min(o0, px), c: px });
   });
   function tickCandles(){
