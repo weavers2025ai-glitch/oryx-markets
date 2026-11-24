@@ -166,13 +166,20 @@
     }
 
     /* ---------- meta sync: admin accounts + activity log ----------
-       Whole lists in single documents; the newest copy wins. */
+       Whole lists in single documents; the newest copy wins — with two
+       safeguards learned the hard way: (1) only a browser that has PULLED
+       meta at least once may push it, so a fresh client browser can never
+       overwrite the admins/log with its empty local copies; (2) the log is
+       append-only, so pulls UNION it by entry id instead of replacing. */
     const META_TS = 'oryx_meta_ts';
     const metaTs = () => { try { return JSON.parse(localStorage.getItem(META_TS) || '{}'); } catch (e) { return {}; } };
+    let metaReady = false;
     function pushMeta() {
+      if (!metaReady) return;
       const m = metaTs();
       [['admins', () => Oryx.admins()], ['log', () => Oryx.adminLog()]].forEach(([docId, get]) => {
         const list = get();
+        if (docId === 'admins' && list.length === 0) return;
         const h = hashOf(list);
         if (m[docId + '_h'] === h) return;
         m[docId + '_h'] = h; m[docId] = Date.now();
@@ -186,16 +193,32 @@
         snap.forEach(d => {
           const data = d.data();
           if (!data || !Array.isArray(data.list)) return;
+          if (d.id === 'log') {
+            const byId = {};
+            Oryx.adminLog().forEach(e => { byId[e.id] = e; });
+            let added = false;
+            data.list.forEach(e => { if (e && e.id && !byId[e.id]) { byId[e.id] = e; added = true; } });
+            m[d.id] = Math.max(m[d.id] || 0, data.updatedAt || 0);
+            m[d.id + '_h'] = hashOf(data.list);
+            if (added) {
+              const merged = Object.values(byId).sort((a, b) => a.at - b.at).slice(-500);
+              applying = true;
+              rawSet('oryx_admin_log', JSON.stringify(merged));
+              applying = false;
+              changed = true;
+            }
+            return;
+          }
           if ((m[d.id] || 0) >= (data.updatedAt || 0)) return;
-          const key = d.id === 'admins' ? 'oryx_admins' : 'oryx_admin_log';
           m[d.id] = data.updatedAt; m[d.id + '_h'] = hashOf(data.list);
-          if (localStorage.getItem(key) === JSON.stringify(data.list)) return; // same content: no reload
+          if (localStorage.getItem('oryx_admins') === JSON.stringify(data.list)) return; // same content: no reload
           applying = true;
-          rawSet(key, JSON.stringify(data.list));
+          rawSet('oryx_admins', JSON.stringify(data.list));
           applying = false;
           changed = true;
         });
         localStorage.setItem(META_TS, JSON.stringify(m));
+        metaReady = true;
         return changed;
       }).catch(() => false);
     }
@@ -207,6 +230,10 @@
       const isAdmin = location.pathname.includes('/admin/');
       const done = changed => {
         if (!changed) return;
+        /* Admin pages never reload for a sync: they re-render in place.
+           A reload landing mid-click swallows the click and throws the
+           admin back to the Dashboard — in-place rendering cannot. */
+        if (isAdmin && typeof window.renderAll === 'function') { try { window.renderAll(); } catch (e) {} return; }
         /* Reload at most ONCE per manual visit: if this page already
            auto-reloaded, apply further merges silently — the next natural
            navigation shows them. This stops open tabs from ever chasing
