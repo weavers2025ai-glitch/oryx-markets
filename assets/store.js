@@ -186,6 +186,41 @@ const Oryx = (() => {
     return true;
   }
 
+  /* ---------- admins, super admin & activity log ----------
+     Above the Admin panel sits a Super Admin. Admins are named accounts
+     (created by the Super Admin); every important thing an admin does is
+     written to the activity log, which the Super Admin reviews. */
+  const K_ADMINS = 'oryx_admins', K_ALOG = 'oryx_admin_log', K_ASESS = 'oryx_admin_session', K_SUPER = 'oryx_super_pw';
+  function admins(){
+    let list = load(K_ADMINS, null);
+    if (!list){
+      list = [{ id:'adm1', name:'Main Admin', email:'admin@oryx.local', pass:'admin1234', active:true, created:Date.now() }];
+      save(K_ADMINS, list);
+    }
+    return list;
+  }
+  const saveAdmins = v => save(K_ADMINS, v);
+  function currentAdmin(){ const e = load(K_ASESS, null); return admins().find(x => x.email === e) || null; }
+  function logAdmin(action, detail){
+    const a = currentAdmin();
+    const log = load(K_ALOG, []);
+    log.push({ id:uid('log'), at:Date.now(), admin: a ? a.name : 'Super Admin', email: a ? a.email : '', action, detail: detail || '' });
+    while (log.length > 500) log.shift();
+    save(K_ALOG, log);
+  }
+  function adminLogin(email, pass){
+    const a = admins().find(x => x.email.toLowerCase() === String(email || '').toLowerCase() && x.pass === pass);
+    if (!a) return { error:'Invalid admin email or password.' };
+    if (!a.active) return { error:'This admin account has been disabled by the Super Admin.' };
+    save(K_ASESS, a.email);
+    logAdmin('Admin login', a.name + ' signed in to the Admin panel');
+    return { admin:a };
+  }
+  function adminLogout(){ localStorage.removeItem(K_ASESS); }
+  const adminLog = () => load(K_ALOG, []);
+  const superPw = () => load(K_SUPER, 'admin1234');
+  const setSuperPw = v => save(K_SUPER, v);
+
   /* one-time migration: bring every existing account to the current default leverage */
   try {
     if (!load('oryx_lev2', false)) {
@@ -203,5 +238,6 @@ const Oryx = (() => {
            register, login, logout, currentUser, myAccounts, accountById,
            pnlOf, floating, usedMargin, openTrade, closeTrade,
            adminPw, issueBalance, requests, createRequest, decideRequest, money, esc,
+           admins, saveAdmins, adminLogin, currentAdmin, adminLogout, logAdmin, adminLog, superPw, setSuperPw,
            setAdminPw: v => save(K.adminpw, v) };
 })();
