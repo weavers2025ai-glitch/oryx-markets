@@ -11,7 +11,7 @@ function drawLiveChart(cv, symbol){
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#070D1D'; ctx.fillRect(0, 0, W, H);
-  const data = Oryx.candles(symbol);
+  const data = Oryx.candles(symbol).slice(-42); /* fewer, BOLDER candles on screen, like a pro chart */
   if (!data.length) return;
   const axisW = 64, padT = 12;
   const plotW = W - axisW;
