@@ -106,33 +106,43 @@
       if (WATCH.includes(k)) schedulePush();
     };
 
-    /* ---------- merge: cloud -> local (only when the cloud copy is newer) ---------- */
+    /* ---------- merge: cloud -> local (only when the cloud copy is newer
+       AND its content actually differs — a newer timestamp alone must never
+       trigger a reload, or open tabs can chase each other's syncs) ---------- */
     function mergeBundle(b) {
       if (!b || !b.user || !b.user.email) return false;
       const email = b.user.email.toLowerCase();
       const m = tsLoad();
       if ((m[email] || 0) >= (b.updatedAt || 0)) return false;
-      applying = true;
-      try {
-        const accIds = (b.accounts || []).map(a => a.id);
-        const users = Oryx.users().filter(u => u.id !== b.user.id && u.email.toLowerCase() !== email);
-        users.push(b.user);
-        rawSet(Oryx.K.users, JSON.stringify(users));
-        const accs = Oryx.accounts().filter(a => a.userId !== b.user.id && !accIds.includes(a.id));
-        rawSet(Oryx.K.accounts, JSON.stringify(accs.concat(b.accounts || [])));
-        const trs = Oryx.trades().filter(t => !accIds.includes(t.accountId));
-        rawSet(Oryx.K.trades, JSON.stringify(trs.concat(b.trades || [])));
-        const txs = Oryx.txns().filter(t => !accIds.includes(t.accountId));
-        rawSet(Oryx.K.txns, JSON.stringify(txs.concat(b.txns || [])));
-        const rqs = Oryx.requests().filter(r => !accIds.includes(r.accountId));
-        rawSet('oryx_requests', JSON.stringify(rqs.concat(b.requests || [])));
-        m[email] = b.updatedAt; tsSave(m);
-        const hashes = hLoad();
-        hashes[email] = hashOf(Object.assign({}, bundleOf(b.user), { updatedAt: 0 }));
-        localStorage.setItem(HKEY, JSON.stringify(hashes));
-      } catch (e) {}
-      applying = false;
-      return true;
+      const accIds = (b.accounts || []).map(a => a.id);
+      const newUsers = Oryx.users().filter(u => u.id !== b.user.id && u.email.toLowerCase() !== email);
+      newUsers.push(b.user);
+      const newAccs = Oryx.accounts().filter(a => a.userId !== b.user.id && !accIds.includes(a.id)).concat(b.accounts || []);
+      const newTrs = Oryx.trades().filter(t => !accIds.includes(t.accountId)).concat(b.trades || []);
+      const newTxs = Oryx.txns().filter(t => !accIds.includes(t.accountId)).concat(b.txns || []);
+      const newRqs = Oryx.requests().filter(r => !accIds.includes(r.accountId)).concat(b.requests || []);
+      const changed =
+        JSON.stringify(newUsers) !== JSON.stringify(Oryx.users()) ||
+        JSON.stringify(newAccs) !== JSON.stringify(Oryx.accounts()) ||
+        JSON.stringify(newTrs) !== JSON.stringify(Oryx.trades()) ||
+        JSON.stringify(newTxs) !== JSON.stringify(Oryx.txns()) ||
+        JSON.stringify(newRqs) !== JSON.stringify(Oryx.requests());
+      m[email] = b.updatedAt; tsSave(m);
+      if (changed) {
+        applying = true;
+        try {
+          rawSet(Oryx.K.users, JSON.stringify(newUsers));
+          rawSet(Oryx.K.accounts, JSON.stringify(newAccs));
+          rawSet(Oryx.K.trades, JSON.stringify(newTrs));
+          rawSet(Oryx.K.txns, JSON.stringify(newTxs));
+          rawSet('oryx_requests', JSON.stringify(newRqs));
+        } catch (e) {}
+        applying = false;
+      }
+      const hashes = hLoad();
+      hashes[email] = hashOf(Object.assign({}, bundleOf(b.user), { updatedAt: 0 }));
+      localStorage.setItem(HKEY, JSON.stringify(hashes));
+      return changed;
     }
 
     function pullUser(email) {
@@ -177,10 +187,12 @@
           const data = d.data();
           if (!data || !Array.isArray(data.list)) return;
           if ((m[d.id] || 0) >= (data.updatedAt || 0)) return;
-          applying = true;
-          rawSet(d.id === 'admins' ? 'oryx_admins' : 'oryx_admin_log', JSON.stringify(data.list));
-          applying = false;
+          const key = d.id === 'admins' ? 'oryx_admins' : 'oryx_admin_log';
           m[d.id] = data.updatedAt; m[d.id + '_h'] = hashOf(data.list);
+          if (localStorage.getItem(key) === JSON.stringify(data.list)) return; // same content: no reload
+          applying = true;
+          rawSet(key, JSON.stringify(data.list));
+          applying = false;
           changed = true;
         });
         localStorage.setItem(META_TS, JSON.stringify(m));
@@ -195,9 +207,13 @@
       const isAdmin = location.pathname.includes('/admin/');
       const done = changed => {
         if (!changed) return;
-        const mark = sessionStorage.getItem('oryx_cloud_reload') || '';
-        const now = String(Date.now());
-        if (mark !== now) { sessionStorage.setItem('oryx_cloud_reload', now); location.reload(); }
+        /* Reload at most ONCE per manual visit: if this page already
+           auto-reloaded, apply further merges silently — the next natural
+           navigation shows them. This stops open tabs from ever chasing
+           each other's syncs in a reload loop that swallows clicks. */
+        if (sessionStorage.getItem('oryx_cloud_reload') === '1') { sessionStorage.removeItem('oryx_cloud_reload'); return; }
+        sessionStorage.setItem('oryx_cloud_reload', '1');
+        location.reload();
       };
       if (isAdmin) { Promise.all([pullAll(), pullMeta()]).then(([a, b]) => done(a || b)); return; }
       const u = Oryx.currentUser();
