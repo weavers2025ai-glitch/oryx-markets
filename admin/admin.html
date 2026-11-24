@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Oryx Markets</title>
-<link rel="stylesheet" href="../assets/style.css?v=8">
+<link rel="stylesheet" href="../assets/style.css?v=10">
 </head>
 <body class="dark-dash">
 <div id="gate" class="auth-wrap" style="min-height:100vh">
@@ -120,8 +120,8 @@
   </div>
 </div>
 
-<script src="../data/instruments.js?v=8"></script>
-<script src="../assets/store.js?v=8"></script>
+<script src="../data/instruments.js?v=10"></script>
+<script src="../assets/store.js?v=10"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function tryLogin(){
@@ -135,7 +135,7 @@
   document.querySelectorAll('.side a[data-tab]').forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
     document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.remove('on')); a.classList.add('on');
-    ['dash','clients','trades','txns','settings'].forEach(t => document.getElementById('tab-' + t).style.display = t === a.dataset.tab ? 'block' : 'none');
+    document.querySelectorAll('main section[id^="tab-"]').forEach(s => s.style.display = s.id === 'tab-' + a.dataset.tab ? 'block' : 'none');
     renderAll();
   }));
 
