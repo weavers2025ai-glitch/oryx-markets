@@ -172,7 +172,7 @@ const Oryx = (() => {
       if (acc.balance + floating(acc.id) > 0) return;
       open.forEach(t => closeTrade(t.id));
       const accs = accounts(); const a2 = accs.find(a => a.id === acc.id);
-      if (a2 && a2.balance < 0){ a2.balance = 0; saveAccounts(accs); }
+      if (a2 && a2.balance < 0){ const adj = -a2.balance; a2.balance = 0; saveAccounts(accs); addTxn(acc.id, 'Stop-Out Adjustment', adj, 'Loss beyond the balance was covered at stop-out'); }
       notifyUser(sess, '⚠️ Stop-Out: your open trades were closed automatically because the losses used up your account balance. Your balance is now $0.00. Please request a new deposit from the Admin to continue trading.');
       fired = true;
     });

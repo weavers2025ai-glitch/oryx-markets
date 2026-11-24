@@ -115,12 +115,55 @@
       const m = tsLoad();
       if ((m[email] || 0) >= (b.updatedAt || 0)) return false;
       const accIds = (b.accounts || []).map(a => a.id);
+      let healed = false;
+      /* The user record comes from the cloud copy, but keep any of his
+         messages that exist only locally (union by message id). */
+      const localUser = Oryx.users().find(u => u.id === b.user.id);
+      const incUser = Object.assign({}, b.user);
+      if (localUser && Array.isArray(localUser.msgs)) {
+        const seen = new Set((incUser.msgs || []).map(x => x.id));
+        const extra = localUser.msgs.filter(x => !seen.has(x.id));
+        if (extra.length) { incUser.msgs = (incUser.msgs || []).concat(extra); healed = true; }
+      }
       const newUsers = Oryx.users().filter(u => u.id !== b.user.id && u.email.toLowerCase() !== email);
-      newUsers.push(b.user);
-      const newAccs = Oryx.accounts().filter(a => a.userId !== b.user.id && !accIds.includes(a.id)).concat(b.accounts || []);
-      const newTrs = Oryx.trades().filter(t => !accIds.includes(t.accountId)).concat(b.trades || []);
-      const newTxs = Oryx.txns().filter(t => !accIds.includes(t.accountId)).concat(b.txns || []);
-      const newRqs = Oryx.requests().filter(r => !accIds.includes(r.accountId)).concat(b.requests || []);
+      newUsers.push(incUser);
+      /* Accounts: union by id. */
+      const accMap = new Map(Oryx.accounts().map(a => [a.id, a]));
+      (b.accounts || []).forEach(a => { if (!accMap.has(a.id)) accMap.set(a.id, a); });
+      /* Trades: union by id - a CLOSED trade never reopens. */
+      const trMap = new Map(Oryx.trades().map(t => [t.id, t]));
+      (b.trades || []).forEach(t => {
+        const cur = trMap.get(t.id);
+        if (!cur) trMap.set(t.id, t);
+        else if (cur.status !== 'closed' && t.status === 'closed') trMap.set(t.id, t);
+        else if (cur.status === 'closed' && t.status !== 'closed') healed = true;
+      });
+      const newTrs = [...trMap.values()];
+      /* Transactions: union by id (the append-only money ledger). */
+      const txMap = new Map(Oryx.txns().map(t => [t.id, t]));
+      (b.txns || []).forEach(t => { if (!txMap.has(t.id)) txMap.set(t.id, t); });
+      const newTxs = [...txMap.values()];
+      /* Requests: union by id - a DECIDED request never returns to pending.
+         (The fix for approved requests resurrecting in the admin panel.) */
+      const rqMap = new Map(Oryx.requests().map(r => [r.id, r]));
+      (b.requests || []).forEach(r => {
+        const cur = rqMap.get(r.id);
+        if (!cur) rqMap.set(r.id, r);
+        else if (cur.status === 'pending' && r.status !== 'pending') rqMap.set(r.id, r);
+        else if (cur.status !== 'pending' && r.status === 'pending') healed = true;
+      });
+      const newRqs = [...rqMap.values()];
+      /* This user's balances are RECOMPUTED from the merged ledger (money in
+         txns + closed-trade P/L), so every device converges to the same
+         figure no matter whose copy was written last. */
+      const newAccs = [...accMap.values()].map(a => {
+        if (!accIds.includes(a.id)) return a;
+        const dep = newTxs.filter(t => t.accountId === a.id).reduce((s2, t) => s2 + t.amount, 0);
+        const pnl = newTrs.filter(t => t.accountId === a.id && t.status === 'closed').reduce((s2, t) => s2 + (t.pnl || 0), 0);
+        const bal = +(dep + pnl).toFixed(2);
+        if (bal !== a.balance) healed = true;
+        return Object.assign({}, a, { balance: bal });
+      });
       const changed =
         JSON.stringify(newUsers) !== JSON.stringify(Oryx.users()) ||
         JSON.stringify(newAccs) !== JSON.stringify(Oryx.accounts()) ||
@@ -140,7 +183,8 @@
         applying = false;
       }
       const hashes = hLoad();
-      hashes[email] = hashOf(Object.assign({}, bundleOf(b.user), { updatedAt: 0 }));
+      if (healed) delete hashes[email];
+      else hashes[email] = hashOf(Object.assign({}, bundleOf(b.user), { updatedAt: 0 }));
       localStorage.setItem(HKEY, JSON.stringify(hashes));
       return changed;
     }
@@ -242,7 +286,7 @@
         sessionStorage.setItem('oryx_cloud_reload', '1');
         location.reload();
       };
-      if (isAdmin) { Promise.all([pullAll(), pullMeta()]).then(([a, b]) => done(a || b)); return; }
+      if (isAdmin) { Promise.all([pullAll(), pullMeta()]).then(([a, b]) => { pushAll(); done(a || b); }); return; }
       const u = Oryx.currentUser();
       /* Heal pass: after the pull, push once — the per-user hash guard makes
          it a no-op for data the cloud already has, but a user whose record
