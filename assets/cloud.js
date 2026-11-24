@@ -244,7 +244,12 @@
       };
       if (isAdmin) { Promise.all([pullAll(), pullMeta()]).then(([a, b]) => done(a || b)); return; }
       const u = Oryx.currentUser();
-      if (u && u.email) pullUser(u.email).then(done);
+      /* Heal pass: after the pull, push once — the per-user hash guard makes
+         it a no-op for data the cloud already has, but a user whose record
+         never reached the cloud (registered on a cached pre-database copy
+         of the site; his data sat only on his phone) is uploaded now, on a
+         plain page open, without him making a new entry. */
+      if (u && u.email) pullUser(u.email).then(changed => { pushAll(); done(changed); });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncOnLoad);
     else syncOnLoad();
