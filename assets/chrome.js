@@ -51,7 +51,13 @@
     </div>
     <div class="foot-base">© 2026 ${Oryx.esc(S.brand)}. All rights reserved.</div>
   </footer>
-  <a class="wa-float" href="https://wa.me/${Oryx.esc(S.whatsapp)}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">💬</a>`;
+  <a class="wa-float" href="https://wa.me/${Oryx.esc(S.whatsapp)}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">💬</a>
+  <nav class="mobile-nav">
+    <a href="${root}index.html"><span>🏠</span>Home</a>
+    <a href="${root}markets.html"><span>🌍</span>Markets</a>
+    <a href="${root}trade.html"><span>📈</span>Trade</a>
+    <a href="${u ? root + 'dashboard.html' : root + 'login.html'}"><span>👤</span>${u ? 'Dashboard' : 'Log In'}</a>
+  </nav>`;
   const h = document.getElementById('site-header'); if (h) h.innerHTML = header;
   const f = document.getElementById('site-footer'); if (f) f.innerHTML = footer;
 })();

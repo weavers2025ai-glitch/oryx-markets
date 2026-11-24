@@ -9,7 +9,7 @@ const Oryx = (() => {
 
   const DEFAULT_SETTINGS = {
     brand:'Oryx Markets', tagline:'Trade Global Markets with Confidence',
-    starter:10, leverage:500,
+    starter:10, leverage:1000,
     whatsapp:'923349001195', email:'weavers2025ai@gmail.com',
     heroTitle:'Trade the World Markets', heroSub:'Forex, Gold, Oil, Crypto and Global Indices — one account, one powerful platform, spreads from 0.1 pips.'
   };
@@ -114,6 +114,14 @@ const Oryx = (() => {
     addTxn(accountId, amount >= 0 ? 'Admin Deposit' : 'Admin Withdrawal', amount, note || 'Issued by Admin');
     return { account:acc };
   }
+
+  /* one-time migration: bring every existing account to the current default leverage */
+  try {
+    if (!load('oryx_lev2', false)) {
+      const accs = accounts(); accs.forEach(a => a.leverage = settings().leverage); saveAccounts(accs);
+      save('oryx_lev2', true);
+    }
+  } catch(e){}
 
   const money = v => (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
