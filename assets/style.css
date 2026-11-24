@@ -362,3 +362,5 @@ body.dark-dash{background:var(--deep);color:#D7DEEF}
 .ob-row span{position:relative}
 .ob-a{color:#C9D3EA}
 .ob-spread{text-align:center;color:#7C88A8;font-size:12.5px;padding:8px 0;border-top:1px dashed rgba(255,255,255,.1);border-bottom:1px dashed rgba(255,255,255,.1);margin:6px 0}
+
+.term .rail{max-height:none;overflow:visible}
