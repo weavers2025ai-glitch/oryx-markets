@@ -105,7 +105,7 @@ const Oryx = (() => {
   }
 
   /* ---------- admin ---------- */
-  const adminPw = () => load(K.adminpw, 'oryx-admin-2026');
+  const adminPw = () => load(K.adminpw, 'admin1234');
   function issueBalance(accountId, amount, note){
     amount = parseFloat(amount); if (!amount) return { error:'Enter an amount.' };
     const accs = accounts(); const acc = accs.find(a => a.id === accountId);
