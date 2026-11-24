@@ -35,15 +35,21 @@
     </aside>
     <main class="main">
       <section id="tab-dash">
-        <h1>Dashboard</h1><p class="sub">Your brokerage at a glance.</p>
-        <div class="stat-grid">
-          <div class="stat"><span>Total Clients</span><b id="dClients">0</b></div>
-          <div class="stat"><span>Total Balances</span><b id="dBal">$0</b></div>
-          <div class="stat"><span>Open Trades</span><b id="dOpen">0</b></div>
-          <div class="stat"><span>Closed P/L (clients)</span><b id="dPl">$0</b></div>
+        <h1>Dashboard</h1><p class="sub">Your brokerage at a glance — every client, every trade, one report.</p>
+        <div class="kpi-row" id="kpiRow"></div>
+        <div style="display:grid;grid-template-columns:1.9fr 1fr;gap:16px" class="dash-grid-2">
+          <div class="d-card"><h3>Platform P/L Overview</h3><div class="sub2">Cumulative closed profit/loss of all clients, over time</div><canvas id="adChart" width="640" height="230" style="width:100%;height:230px"></canvas></div>
+          <div class="d-card"><h3>Trades by Instrument</h3><div class="sub2">Share of all trades on the platform</div><div id="adDonut"></div></div>
         </div>
-        <div class="panel"><h3>Latest Clients</h3><div id="dLatest"></div></div>
-        <div class="panel"><h3>Latest Trades</h3><div id="dTrades"></div></div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-top:16px" class="dash-grid-2">
+          <div class="panel" style="margin:0"><h3>🏆 Top Traders</h3><div id="adTop"></div></div>
+          <div class="d-card"><h3>Account Summary</h3><div class="sub2">Platform totals</div><div id="adSummary"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="dash-grid-2">
+          <div class="d-card"><h3>Recent Trades</h3><div class="sub2">Latest across all clients</div><div id="adRecentTrades"></div></div>
+          <div class="d-card"><h3>Recent Transactions</h3><div class="sub2">Balance movements</div><div id="adRecentTxns"></div></div>
+        </div>
+        <div class="panel" style="margin-top:16px"><h3>Latest Clients</h3><div id="dLatest"></div></div>
       </section>
 
       <section id="tab-clients" style="display:none">
@@ -131,17 +137,96 @@
     const us = Oryx.users(), ac = Oryx.accounts(), tr = Oryx.trades(), tx = Oryx.txns();
     const open = tr.filter(t => t.status === 'open');
     const closedPl = tr.filter(t => t.status === 'closed').reduce((s, t) => s + t.pnl, 0);
-    document.getElementById('dClients').textContent = us.length;
-    document.getElementById('dBal').textContent = Oryx.money(ac.reduce((s, a) => s + a.balance, 0));
-    document.getElementById('dOpen').textContent = open.length;
-    const dp = document.getElementById('dPl'); dp.textContent = Oryx.money(closedPl); dp.style.color = closedPl >= 0 ? 'var(--up)' : 'var(--dn)';
+    /* ===== rich dashboard (reference-style report) ===== */
+    const closed = tr.filter(t => t.status === 'closed');
+    const totalBal = ac.reduce((s, a) => s + a.balance, 0);
+    const issuedPos = tx.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const floatAll = ac.reduce((s, a) => s + Oryx.floating(a.id), 0);
+    const DAY = 86400000, nowT = Date.now();
+    function seriesDays(events, days, cumulative){
+      const out = []; let run = 0;
+      for (let d = days - 1; d >= 0; d--){
+        const st = nowT - (d + 1) * DAY, en = nowT - d * DAY;
+        const v = events.filter(e => e.t >= st && e.t < en).reduce((s, e) => s + e.v, 0);
+        run = cumulative ? run + v : v; out.push(+(run).toFixed(2));
+      }
+      return out;
+    }
+    const sp = arr => Oryx.sparkData(arr, 74, 24, 'rgba(255,255,255,.92)');
+    const kpis = [
+      { g:'g1', ic:'👥', label:'Total Clients', val: us.length, sub: ac.length + ' trading accounts', spark: sp(seriesDays(us.map(u => ({ t:u.created, v:1 })), 14, true)) },
+      { g:'g4', ic:'💰', label:'Total Balances', val: Oryx.money(totalBal), sub: 'across all accounts', spark: sp(seriesDays(tx.map(t => ({ t:t.at, v:t.amount })), 14, true)) },
+      { g:'g2', ic:'🏦', label:'Balance Issued', val: Oryx.money(issuedPos), sub: 'starter + admin credits', spark: sp(seriesDays(tx.filter(t => t.amount > 0).map(t => ({ t:t.at, v:t.amount })), 14, true)) },
+      { g:'g3', ic:'📈', label:'Total Trades', val: tr.length, sub: closed.length + ' closed · ' + open.length + ' open', spark: sp(seriesDays(tr.map(t => ({ t:t.openAt, v:1 })), 14, false)) },
+      { g:'g5', ic:'🔥', label:'Open Positions', val: open.length, sub: 'floating ' + Oryx.money(floatAll), spark: sp(seriesDays(open.map(t => ({ t:t.openAt, v:1 })), 14, true)) },
+      { g:'g6', ic:'📊', label:'Clients Closed P/L', val: Oryx.money(closedPl), sub: closed.length + ' closed trades', spark: sp(seriesDays(closed.map(t => ({ t:t.closeAt, v:t.pnl })), 14, true)) }
+    ];
+    document.getElementById('kpiRow').innerHTML = kpis.map(k => `<div class="kpi ${k.g}"><span class="kic">${k.ic}</span><span>${k.label}</span><b>${k.val}</b><small>${k.sub}</small><span class="ksp">${k.spark}</span></div>`).join('');
+    /* cumulative P/L chart */
+    (function(){
+      const cv = document.getElementById('adChart'); if (!cv) return;
+      const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
+      const asc = closed.slice().sort((a, b) => a.closeAt - b.closeAt);
+      let run = 0; const pts = [0]; asc.forEach(t => { run += t.pnl; pts.push(+run.toFixed(2)); });
+      const d = pts.length > 1 ? pts : [0, 0];
+      let min = Math.min(...d, 0), max = Math.max(...d, 0); if (max - min < 1){ max += 0.5; min -= 0.5; }
+      const X = ix => 8 + ix / (d.length - 1) * (W - 16);
+      const Y = v => H - 18 - (v - min) / (max - min) * (H - 40);
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(255,255,255,.06)';
+      for (let g = 0; g < 4; g++){ const y = 14 + g * (H - 32) / 3; ctx.beginPath(); ctx.moveTo(8, y); ctx.lineTo(W - 8, y); ctx.stroke(); }
+      const grad = ctx.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, 'rgba(22,199,132,.32)'); grad.addColorStop(1, 'rgba(22,199,132,0)');
+      ctx.beginPath(); d.forEach((v, ix) => ix ? ctx.lineTo(X(ix), Y(v)) : ctx.moveTo(X(ix), Y(v)));
+      ctx.strokeStyle = '#22C55E'; ctx.lineWidth = 2.4; ctx.stroke();
+      ctx.lineTo(X(d.length - 1), H - 10); ctx.lineTo(X(0), H - 10); ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Segoe UI'; ctx.textAlign = 'right';
+      ctx.fillText(Oryx.money(d[d.length - 1]), W - 8, Math.max(Y(d[d.length - 1]) - 10, 14));
+      if (asc.length === 0){ ctx.fillStyle = '#7C88A8'; ctx.font = '13px Segoe UI'; ctx.textAlign = 'center'; ctx.fillText('No closed trades yet — the curve will grow as clients trade.', W / 2, H / 2); }
+    })();
+    /* donut: trades by instrument */
+    (function(){
+      const byS = {}; tr.forEach(t => byS[t.symbol] = (byS[t.symbol] || 0) + 1);
+      const rows = Object.entries(byS).sort((a, b) => b[1] - a[1]);
+      const top = rows.slice(0, 5); const rest = rows.slice(5).reduce((s, r) => s + r[1], 0);
+      if (rest) top.push(['Other', rest]);
+      const total = tr.length || 1;
+      const cols = ['#F5B544','#4EA8FF','#16C784','#F472B6','#8B5CF6','#66738F'];
+      const C = 2 * Math.PI * 48; let acc2 = 0;
+      const segs = top.map(([s, n], ix) => { const frac = n / total; const el = `<circle cx="60" cy="60" r="48" fill="none" stroke="${cols[ix % 6]}" stroke-width="15" stroke-dasharray="${(frac * C).toFixed(1)} ${C.toFixed(1)}" stroke-dashoffset="${(-acc2 * C).toFixed(1)}" transform="rotate(-90 60 60)"/>`; acc2 += frac; return el; }).join('');
+      document.getElementById('adDonut').innerHTML = tr.length ? `<div class="donut-wrap"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="15"/>${segs}<text x="60" y="58" text-anchor="middle" fill="#fff" font-size="19" font-weight="800">${tr.length}</text><text x="60" y="76" text-anchor="middle" fill="#7C88A8" font-size="10.5">TRADES</text></svg><div style="font-size:13.5px">${top.map(([s, n], ix) => `<div style="margin-bottom:6px"><span style="color:${cols[ix % 6]}">●</span> ${s} <b style="color:#fff">${Math.round(n / total * 100)}%</b></div>`).join('')}</div></div>` : '<p style="color:#7C88A8;font-size:13.5px">No trades yet.</p>';
+    })();
+    /* top traders */
+    const perUser = us.map(x => {
+      const a = ac.find(v => v.userId === x.id);
+      const my = a ? tr.filter(t => t.accountId === a.id) : [];
+      const pl = my.filter(t => t.status === 'closed').reduce((s, t) => s + t.pnl, 0);
+      return { x, a, n: my.length, pl };
+    }).sort((p, q) => q.pl - p.pl).slice(0, 5);
+    document.getElementById('adTop').innerHTML = tbl(['#','Trader','Account','Balance','Trades','Closed P/L'], perUser.map((r, ix) => `<tr><td>${ix + 1}</td><td><b>${Oryx.esc(r.x.name)}</b></td><td>${r.a ? r.a.login : '—'}</td><td>${r.a ? Oryx.money(r.a.balance) : '—'}</td><td>${r.n}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'}"><b>${Oryx.money(r.pl)}</b></td></tr>`).join(''));
+    /* account summary */
+    const starterSum = tx.filter(t => t.type === 'Starter Credit').reduce((s, t) => s + t.amount, 0);
+    const adminSum = tx.filter(t => t.type !== 'Starter Credit' && t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const wdSum = tx.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+    const marginUse = ac.reduce((s, a) => s + Oryx.usedMargin(a.id), 0);
+    const sumRow = (label, val, col) => `<div class="bars-row"><span style="color:#C9D3EA">${label}</span><b style="color:${col || '#fff'}">${val}</b></div>`;
+    document.getElementById('adSummary').innerHTML =
+      sumRow('Total Accounts', ac.length) + sumRow('Total Client Balances', Oryx.money(totalBal)) +
+      sumRow('Starter Credits Issued', Oryx.money(starterSum)) + sumRow('Admin Issued', Oryx.money(adminSum)) +
+      sumRow('Admin Withdrawals', Oryx.money(wdSum)) + sumRow('Margin in Use (open trades)', Oryx.money(marginUse)) +
+      sumRow('Floating P/L (live)', Oryx.money(floatAll), floatAll >= 0 ? '#16C784' : '#EA3943');
+    /* recent activity lists */
+    document.getElementById('adRecentTrades').innerHTML = tr.slice().reverse().slice(0, 6).map(t => {
+      const a = ac.find(v => v.id === t.accountId);
+      const live = t.status === 'open' ? Oryx.pnlOf(t) : t.pnl;
+      return `<div class="act-row"><span class="act-ic" style="background:rgba(216,169,78,.14)">💹</span><div style="flex:1"><b style="color:#fff">${t.symbol}</b> · ${t.side} ${t.lots} lots — ${a ? Oryx.esc(clientName(a.userId)) : '—'}<div style="color:#7C88A8;font-size:12px">${new Date(t.openAt).toLocaleString()} · ${t.status}</div></div><b style="color:${live >= 0 ? '#16C784' : '#EA3943'}">${t.status === 'open' ? Oryx.money(live) : Oryx.money(t.pnl)}</b></div>`;
+    }).join('') || '<p style="color:#7C88A8;font-size:13.5px">No trades yet.</p>';
+    document.getElementById('adRecentTxns').innerHTML = tx.slice().reverse().slice(0, 6).map(t => {
+      const a = ac.find(v => v.id === t.accountId);
+      return `<div class="act-row"><span class="act-ic" style="background:rgba(34,197,94,.12)">💳</span><div style="flex:1">${t.type} — ${a ? Oryx.esc(clientName(a.userId)) : '—'}<div style="color:#7C88A8;font-size:12px">${new Date(t.at).toLocaleString()}${t.note ? ' · ' + Oryx.esc(t.note) : ''}</div></div><b style="color:${t.amount >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(t.amount)}</b></div>`;
+    }).join('') || '<p style="color:#7C88A8;font-size:13.5px">No transactions yet.</p>';
     document.getElementById('dLatest').innerHTML = tbl(['Name','Email','Account','Balance','Joined'], us.slice().reverse().slice(0, 6).map(x => {
       const a = ac.find(v => v.userId === x.id);
       return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
-    }).join(''));
-    document.getElementById('dTrades').innerHTML = tbl(['Client','Symbol','Type','Lots','Open','Status','P/L'], tr.slice().reverse().slice(0, 8).map(t => {
-      const a = ac.find(v => v.id === t.accountId);
-      return `<tr><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td><span class="pill ${t.status==='open'?'y':'b'}">${t.status}</span></td><td>${t.status==='closed' ? Oryx.money(t.pnl) : '—'}</td></tr>`;
     }).join(''));
     document.getElementById('ibAcc').innerHTML = ac.map(a => `<option value="${a.id}">${a.login} — ${Oryx.esc(clientName(a.userId))} (${Oryx.esc(clientEmail(a.userId))}) · Balance ${Oryx.money(a.balance)}</option>`).join('') || '<option value="">No clients yet</option>';
     document.getElementById('cList').innerHTML = tbl(['Name','Email','Phone','Country','Account','Balance','Open Trades','Joined'], us.slice().reverse().map(x => {
