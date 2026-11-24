@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A1128">
 <title>Web Terminal — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=4">
+<link rel="stylesheet" href="assets/style.css?v=5">
 </head>
 <body style="background:#060B1D">
 <div class="term-top">
@@ -16,15 +16,14 @@
 <div class="eq-bar" id="eqBar"></div>
 <div class="term">
   <div class="col">
-    <h5>INSTRUMENTS — CLICK TO OPEN</h5>
+    <h5>⚡ OPEN POSITIONS — LIVE</h5>
+    <div class="pos-list" id="posBox" style="padding-top:6px"></div>
+    <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">INSTRUMENTS — CLICK TO OPEN</h5>
     <div class="inst-list" id="instList"></div>
   </div>
   <div class="col">
+    <div class="sym-strip" id="symStrip"></div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas></div>
-    <div class="pos-strip">
-      <h5 style="padding:14px 14px 4px">⚡ OPEN POSITIONS — HAR ENTRY KE SAMNAY CLOSE BUTTON</h5>
-      <div id="posStrip"></div>
-    </div>
     <div class="hist-wrap">
       <h5 style="padding-left:0">RECENTLY CLOSED</h5>
       <div id="histBox"></div>
@@ -53,28 +52,21 @@
       </div>
       <div id="tpMsg" style="margin-top:12px;font-size:13.5px"></div>
     </div>
-    <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">OPEN POSITIONS — LIVE</h5>
-    <div class="pos-list" id="posBox"></div>
-    <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">MARKET OVERVIEW</h5>
-    <div class="gauge-box">
-      <div class="kv-row"><span>Symbol</span><b id="ovSym">XAUUSD</b></div>
-      <div class="kv-row"><span>Session High</span><b id="ovHigh">—</b></div>
-      <div class="kv-row"><span>Session Low</span><b id="ovLow">—</b></div>
-      <div class="kv-row"><span>Change</span><b id="ovChg">—</b></div>
-      <div class="kv-row"><span>Trend (session)</span><span id="ovSpark"></span></div>
-      <div style="margin-top:12px">Market Sentiment — <b style="color:#fff" id="ovSentTxt">—</b></div>
-      <div style="height:10px;border-radius:99px;background:linear-gradient(90deg,#EA3943,#F5B544,#16C784);position:relative;margin-top:8px">
-        <span id="ovSentDot" style="position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #0A1128;left:50%"></span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px"><span>Bearish</span><span>Neutral</span><span>Bullish</span></div>
+    <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">ORDER BOOK</h5>
+    <div class="ob-box">
+      <div class="ob-head"><span>Price</span><span>Amount</span></div>
+      <div id="obAsks"></div>
+      <div class="ob-spread" id="obSpread">—</div>
+      <div id="obBids"></div>
+      <div class="kv-row" style="margin-top:10px"><span>Market Sentiment</span><b id="obSent">—</b></div>
     </div>
     <p style="font-size:12px;color:#7C88A8;padding:0 16px 16px">Demo terminal: charts and prices are live, orders are simulated on your practice balance. Balance is issued by Admin only.</p>
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="data/instruments.js?v=4"></script>
-<script src="assets/store.js?v=4"></script>
-<script src="assets/chart.js?v=4"></script>
+<script src="data/instruments.js?v=5"></script>
+<script src="assets/store.js?v=5"></script>
+<script src="assets/chart.js?v=5"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
@@ -119,31 +111,36 @@
       `<span>Balance <b>${Oryx.money(a.balance)}</b></span><span>Equity <b>${Oryx.money(eq)}</b></span><span>Margin <b>${Oryx.money(mg)}</b></span><span>Free Margin <b>${Oryx.money(eq - mg)}</b></span><span>Floating P/L <b style="color:${fl>=0?'#16C784':'#EA3943'}">${Oryx.money(fl)}</b></span>`;
     try { drawLiveChart(document.getElementById('tvchart'), cur); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
-    document.getElementById('posStrip').innerHTML = open.length ? open.map(t => {
-      const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
-      return `<div class="pos-card" style="margin:0 14px 10px">
-        <div class="pos-top"><b>${t.symbol}</b><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots} lots</span><span class="pos-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
-        <div class="pos-sub">Opened at ${Oryx.fmtP(t.symbol, t.open)} &nbsp;→&nbsp; Now ${Oryx.fmtP(t.symbol, now)}</div>
-        <button class="close-btn" onclick="closeT('${t.id}')">✕ CLOSE POSITION</button>
-      </div>`;
-    }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 14px 12px">Abhi koi open position nahi. BUY ya SELL lagayein — entry yahan aur right side, dono jagah live nazar ayegi.</p>';
     document.getElementById('posBox').innerHTML = open.length ? open.map(t => {
       const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
-      return `<div class="pos-card">
+      return `<div class="pos-card" style="margin:0 12px 10px">
         <div class="pos-top"><b>${t.symbol}</b><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots} lots</span><span class="pos-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
         <div class="pos-sub">Opened at ${Oryx.fmtP(t.symbol, t.open)} &nbsp;→&nbsp; Now ${Oryx.fmtP(t.symbol, now)} &nbsp;·&nbsp; ${new Date(t.openAt).toLocaleTimeString()}</div>
-        <button class="close-btn" onclick="closeT('${t.id}')">✕ CLOSE POSITION</button>
+        <div class="pos-foot"><span>${p>=0?'Profit — green button':'Loss — red button'}</span><button class="close-btn ${p>=0?'win':''}" onclick="closeT('${t.id}')">✕ CLOSE</button></div>
       </div>`;
-    }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 16px 12px">No open positions yet. Place a BUY or SELL order above — it will appear here live with its profit/loss and a Close button.</p>';
-    document.getElementById('ovSym').textContent = cur;
-    document.getElementById('ovHigh').textContent = Oryx.fmtP(cur, Oryx.dayHigh(cur));
-    document.getElementById('ovLow').textContent = Oryx.fmtP(cur, Oryx.dayLow(cur));
-    const oc = Oryx.changePct(cur); const oce = document.getElementById('ovChg');
-    oce.textContent = (oc >= 0 ? '+' : '') + oc.toFixed(2) + '%'; oce.style.color = oc >= 0 ? '#16C784' : '#EA3943';
-    document.getElementById('ovSpark').innerHTML = Oryx.spark(cur, 110, 26);
+    }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 12px 12px">No open positions yet. Place a BUY or SELL order — it will appear here live with its profit/loss and a small Close button (green in profit, red in loss).</p>';
+    const ins = Oryx.inst(cur); const cp = Oryx.changePct(cur);
+    document.getElementById('symStrip').innerHTML = `
+      <div class="ss-main"><b>${cur}</b><span>${ins.name}</span></div>
+      <div class="ss-it"><span>Last Price</span><b>${Oryx.fmtP(cur, Oryx.prices[cur])}</b></div>
+      <div class="ss-it"><span>Change</span><b style="color:${cp>=0?'#16C784':'#EA3943'}">${cp>=0?'+':''}${cp.toFixed(2)}%</b></div>
+      <div class="ss-it"><span>Session High</span><b>${Oryx.fmtP(cur, Oryx.dayHigh(cur))}</b></div>
+      <div class="ss-it"><span>Session Low</span><b>${Oryx.fmtP(cur, Oryx.dayLow(cur))}</b></div>
+      <div class="ss-it"><span>Spread</span><b>${ins.spread.toFixed(ins.digits)}</b></div>`;
+    const bid0 = Oryx.bid(cur), ask0 = Oryx.ask(cur);
+    const tStep = Math.max((ask0 - bid0) / 2, Oryx.prices[cur] * 0.00004);
+    const aRows = [], bRows = [];
+    for (let r = 7; r >= 1; r--) aRows.push({ p: ask0 + tStep * (r - 1), a: 0.05 + Math.random() * 3.4 });
+    for (let r = 1; r <= 7; r++) bRows.push({ p: bid0 - tStep * (r - 1), a: 0.05 + Math.random() * 3.4 });
+    const mxA = Math.max(...aRows.map(x => x.a), ...bRows.map(x => x.a));
+    const rowHtml = (x, col) => `<div class="ob-row"><i style="width:${Math.round(x.a / mxA * 100)}%;background:${col === '#EA3943' ? 'rgba(234,57,67,.13)' : 'rgba(22,199,132,.13)'}"></i><span style="color:${col}">${Oryx.fmtP(cur, x.p)}</span><span class="ob-a">${x.a.toFixed(3)}</span></div>`;
+    document.getElementById('obAsks').innerHTML = aRows.map(x => rowHtml(x, '#EA3943')).join('');
+    document.getElementById('obBids').innerHTML = bRows.map(x => rowHtml(x, '#16C784')).join('');
+    document.getElementById('obSpread').innerHTML = `Spread <b style="color:#fff">${(ask0 - bid0).toFixed(ins.digits)}</b> · Mid <b style="color:#fff">${Oryx.fmtP(cur, Oryx.prices[cur])}</b>`;
     const sv = Oryx.sentiment();
-    document.getElementById('ovSentTxt').textContent = sv + (sv >= 60 ? ' · Bullish' : sv <= 40 ? ' · Bearish' : ' · Neutral');
-    document.getElementById('ovSentDot').style.left = 'calc(' + sv + '% - 9px)';
+    const svEl = document.getElementById('obSent');
+    svEl.textContent = sv + '% ' + (sv >= 60 ? 'Bullish' : sv <= 40 ? 'Bearish' : 'Neutral');
+    svEl.style.color = sv >= 60 ? '#16C784' : sv <= 40 ? '#EA3943' : '#F5B544';
     const closed = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'closed').slice().reverse().slice(0, 6);
     document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
   }
