@@ -201,10 +201,13 @@ const Oryx = (() => {
   }
   const saveAdmins = v => save(K_ADMINS, v);
   function currentAdmin(){ const e = load(K_ASESS, null); return admins().find(x => x.email === e) || null; }
-  function logAdmin(action, detail){
+  function logAdmin(action, detail, meta){
     const a = currentAdmin();
     const log = load(K_ALOG, []);
-    log.push({ id:uid('log'), at:Date.now(), admin: a ? a.name : 'Super Admin', email: a ? a.email : '', action, detail: detail || '' });
+    const entry = { id:uid('log'), at:Date.now(), admin: a ? a.name : 'Super Admin', email: a ? a.email : '', action, detail: detail || '' };
+    if (meta && meta.clientId) entry.clientId = meta.clientId;   // which client this action touched (builds the admin's tree)
+    if (meta && meta.amount != null) entry.amount = meta.amount;
+    log.push(entry);
     while (log.length > 500) log.shift();
     save(K_ALOG, log);
   }
