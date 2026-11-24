@@ -12,8 +12,8 @@
   /* slimmer side columns + smaller top boxes, so the chart owns the screen */
   .term{grid-template-columns:214px 1fr 250px;gap:12px;padding:12px}
   .eq-bar{gap:10px;margin:0 12px 12px}
-  .eq-bar .kpi{padding:10px 12px;border-radius:13px}
-  .eq-bar .kpi b{font-size:16.5px;margin:3px 0 1px}
+  .eq-bar .kpi{padding:8px 10px;border-radius:13px}
+  .eq-bar .kpi b{font-size:15.5px;margin:2px 0 1px}
   .eq-bar .kpi span{font-size:10.5px}
   /* compact right rail, so BUY / SELL stay on the screen */
   .trade-panel{padding:2px 14px 12px}
@@ -24,8 +24,7 @@
   .bs-btns{margin-top:10px}
   .bs-btns button{padding:10px}
   .lot-chips button{padding:4px 0}
-  .hl-box{padding:6px 10px}
-  .hl-box b{font-size:15px}
+  .hl-box{padding:7px 11px}
   .pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.03em}
   .pill.g{background:rgba(22,199,132,.16);color:#16C784;border:1px solid rgba(22,199,132,.45)}
   .pill.r{background:rgba(234,57,67,.16);color:#EA3943;border:1px solid rgba(234,57,67,.45)}
@@ -59,10 +58,13 @@
   .pos-rows span{display:block;color:#7C88A8;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
   .pos-rows b{color:#fff;font-size:13px}
   @media(max-width:900px){ .chart-box{height:340px} .eq-bar{grid-template-columns:repeat(2,1fr)} }
-  .hlbar{display:flex;flex-direction:column;gap:8px;margin:0 0 6px}
-  .hl-box{border-radius:12px;padding:8px 12px;color:#fff;display:flex;justify-content:space-between;align-items:center;box-shadow:0 6px 14px rgba(0,0,0,.22)}
-  .hl-box span{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;opacity:.95}
-  .hl-box b{font-size:16.5px;font-weight:800}
+  @media(max-width:900px){ .top-strip{flex-direction:column} .hlbar{width:auto} }
+  .top-strip{display:flex;gap:10px;margin:0 12px 12px;align-items:stretch}
+  .top-strip .eq-bar{flex:1;margin:0}
+  .hlbar{display:flex;flex-direction:row;gap:8px;width:312px;flex:none;margin:0}
+  .hl-box{flex:1;border-radius:12px;padding:7px 11px;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:1px;box-shadow:0 6px 14px rgba(0,0,0,.22)}
+  .hl-box span{font-size:9.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;opacity:.95;white-space:nowrap}
+  .hl-box b{font-size:16px;font-weight:800}
   .hl-box.hi{background:linear-gradient(135deg,#0B8A5F,#16C784)}
   .hl-box.lo{background:linear-gradient(135deg,#C81E1E,#EA3943)}
   .ot-row{display:flex;gap:8px;margin:2px 0 4px}
@@ -80,7 +82,7 @@
   <span style="color:#D8A94E;font-weight:800;letter-spacing:.1em">ORYX WEB TERMINAL</span>
   <span id="whoLine" style="color:#7C88A8;font-size:13px;margin-left:auto"></span>
 </div>
-<div class="eq-bar" id="eqBar"></div>
+<div class="top-strip"><div class="eq-bar" id="eqBar"></div><div id="hlBar" class="hlbar"></div></div>
 <div class="term">
   <div class="col">
     <h5>⚡ OPEN POSITIONS — LIVE</h5>
@@ -99,7 +101,6 @@
     </div>
   </div>
   <div class="col rail" id="rail">
-    <div id="hlBar" class="hlbar"></div>
     <h5>NEW ORDER</h5>
     <div class="trade-panel">
       <div class="sym" id="tpSym">XAUUSD</div>
@@ -149,9 +150,9 @@
 <div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=17"></script>
+<script src="assets/store.js?v=18"></script>
 <script src="assets/cloud.js?v=8"></script>
-<script src="assets/chart.js?v=10"></script>
+<script src="assets/chart.js?v=11"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
