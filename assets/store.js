@@ -66,6 +66,12 @@ const Oryx = (() => {
     if (now - bucketStart >= BUCKET) bucketStart = now;
   }
   const candles = s => CANDLES[s] || [];
+  function sparkData(arr, w, h, color){
+    if (!arr || arr.length < 2) arr = [0, 0];
+    const min = Math.min(...arr), max = Math.max(...arr), rng = (max - min) || 1;
+    const pts = arr.map((v, ix) => (ix / (arr.length - 1) * w).toFixed(1) + ',' + (h - 2 - (v - min) / rng * (h - 4)).toFixed(1)).join(' ');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color || '#fff'}" stroke-width="1.8" stroke-linejoin="round" opacity="0.9"/></svg>`;
+  }
   const hist = s => HIST[s] || [];
   const dayHigh = s => Math.max(...HIST[s]);
   const dayLow = s => Math.min(...HIST[s]);
@@ -173,7 +179,7 @@ const Oryx = (() => {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   return { K, settings, saveSettings, users, accounts, trades, txns, addTxn,
-           prices, hist, candles, dayHigh, dayLow, changePct, sentiment, spark,
+           prices, hist, candles, sparkData, dayHigh, dayLow, changePct, sentiment, spark,
            inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById,
            pnlOf, floating, usedMargin, openTrade, closeTrade,
