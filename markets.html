@@ -38,7 +38,7 @@
           <div><b style="color:#fff;font-size:18px">${i.symbol}</b><div style="color:#7C88A8;font-size:12.5px">${i.name}</div></div>
           <span class="pill b">${i.type}</span>
         </div>
-        <div style="margin:12px 0 2px">${Oryx.spark(i.symbol)}</div>
+        <div style="margin:12px 0 2px">${Oryx.spark(i.symbol, 300, 44)}</div>
         <div style="display:flex;justify-content:space-between;font-size:12.5px;color:#7C88A8"><span>24h change</span><b style="color:${cp >= 0 ? '#16C784' : '#EA3943'}">${cp >= 0 ? '▲' : '▼'} ${Math.abs(cp).toFixed(2)}%</b></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px">
           <div style="background:rgba(255,255,255,.04);border-radius:9px;padding:8px 11px"><span style="display:block;font-size:10.5px;color:#7C88A8;letter-spacing:.07em;font-weight:700">BID · SELL</span><b style="color:#fff;font-size:15.5px">${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</b></div>
