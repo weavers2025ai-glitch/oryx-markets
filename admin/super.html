@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Super Admin — Oryx Markets</title>
 <link rel="stylesheet" href="../assets/style.css?v=13">
+<style>
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .acard{background:var(--panel2,#0D1424);border:1px solid var(--line,#1D2942);border-radius:14px;padding:16px;cursor:pointer;transition:transform .15s,border-color .15s}
+  .acard:hover{transform:translateY(-3px);border-color:#D8A94E}
+  .acard h4{margin:0 0 4px;font-size:16px;color:#fff}
+  .acard .ln{color:#93A1C4;font-size:13px;margin:2px 0}
+  .acard .ln b{color:#C9D4F2;font-weight:600}
+  .ibox{background:var(--panel2,#0D1424);border:1px solid var(--line,#1D2942);border-radius:12px;padding:14px 16px}
+  .ibox span{display:block;color:#7C88A8;font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .ibox b{color:#fff;font-size:16px}
+  .igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .actbox{border-left:4px solid #D8A94E;background:var(--panel2,#0D1424);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+  .actbox .t{color:#7C88A8;font-size:12px}
+  .backbtn{margin-bottom:14px}
+  tr.clickable{cursor:pointer}
+  tr.clickable:hover td{background:rgba(216,169,78,.07)}
+</style>
 </head>
 <body class="dark-dash">
 <div id="gate" class="auth-wrap" style="min-height:100vh">
@@ -48,8 +65,10 @@
           <h3>➕ Create Admin</h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
             <div class="field"><label>Full Name</label><input id="naName" placeholder="e.g. Ali Khan"></div>
-            <div class="field"><label>Email (login)</label><input id="naEmail" type="email" placeholder="ali@oryx.local"></div>
+            <div class="field"><label>Email (login / user ID)</label><input id="naEmail" type="email" placeholder="ali@oryx.local"></div>
             <div class="field"><label>Password</label><input id="naPass" type="text" placeholder="min 6 characters"></div>
+            <div class="field"><label>Country</label><input id="naCountry" placeholder="e.g. Pakistan"></div>
+            <div class="field"><label>Contact (phone / WhatsApp)</label><input id="naPhone" placeholder="e.g. +92 300 0000000"></div>
           </div>
           <div class="form-err" id="naErr"></div>
           <button class="btn btn-gold" onclick="createAdmin()">Create Admin Account</button>
@@ -68,6 +87,16 @@
         <div class="panel"><div id="sClients"></div></div>
       </section>
 
+      <section id="view-admin" style="display:none">
+        <button class="btn btn-line backbtn" onclick="backToTabs('admins')">← Back to Admins</button>
+        <div id="adminDetail"></div>
+      </section>
+
+      <section id="view-client" style="display:none">
+        <button class="btn btn-line backbtn" id="clientBack" onclick="backFromClient()">← Back</button>
+        <div id="clientDetail"></div>
+      </section>
+
       <section id="tab-settings" style="display:none">
         <h1>Settings</h1><p class="sub">Super Admin security.</p>
         <div class="panel">
@@ -84,7 +113,7 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=11"></script>
+<script src="../assets/store.js?v=12"></script>
 <script src="../assets/cloud.js?v=3"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
@@ -99,9 +128,86 @@
   document.querySelectorAll('.side a[data-tab]').forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
     document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.remove('on')); a.classList.add('on');
-    document.querySelectorAll('main section[id^="tab-"]').forEach(s => s.style.display = s.id === 'tab-' + a.dataset.tab ? 'block' : 'none');
+    document.querySelectorAll('main section').forEach(s => s.style.display = s.id === 'tab-' + a.dataset.tab ? 'block' : 'none');
     renderAll();
   }));
+
+  /* ---------- drill-down tree: Admins -> one Admin -> his Clients -> one Client ---------- */
+  let treeAdmin = null, treeFrom = 'clients';
+  function showOnly(id){
+    document.querySelectorAll('main section').forEach(s => s.style.display = s.id === id ? 'block' : 'none');
+  }
+  function backToTabs(tab){
+    document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === tab));
+    showOnly('tab-' + tab);
+    renderAll();
+  }
+  function openAdmin(id){
+    const a = Oryx.admins().find(x => x.id === id); if (!a) return;
+    treeAdmin = a;
+    const log = Oryx.adminLog().filter(l => l.email === a.email);
+    const issued = log.filter(l => l.action === 'Balance issued').reduce((s, l) => s + (l.amount || 0), 0);
+    const approved = log.filter(l => l.action === 'Request approved').reduce((s, l) => s + (l.amount || 0), 0);
+    const servedIds = [...new Set(log.filter(l => l.clientId).map(l => l.clientId))];
+    const served = servedIds.map(cid => Oryx.users().find(u => u.id === cid)).filter(Boolean);
+    const last = log.length ? new Date(log[log.length - 1].at).toLocaleString() : 'Never';
+    document.getElementById('adminDetail').innerHTML = `
+      <h1>🛡️ ${Oryx.esc(a.name)}</h1><p class="sub">This admin's full tree — his details, the clients he served, and everything he did.</p>
+      <div class="igrid">
+        <div class="ibox"><span>User ID / Email</span><b>${Oryx.esc(a.email)}</b></div>
+        <div class="ibox"><span>Country</span><b>${Oryx.esc(a.country || '—')}</b></div>
+        <div class="ibox"><span>Contact</span><b>${Oryx.esc(a.phone || '—')}</b></div>
+        <div class="ibox"><span>Status</span><b>${a.active ? 'Active' : 'Disabled'}</b></div>
+        <div class="ibox"><span>Admin Since</span><b>${new Date(a.created).toLocaleDateString()}</b></div>
+        <div class="ibox"><span>Last Active</span><b>${last}</b></div>
+        <div class="ibox"><span>Total Actions</span><b>${log.length}</b></div>
+        <div class="ibox"><span>Balance Issued</span><b>${Oryx.money(issued)}</b></div>
+        <div class="ibox"><span>Requests Approved</span><b>${Oryx.money(approved)}</b></div>
+      </div>
+      <div class="panel"><h3>👥 Clients He Served (${served.length})</h3>
+        ${served.length ? `<div class="cards">${served.map(u => { const ac = Oryx.accounts().find(v => v.userId === u.id); return `
+          <div class="acard" onclick="openClient('${u.id}', 'admin')">
+            <h4>${Oryx.esc(u.name)}</h4>
+            <div class="ln"><b>Email:</b> ${Oryx.esc(u.email)}</div>
+            <div class="ln"><b>Account:</b> ${ac ? ac.login : '—'} · <b>Balance:</b> ${ac ? Oryx.money(ac.balance) : '—'}</div>
+            <div class="ln"><b>Country:</b> ${Oryx.esc(u.country || '—')} · <b>Contact:</b> ${Oryx.esc(u.phone || '—')}</div>
+            <div class="ln" style="color:#D8A94E">Open his tree →</div>
+          </div>`; }).join('')}</div>` : '<p style="color:var(--mut)">No client actions recorded for this admin yet. His tree grows as he issues balances and approves requests.</p>'}
+      </div>
+      <div class="panel"><h3>📋 His Activity (${log.length})</h3>
+        ${log.length ? log.slice().reverse().map(l => `<div class="actbox"><b style="color:#fff">${Oryx.esc(l.action)}</b> — ${Oryx.esc(l.detail)}<div class="t">${new Date(l.at).toLocaleString()}</div></div>`).join('') : '<p style="color:var(--mut)">No activity recorded yet.</p>'}
+      </div>`;
+    showOnly('view-admin');
+    window.scrollTo(0, 0);
+  }
+  function openClient(userId, from){
+    const u = Oryx.users().find(x => x.id === userId); if (!u) return;
+    treeFrom = from || 'clients';
+    document.getElementById('clientBack').textContent = from === 'admin' && treeAdmin ? '← Back to ' + treeAdmin.name : '← Back to Clients';
+    const ac = Oryx.accounts().find(v => v.userId === u.id);
+    const trs = ac ? Oryx.trades().filter(t => t.accountId === ac.id) : [];
+    const txs = ac ? Oryx.txns().filter(t => t.accountId === ac.id) : [];
+    const rqs = ac ? Oryx.requests().filter(r => r.accountId === ac.id) : [];
+    document.getElementById('clientDetail').innerHTML = `
+      <h1>👤 ${Oryx.esc(u.name)}</h1><p class="sub">This client's full tree — profile, account, trades, money and requests.</p>
+      <div class="igrid">
+        <div class="ibox"><span>Email</span><b>${Oryx.esc(u.email)}</b></div>
+        <div class="ibox"><span>Country</span><b>${Oryx.esc(u.country || '—')}</b></div>
+        <div class="ibox"><span>Contact</span><b>${Oryx.esc(u.phone || '—')}</b></div>
+        <div class="ibox"><span>Account</span><b>${ac ? ac.login : '—'}</b></div>
+        <div class="ibox"><span>Balance</span><b>${ac ? Oryx.money(ac.balance) : '—'}</b></div>
+        <div class="ibox"><span>Joined</span><b>${new Date(u.created).toLocaleDateString()}</b></div>
+      </div>
+      <div class="panel"><h3>💳 Transactions (${txs.length})</h3>${tbl(['When','Type','Amount','Note'], txs.slice().reverse().map(t => `<tr><td>${new Date(t.at).toLocaleString()}</td><td>${Oryx.esc(t.type)}</td><td>${Oryx.money(t.amount)}</td><td>${Oryx.esc(t.note || '')}</td></tr>`).join(''), 'No transactions yet.')}</div>
+      <div class="panel"><h3>📈 Trades (${trs.length})</h3>${tbl(['Instrument','Side','Lots','Open','Close','P/L','Status'], trs.slice().reverse().map(t => `<tr><td>${t.symbol}</td><td>${t.side}</td><td>${t.lots}</td><td>${t.open}</td><td>${t.close || '—'}</td><td>${t.status === 'closed' ? Oryx.money(t.pnl) : '—'}</td><td>${t.status}</td></tr>`).join(''), 'No trades yet.')}</div>
+      <div class="panel"><h3>💸 Balance Requests (${rqs.length})</h3>${tbl(['When','Amount','Method','Status'], rqs.slice().reverse().map(r => `<tr><td>${new Date(r.at).toLocaleString()}</td><td>${Oryx.money(r.amount)}</td><td>${Oryx.esc(r.method)}</td><td>${r.status}</td></tr>`).join(''), 'No requests yet.')}</div>`;
+    showOnly('view-client');
+    window.scrollTo(0, 0);
+  }
+  function backFromClient(){
+    if (treeFrom === 'admin' && treeAdmin) openAdmin(treeAdmin.id);
+    else backToTabs('clients');
+  }
 
   function tbl(head, rows, empty){ return `<div style="overflow:auto"><table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td colspan="${head.length}" style="color:var(--mut)">${empty || 'Nothing here yet.'}</td></tr>`}</tbody></table></div>`; }
   const kpi = (g, ic, label, val, sub) => `<div class="kpi ${g}"><span class="kic">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
@@ -119,24 +225,29 @@
     const perAdmin = ads.map(a => {
       const mine = log.filter(l => l.email === a.email);
       const last = mine.length ? new Date(mine[mine.length - 1].at).toLocaleString() : 'Never';
-      return `<tr><td><b>${Oryx.esc(a.name)}</b></td><td>${Oryx.esc(a.email)}</td><td>${a.active ? '<span style="color:#16C784;font-weight:700">Active</span>' : '<span style="color:#EA3943;font-weight:700">Disabled</span>'}</td><td>${mine.length}</td><td>${last}</td></tr>`;
+      return `<tr class="clickable" onclick="openAdmin('${a.id}')"><td><b>${Oryx.esc(a.name)}</b></td><td>${Oryx.esc(a.email)}</td><td>${a.active ? '<span style="color:#16C784;font-weight:700">Active</span>' : '<span style="color:#EA3943;font-weight:700">Disabled</span>'}</td><td>${mine.length}</td><td>${last}</td></tr>`;
     }).join('');
     document.getElementById('sAdminActivity').innerHTML = tbl(['Admin','Email','Status','Actions','Last Active'], perAdmin, 'No admins yet.');
     document.getElementById('sLatest').innerHTML = tbl(['When','Admin','Action','Details'],
       log.slice().reverse().slice(0, 8).map(l => `<tr><td>${new Date(l.at).toLocaleString()}</td><td><b>${Oryx.esc(l.admin)}</b></td><td>${Oryx.esc(l.action)}</td><td>${Oryx.esc(l.detail)}</td></tr>`).join(''), 'No activity recorded yet.');
-    document.getElementById('sAdmins').innerHTML = tbl(['Name','Email','Status','Created','Actions'],
-      ads.map(a => `<tr><td><b>${Oryx.esc(a.name)}</b></td><td>${Oryx.esc(a.email)}</td>
-        <td>${a.active ? '<span style="color:#16C784;font-weight:700">Active</span>' : '<span style="color:#EA3943;font-weight:700">Disabled</span>'}</td>
-        <td>${new Date(a.created).toLocaleDateString()}</td>
-        <td style="white-space:nowrap">
-          <button class="btn btn-line btn-sm" onclick="toggleAdmin('${a.id}')">${a.active ? 'Disable' : 'Enable'}</button>
-          <button class="btn btn-line btn-sm" onclick="resetAdminPw('${a.id}')">Reset Password</button>
-          <button class="btn btn-line btn-sm" style="border-color:#EA3943;color:#EA3943" onclick="deleteAdmin('${a.id}')">Delete</button>
-        </td></tr>`).join(''), 'No admins yet.');
+    document.getElementById('sAdmins').innerHTML = ads.length ? `<div class="cards">${ads.map(a => {
+        const mine = log.filter(l => l.email === a.email);
+        return `<div class="acard" onclick="openAdmin('${a.id}')">
+          <h4>🛡️ ${Oryx.esc(a.name)}</h4>
+          <div class="ln"><b>User ID:</b> ${Oryx.esc(a.email)}</div>
+          <div class="ln"><b>Country:</b> ${Oryx.esc(a.country || '—')} · <b>Contact:</b> ${Oryx.esc(a.phone || '—')}</div>
+          <div class="ln"><b>Status:</b> ${a.active ? '<span style="color:#16C784;font-weight:700">Active</span>' : '<span style="color:#EA3943;font-weight:700">Disabled</span>'} · <b>Actions:</b> ${mine.length}</div>
+          <div class="ln" style="color:#D8A94E">Click to open his tree →</div>
+          <div style="margin-top:10px" onclick="event.stopPropagation()">
+            <button class="btn btn-line btn-sm" onclick="toggleAdmin('${a.id}')">${a.active ? 'Disable' : 'Enable'}</button>
+            <button class="btn btn-line btn-sm" onclick="resetAdminPw('${a.id}')">Reset Password</button>
+            <button class="btn btn-line btn-sm" style="border-color:#EA3943;color:#EA3943" onclick="deleteAdmin('${a.id}')">Delete</button>
+          </div>
+        </div>`; }).join('')}</div>` : '<p style="color:var(--mut)">No admins yet.</p>';
     document.getElementById('sLog').innerHTML = tbl(['When','Admin','Action','Details'],
       log.slice().reverse().map(l => `<tr><td style="white-space:nowrap">${new Date(l.at).toLocaleString()}</td><td><b>${Oryx.esc(l.admin)}</b><br><span style="color:var(--mut);font-size:12px">${Oryx.esc(l.email)}</span></td><td>${Oryx.esc(l.action)}</td><td>${Oryx.esc(l.detail)}</td></tr>`).join(''), 'No activity recorded yet.');
-    document.getElementById('sClients').innerHTML = tbl(['Name','Email','Account','Balance','Joined'],
-      us.slice().reverse().map(u => { const a = ac.find(v => v.userId === u.id); return `<tr><td><b>${Oryx.esc(u.name)}</b></td><td>${Oryx.esc(u.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(u.created).toLocaleDateString()}</td></tr>`; }).join(''), 'No clients yet.');
+    document.getElementById('sClients').innerHTML = tbl(['Name','Email','Country','Contact','Account','Balance','Joined'],
+      us.slice().reverse().map(u => { const a = ac.find(v => v.userId === u.id); return `<tr class="clickable" onclick="openClient('${u.id}', 'clients')"><td><b>${Oryx.esc(u.name)}</b></td><td>${Oryx.esc(u.email)}</td><td>${Oryx.esc(u.country || '—')}</td><td>${Oryx.esc(u.phone || '—')}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(u.created).toLocaleDateString()}</td></tr>`; }).join(''), 'No clients yet.');
   }
 
   function createAdmin(){
@@ -147,10 +258,10 @@
     if (!name || !email || pass.length < 6){ err.textContent = 'Fill the name, email and a password of at least 6 characters.'; err.style.display = 'block'; return; }
     const list = Oryx.admins();
     if (list.some(a => a.email.toLowerCase() === email.toLowerCase())){ err.textContent = 'An admin with this email already exists.'; err.style.display = 'block'; return; }
-    list.push({ id:'adm' + Date.now().toString(36), name, email, pass, active:true, created:Date.now() });
+    list.push({ id:'adm' + Date.now().toString(36), name, email, pass, country: document.getElementById('naCountry').value.trim(), phone: document.getElementById('naPhone').value.trim(), active:true, created:Date.now() });
     Oryx.saveAdmins(list);
     err.style.display = 'none';
-    document.getElementById('naName').value = ''; document.getElementById('naEmail').value = ''; document.getElementById('naPass').value = '';
+    document.getElementById('naName').value = ''; document.getElementById('naEmail').value = ''; document.getElementById('naPass').value = ''; document.getElementById('naCountry').value = ''; document.getElementById('naPhone').value = '';
     renderAll();
   }
   function toggleAdmin(id){
