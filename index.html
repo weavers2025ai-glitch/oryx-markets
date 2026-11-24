@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#05080F">
 <title>Oryx Markets — Trade Forex, Gold, Crypto & Indices Online</title>
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=4">
 </head>
 <body data-root="">
 <div id="site-header"></div>
@@ -37,7 +37,7 @@
     <div class="hero-visual">
       <div class="hero-chart-frame">
         <div class="hc-head"><span class="tc-dot" style="background:#EA3943"></span><span class="tc-dot" style="background:#F5B544"></span><span class="tc-dot" style="background:#16C784"></span><span style="margin-left:8px;color:#93A1C4;font-size:12px;letter-spacing:.12em;font-weight:700">ORYX WEB TERMINAL — XAU/USD LIVE</span></div>
-        <div id="heroChart" style="height:340px"></div>
+        <canvas id="heroChart" style="width:100%;height:340px;display:block"></canvas>
       </div>
       <div class="float-card fc1">Gold Position · 0.10 lots<br><b style="color:#16C784">+$128.40</b> <span style="color:#7C88A8">floating</span></div>
       <div class="float-card fc2">Account Equity<br><b>$12,480.22</b> <span style="color:#16C784">▲ 2.4%</span></div>
@@ -77,10 +77,10 @@
     <div class="sec-head">
       <div class="kicker">Live Trading Chart</div>
       <h2>Watch the Market Move — Live</h2>
-      <p>Real-time charts powered by TradingView. Pick an instrument and see exactly what our traders see.</p>
+      <p>Real-time live charts, streaming every second. Pick an instrument and see exactly what our traders see.</p>
     </div>
     <div class="sym-tabs" id="symTabs"></div>
-    <div class="chart-frame"><div id="homeChart" style="width:100%;height:100%"></div></div>
+    <div class="chart-frame"><canvas id="homeChart" style="width:100%;height:100%;display:block"></canvas></div>
     <p style="text-align:center;margin-top:22px"><a class="btn btn-green" href="register.html">Create Account &amp; Start Trading</a></p>
   </div>
 </section>
@@ -188,10 +188,10 @@
 </section>
 
 <div id="site-footer"></div>
-<script src="data/instruments.js?v=3"></script>
-<script src="assets/store.js?v=3"></script>
-<script src="assets/chrome.js?v=3"></script>
-<script src="https://s3.tradingview.com/tv.js"></script>
+<script src="data/instruments.js?v=4"></script>
+<script src="assets/store.js?v=4"></script>
+<script src="assets/chrome.js?v=4"></script>
+<script src="assets/chart.js?v=4"></script>
 <script>
   const S = Oryx.settings();
   document.getElementById('heroSub').textContent = S.heroSub;
@@ -207,14 +207,18 @@
       return `<div class="mini-row"><div><b>${s}</b><span>${i.name}</span></div><div style="text-align:right"><b>${Oryx.fmtP(s, Oryx.bid(s))}</b><span class="chg ${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</span></div></div>`;
     }).join('');
   }
-  Oryx.startFeed(renderHome, 1000);
-  new TradingView.widget({ container_id:'heroChart', autosize:true, symbol:'TVC:GOLD', interval:'15', timezone:'Asia/Dubai', theme:'dark', style:'1', locale:'en', hide_top_toolbar:true, hide_side_toolbar:true, allow_symbol_change:false });
+  let homeSymCur = 'XAUUSD';
+  function drawHomeCharts(){
+    try { drawLiveChart(document.getElementById('heroChart'), 'XAUUSD'); } catch(e){}
+    try { drawLiveChart(document.getElementById('homeChart'), homeSymCur); } catch(e){}
+  }
+  const renderAll = () => { renderHome(); drawHomeCharts(); };
+  Oryx.startFeed(renderAll, 1000);
   const chartSyms = ['XAUUSD','EURUSD','GBPUSD','BTCUSD','WTIUSD','NAS100'];
   const tabs = document.getElementById('symTabs');
   tabs.innerHTML = chartSyms.map((s, ix) => `<button class="${ix===0?'on':''}" onclick="homeSym('${s}',this)">${s}</button>`).join('');
-  function loadHomeChart(s){ new TradingView.widget({ container_id:'homeChart', autosize:true, symbol:Oryx.inst(s).tv, interval:'15', timezone:'Asia/Dubai', theme:'dark', style:'1', locale:'en', hide_side_toolbar:true, allow_symbol_change:false }); }
-  function homeSym(s, el){ document.querySelectorAll('#symTabs button').forEach(b => b.classList.remove('on')); el.classList.add('on'); document.getElementById('homeChart').innerHTML = ''; loadHomeChart(s); }
-  loadHomeChart('XAUUSD');
+  function homeSym(s, el){ document.querySelectorAll('#symTabs button').forEach(b => b.classList.remove('on')); el.classList.add('on'); homeSymCur = s; drawHomeCharts(); }
+  drawHomeCharts();
 </script>
 </body>
 </html>

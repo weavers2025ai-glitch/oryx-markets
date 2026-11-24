@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A1128">
 <title>Web Terminal — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=4">
 </head>
 <body style="background:#060B1D">
 <div class="term-top">
@@ -20,7 +20,11 @@
     <div class="inst-list" id="instList"></div>
   </div>
   <div class="col">
-    <div class="chart-box" id="tvchart"></div>
+    <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas></div>
+    <div class="pos-strip">
+      <h5 style="padding:14px 14px 4px">⚡ OPEN POSITIONS — HAR ENTRY KE SAMNAY CLOSE BUTTON</h5>
+      <div id="posStrip"></div>
+    </div>
     <div class="hist-wrap">
       <h5 style="padding-left:0">RECENTLY CLOSED</h5>
       <div id="histBox"></div>
@@ -68,9 +72,9 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="data/instruments.js?v=3"></script>
-<script src="assets/store.js?v=3"></script>
-<script src="https://s3.tradingview.com/tv.js"></script>
+<script src="data/instruments.js?v=4"></script>
+<script src="assets/store.js?v=4"></script>
+<script src="assets/chart.js?v=4"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
@@ -79,11 +83,7 @@
   document.getElementById('whoLine').textContent = u.name + ' · Account ' + acc.login + ' · 1:' + acc.leverage;
   document.getElementById('tpLev').value = '1:' + acc.leverage;
 
-  function loadChart(){
-    document.getElementById('tvchart').innerHTML = '';
-    new TradingView.widget({ container_id:'tvchart', autosize:true, symbol:Oryx.inst(cur).tv, interval:'15', timezone:'Asia/Dubai', theme:'dark', style:'1', locale:'en', hide_side_toolbar:false, allow_symbol_change:false, studies:['STD;RSI'] });
-  }
-  function pick(s){ cur = s; render(); loadChart(); }
+  function pick(s){ cur = s; render(); }
   function setLot(v){ document.getElementById('tpLots').value = v; render(); }
   function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3400); }
   function place(side){
@@ -117,7 +117,16 @@
     const eq = a.balance + fl, mg = Oryx.usedMargin(acc.id);
     document.getElementById('eqBar').innerHTML =
       `<span>Balance <b>${Oryx.money(a.balance)}</b></span><span>Equity <b>${Oryx.money(eq)}</b></span><span>Margin <b>${Oryx.money(mg)}</b></span><span>Free Margin <b>${Oryx.money(eq - mg)}</b></span><span>Floating P/L <b style="color:${fl>=0?'#16C784':'#EA3943'}">${Oryx.money(fl)}</b></span>`;
+    try { drawLiveChart(document.getElementById('tvchart'), cur); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
+    document.getElementById('posStrip').innerHTML = open.length ? open.map(t => {
+      const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
+      return `<div class="pos-card" style="margin:0 14px 10px">
+        <div class="pos-top"><b>${t.symbol}</b><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots} lots</span><span class="pos-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
+        <div class="pos-sub">Opened at ${Oryx.fmtP(t.symbol, t.open)} &nbsp;→&nbsp; Now ${Oryx.fmtP(t.symbol, now)}</div>
+        <button class="close-btn" onclick="closeT('${t.id}')">✕ CLOSE POSITION</button>
+      </div>`;
+    }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 14px 12px">Abhi koi open position nahi. BUY ya SELL lagayein — entry yahan aur right side, dono jagah live nazar ayegi.</p>';
     document.getElementById('posBox').innerHTML = open.length ? open.map(t => {
       const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
       return `<div class="pos-card">
@@ -138,7 +147,6 @@
     const closed = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'closed').slice().reverse().slice(0, 6);
     document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
   }
-  loadChart();
   Oryx.startFeed(render, 1000);
 </script>
 </body>
