@@ -41,6 +41,7 @@ const Oryx = (() => {
       if (HIST[i.symbol].length > 48) HIST[i.symbol].shift();
     });
     tickCandles();
+    checkStopOut();
   }
   /* ---------- live candlesticks (built from the same feed, 5-second candles) ---------- */
   const CANDLES = {}; const BUCKET = 5000;
@@ -145,6 +146,39 @@ const Oryx = (() => {
     const all = trades(); all.push(tr); saveTrades(all);
     return { trade:tr };
   }
+  /* ---------- client messages (ride inside the user record, so they sync
+     to every device and up to the admin with the rest of his data) ---------- */
+  function notifyUser(userId, text){
+    const us = users(); const u = us.find(x => x.id === userId); if (!u) return;
+    if (!Array.isArray(u.msgs)) u.msgs = [];
+    u.msgs.push({ id: uid('m'), at: Date.now(), text, read: false });
+    if (u.msgs.length > 20) u.msgs = u.msgs.slice(-20);
+    saveUsers(us);
+  }
+  function markMsgsRead(userId){
+    const us = users(); const u = us.find(x => x.id === userId); if (!u || !Array.isArray(u.msgs)) return;
+    let ch = false; u.msgs.forEach(m => { if (!m.read){ m.read = true; ch = true; } });
+    if (ch) saveUsers(us);
+  }
+
+  /* ---------- stop-out: if the losses eat the whole balance, his entries
+     close automatically and he is told his balance is finished ---------- */
+  function checkStopOut(){
+    const sess = load(K.session, null); if (!sess) return false;
+    let fired = false;
+    accounts().filter(a => a.userId === sess).forEach(acc => {
+      const open = trades().filter(t => t.accountId === acc.id && t.status === 'open');
+      if (!open.length) return;
+      if (acc.balance + floating(acc.id) > 0) return;
+      open.forEach(t => closeTrade(t.id));
+      const accs = accounts(); const a2 = accs.find(a => a.id === acc.id);
+      if (a2 && a2.balance < 0){ a2.balance = 0; saveAccounts(accs); }
+      notifyUser(sess, '⚠️ Stop-Out: your open trades were closed automatically because the losses used up your account balance. Your balance is now $0.00. Please request a new deposit from the Admin to continue trading.');
+      fired = true;
+    });
+    return fired;
+  }
+
   function closeTrade(tradeId){
     const all = trades(); const tr = all.find(t => t.id === tradeId);
     if (!tr || tr.status !== 'open') return { error:'Trade not open.' };
@@ -240,6 +274,7 @@ const Oryx = (() => {
            inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById,
            pnlOf, floating, usedMargin, openTrade, closeTrade,
+           notifyUser, markMsgsRead, checkStopOut,
            adminPw, issueBalance, requests, createRequest, decideRequest, money, esc,
            admins, saveAdmins, adminLogin, currentAdmin, adminLogout, logAdmin, adminLog, superPw, setSuperPw,
            setAdminPw: v => save(K.adminpw, v) };
