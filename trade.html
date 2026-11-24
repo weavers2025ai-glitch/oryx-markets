@@ -48,6 +48,9 @@
   .hl-box b{font-size:16.5px;font-weight:800}
   .hl-box.hi{background:linear-gradient(135deg,#0B8A5F,#16C784)}
   .hl-box.lo{background:linear-gradient(135deg,#C81E1E,#EA3943)}
+  .ot-row{display:flex;gap:8px;margin:2px 0 4px}
+  .ot-btn{flex:1;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:#0E1626;color:#93A1C4;font-weight:700;font-size:12.5px;cursor:pointer}
+  .ot-btn.on{background:#F5B544;color:#171106;border-color:transparent}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -65,6 +68,8 @@
   <div class="col">
     <h5>⚡ OPEN POSITIONS — LIVE</h5>
     <div class="pos-list" id="posBox" style="padding-top:6px"></div>
+    <h5 style="margin-top:16px">⏳ PENDING ORDERS — AUTO</h5>
+    <div id="ordBox" style="padding-top:6px"></div>
     <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">INSTRUMENTS — CLICK TO OPEN</h5>
     <div class="inst-list" id="instList"></div>
   </div>
@@ -94,6 +99,19 @@
       <label>Leverage</label>
       <input id="tpLev" disabled>
       <div style="font-size:12.5px;color:#93A1C4;margin-top:10px" id="tpMargin"></div>
+      <label>Order Type</label>
+      <div class="ot-row">
+        <button type="button" id="otMarket" class="ot-btn on" onclick="setOtype('market')">⚡ Market — now</button>
+        <button type="button" id="otPending" class="ot-btn" onclick="setOtype('pending')">⏳ Pending — at price</button>
+      </div>
+      <div id="priceRow" style="display:none">
+        <label>Trigger Price — the trade opens BY ITSELF when the market reaches it</label>
+        <input id="tpPrice" type="number" step="any" placeholder="e.g. 3600.00">
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label>Stop Loss (optional)</label><input id="tpSL" type="number" step="any" placeholder="Auto-close price"></div>
+        <div style="flex:1"><label>Take Profit (optional)</label><input id="tpTP" type="number" step="any" placeholder="Auto-close price"></div>
+      </div>
       <div class="bs-btns">
         <button style="background:var(--dn)" onclick="place('SELL')">SELL</button>
         <button style="background:var(--up)" onclick="place('BUY')">BUY</button>
@@ -114,8 +132,8 @@
 <div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=15"></script>
-<script src="assets/cloud.js?v=7"></script>
+<script src="assets/store.js?v=16"></script>
+<script src="assets/cloud.js?v=8"></script>
 <script src="assets/chart.js?v=10"></script>
 <script>
   const u = Oryx.currentUser();
@@ -128,16 +146,34 @@
   function pick(s){ cur = s; render(); }
   function setLot(v){ document.getElementById('tpLots').value = v; render(); }
   function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3400); }
+  let otype = 'market';
+  function setOtype(t){
+    otype = t;
+    document.getElementById('otMarket').classList.toggle('on', t === 'market');
+    document.getElementById('otPending').classList.toggle('on', t === 'pending');
+    document.getElementById('priceRow').style.display = t === 'pending' ? 'block' : 'none';
+  }
   function place(side){
     const lots = parseFloat(document.getElementById('tpLots').value);
-    const r = Oryx.openTrade(acc.id, cur, side, lots);
+    const sl = parseFloat(document.getElementById('tpSL').value) || null;
+    const tp = parseFloat(document.getElementById('tpTP').value) || null;
     const m = document.getElementById('tpMsg');
-    if (r.error){ m.style.color = '#EA3943'; m.textContent = r.error; return; }
-    m.style.color = '#16C784'; m.textContent = '✔ ' + side + ' ' + lots + ' lots ' + cur + ' opened at ' + Oryx.fmtP(cur, r.trade.open) + ' — see it live on the right →';
-    toast('Order filled: ' + side + ' ' + cur + ' ' + lots + ' lots');
+    if (otype === 'pending'){
+      const price = parseFloat(document.getElementById('tpPrice').value);
+      const r = Oryx.placeOrder(acc.id, cur, side, lots, price, sl, tp);
+      if (r.error){ m.style.color = '#EA3943'; m.textContent = r.error; return; }
+      m.style.color = '#F5B544'; m.textContent = '⏳ Pending ' + side + ' ' + lots + ' lots ' + cur + ' @ ' + Oryx.fmtP(cur, price) + ' — it will open BY ITSELF when the price reaches there.';
+      toast('Pending order set: ' + side + ' ' + cur + ' @ ' + Oryx.fmtP(cur, price));
+    } else {
+      const r = Oryx.openTrade(acc.id, cur, side, lots, { sl, tp });
+      if (r.error){ m.style.color = '#EA3943'; m.textContent = r.error; return; }
+      m.style.color = '#16C784'; m.textContent = '✔ ' + side + ' ' + lots + ' lots ' + cur + ' opened at ' + Oryx.fmtP(cur, r.trade.open) + (sl || tp ? ' · SL/TP set' : '') + ' — see it live in Open Positions.';
+      toast('Order filled: ' + side + ' ' + cur + ' ' + lots + ' lots');
+    }
     const rail = document.getElementById('rail'); rail.classList.remove('flash'); void rail.offsetWidth; rail.classList.add('flash');
     render();
   }
+  function cancelOrd(id){ const r = Oryx.cancelOrder(id); if (!r.error) toast('Pending order cancelled'); render(); }
   function closeT(id){
     const r = Oryx.closeTrade(id);
     if (r.error){ toast(r.error); return; }
@@ -183,9 +219,17 @@
       return `<div class="pos-card" style="margin:0 12px 10px">
         <div class="pos-top"><b>${t.symbol}</b><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots} lots</span><span class="pos-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
         <div class="pos-rows"><div><span>Opened</span><b>${Oryx.fmtP(t.symbol, t.open)}</b></div><div><span>Now</span><b>${Oryx.fmtP(t.symbol, now)}</b></div><div><span>Time</span><b>${new Date(t.openAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b></div></div>
+        ${t.sl || t.tp ? `<div class="pos-rows"><div><span>Stop Loss</span><b style="color:#EA3943">${t.sl ? Oryx.fmtP(t.symbol, t.sl) : '—'}</b></div><div><span>Take Profit</span><b style="color:#16C784">${t.tp ? Oryx.fmtP(t.symbol, t.tp) : '—'}</b></div><div><span>Auto-Close</span><b>ON</b></div></div>` : ''}
         <div class="pos-foot"><span>${p>=0?'Profit — green button':'Loss — red button'}</span><button class="close-btn ${p>=0?'win':''}" onclick="closeT('${t.id}')">✕ CLOSE</button></div>
       </div>`;
     }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 12px 12px">No open positions yet. Place a BUY or SELL order — it will appear here live with its profit/loss and a small Close button (green in profit, red in loss).</p>';
+    const pends = Oryx.orders().filter(o => o.accountId === acc.id && o.status === 'pending');
+    document.getElementById('ordBox').innerHTML = pends.length ? pends.map(o => `
+      <div class="pos-card" style="margin:0 12px 10px">
+        <div class="pos-top"><b>${o.symbol}</b><span class="pill ${o.side==='BUY'?'g':'r'}">${o.side} · ${o.lots} lots</span><span class="pos-pl" style="color:#F5B544">⏳ @ ${Oryx.fmtP(o.symbol, o.price)}</span></div>
+        <div class="pos-rows"><div><span>Trigger</span><b>${Oryx.fmtP(o.symbol, o.price)}</b></div><div><span>Now</span><b>${Oryx.fmtP(o.symbol, Oryx.prices[o.symbol])}</b></div><div><span>SL / TP</span><b>${o.sl ? Oryx.fmtP(o.symbol, o.sl) : '—'} / ${o.tp ? Oryx.fmtP(o.symbol, o.tp) : '—'}</b></div></div>
+        <div class="pos-foot"><span>Opens by itself when the price reaches the trigger</span><button class="close-btn" onclick="cancelOrd('${o.id}')">✕ CANCEL</button></div>
+      </div>`).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 12px 12px">No pending orders. Switch Order Type to ⏳ Pending, set a price, and the trade opens by itself when the market reaches it.</p>';
     const ins = Oryx.inst(cur); const cp = Oryx.changePct(cur);
     document.getElementById('symStrip').innerHTML = `
       <div class="ss-main"><b>${cur}</b><span>${ins.name}</span></div>
@@ -209,7 +253,7 @@
     svEl.textContent = sv + '% ' + (sv >= 60 ? 'Bullish' : sv <= 40 ? 'Bearish' : 'Neutral');
     svEl.style.color = sv >= 60 ? '#16C784' : sv <= 40 ? '#EA3943' : '#F5B544';
     const closed = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'closed').slice().reverse().slice(0, 6);
-    document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
+    document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}${t.closeReason ? ' · ' + t.closeReason : ''}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
   }
   Oryx.startFeed(render, 1000);
 </script>
