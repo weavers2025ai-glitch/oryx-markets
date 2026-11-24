@@ -2,7 +2,7 @@
    Rules built in: a new client receives ONLY the $10 starter credit set in Settings.
    Any further balance is issued by the Admin only (Admin → Clients → Issue Balance). */
 const Oryx = (() => {
-  const K = { users:'oryx_users', session:'oryx_session', accounts:'oryx_accounts', trades:'oryx_trades', txns:'oryx_txns', settings:'oryx_settings', adminpw:'oryx_admin_pw' };
+  const K = { users:'oryx_users', session:'oryx_session', accounts:'oryx_accounts', trades:'oryx_trades', txns:'oryx_txns', settings:'oryx_settings', adminpw:'oryx_admin_pw', orders:'oryx_orders' };
   const load = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } };
   const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
   const uid = p => p + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -19,45 +19,62 @@ const Oryx = (() => {
   const users    = () => load(K.users, []);
   const accounts = () => load(K.accounts, []);
   const trades   = () => load(K.trades, []);
+  const orders   = () => load(K.orders, []);
+  function saveOrders(o){ save(K.orders, o); }
   const txns     = () => load(K.txns, []);
   const saveUsers = v => save(K.users, v), saveAccounts = v => save(K.accounts, v), saveTrades = v => save(K.trades, v), saveTxns = v => save(K.txns, v);
 
   /* ---------- price feed (simulated live feed around the seed prices) ---------- */
   const prices = {}; // symbol -> mid price
   const HIST = {};   // symbol -> rolling price history (for sparklines / day range)
+  /* The market is a pure function of TIME (layered waves + hashed noise), so
+     every device and every refresh shows the SAME prices and the SAME chart.
+     Nothing is re-invented when a page reloads or on another phone. */
+  function hashN(str){ let h = 2166136261; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
+  function priceAt(sym, t){
+    const ins = INSTRUMENTS.find(x => x.symbol === sym); const base = ins.base;
+    const scale = ins.type === 'Crypto' ? 0.006 : ins.type === 'Forex' ? 0.0011 : 0.0042;
+    const ph = hashN(sym) * 100;
+    let v = Math.sin(t / 260000 + ph) * 0.46 + Math.sin(t / 71000 + ph * 1.7) * 0.30 + Math.sin(t / 19000 + ph * 0.6) * 0.14;
+    const K30 = 30000, k = Math.floor(t / K30), f = (t - k * K30) / K30, u = f * f * (3 - 2 * f);
+    const n0 = hashN(sym + '@' + k) - 0.5, n1 = hashN(sym + '@' + (k + 1)) - 0.5;
+    v += (n0 + (n1 - n0) * u) * 0.55;
+    return Math.max(base * (1 + v * scale), base * 0.5);
+  }
   INSTRUMENTS.forEach(i => {
-    prices[i.symbol] = i.base;
+    const now = Date.now();
+    prices[i.symbol] = priceAt(i.symbol, now);
     HIST[i.symbol] = [];
-    let p = i.base * (1 - (Math.random() * 0.004 - 0.002));
-    for (let n = 0; n < 28; n++){ p = p * (1 + (Math.random() - 0.48) * 0.0012); HIST[i.symbol].push(p); }
-    HIST[i.symbol].push(i.base);
+    for (let n = 47; n >= 0; n--) HIST[i.symbol].push(priceAt(i.symbol, now - n * 15000));
   });
   const inst = s => INSTRUMENTS.find(i => i.symbol === s);
   function tick(){
+    const now = Date.now();
     INSTRUMENTS.forEach(i => {
-      const vol = i.type === 'Crypto' ? 0.00045 : i.type === 'Forex' ? 0.00006 : 0.00022;
-      prices[i.symbol] = Math.max(prices[i.symbol] * (1 + (Math.random() - 0.5) * 2 * vol), 0.00001);
+      prices[i.symbol] = priceAt(i.symbol, now);
       HIST[i.symbol].push(prices[i.symbol]);
       if (HIST[i.symbol].length > 48) HIST[i.symbol].shift();
     });
     tickCandles();
     trackHL();
     checkStopOut();
+    checkOrders();
   }
   /* ---------- live candlesticks (built from the same feed, 5-second candles) ---------- */
   const CANDLES = {}; const BUCKET = 5000;
+  let bucketStart = Math.floor(Date.now() / BUCKET) * BUCKET;
   INSTRUMENTS.forEach(i => {
     CANDLES[i.symbol] = [];
-    let p = i.base * (1 - (Math.random() * 0.006 - 0.003));
-    for (let n = 0; n < 64; n++){
-      const o = p; const drift = (Math.random() - 0.485) * i.base * 0.0011;
-      const c = o + drift; const h = Math.max(o, c) + Math.random() * i.base * 0.00035; const l = Math.min(o, c) - Math.random() * i.base * 0.00035;
-      CANDLES[i.symbol].push({ o, h, l, c }); p = c;
+    for (let n = 89; n >= 1; n--){
+      const t0 = bucketStart - n * BUCKET;
+      const o = priceAt(i.symbol, t0), c = priceAt(i.symbol, t0 + BUCKET);
+      let h = Math.max(o, c), l = Math.min(o, c);
+      for (let q = 1; q <= 3; q++){ const px = priceAt(i.symbol, t0 + q * 1250); if (px > h) h = px; if (px < l) l = px; }
+      CANDLES[i.symbol].push({ o, h, l, c });
     }
-    const last = CANDLES[i.symbol][CANDLES[i.symbol].length - 1];
-    last.c = i.base; last.h = Math.max(last.h, i.base); last.l = Math.min(last.l, i.base);
+    const o0 = priceAt(i.symbol, bucketStart), px = prices[i.symbol];
+    CANDLES[i.symbol].push({ o: o0, h: Math.max(o0, px), l: Math.min(o0, px), c: px });
   });
-  let bucketStart = Date.now();
   function tickCandles(){
     const now = Date.now();
     INSTRUMENTS.forEach(i => {
@@ -148,7 +165,8 @@ const Oryx = (() => {
     return trades().filter(t => t.accountId === accountId && t.status === 'open')
       .reduce((s, t) => s + (t.lots * inst(t.symbol).contract * t.open) / (accountById(accountId)?.leverage || 500), 0);
   }
-  function openTrade(accountId, symbol, side, lots){
+  function openTrade(accountId, symbol, side, lots, opts){
+    opts = opts || {};
     const acc = accountById(accountId); if (!acc) return { error:'Account not found.' };
     lots = parseFloat(lots);
     if (!lots || lots < 0.01) return { error:'Minimum lot size is 0.01.' };
@@ -156,7 +174,7 @@ const Oryx = (() => {
     const need = (lots * i.contract * prices[symbol]) / acc.leverage;
     const free = acc.balance + floating(accountId) - usedMargin(accountId);
     if (need > free) return { error:'Not enough free margin. Required: $' + need.toFixed(2) + ' — ask Admin to issue more balance.' };
-    const tr = { id:uid('tr'), accountId, symbol, side, lots, open: side === 'BUY' ? ask(symbol) : bid(symbol), close:null, openAt:Date.now(), closeAt:null, status:'open', pnl:0 };
+    const tr = { id:uid('tr'), accountId, symbol, side, lots, open: opts.price ? +opts.price : (side === 'BUY' ? ask(symbol) : bid(symbol)), close:null, openAt:Date.now(), closeAt:null, status:'open', pnl:0, sl: opts.sl ? +opts.sl : null, tp: opts.tp ? +opts.tp : null, closeReason:null };
     const all = trades(); all.push(tr); saveTrades(all);
     return { trade:tr };
   }
@@ -202,6 +220,66 @@ const Oryx = (() => {
     const accs = accounts(); const acc = accs.find(a => a.id === tr.accountId);
     if (acc){ acc.balance = +(acc.balance + tr.pnl).toFixed(2); saveAccounts(accs); }
     return { trade:tr };
+  }
+
+  /* Close at an exact price (used by Stop Loss / Take Profit). */
+  function closeTradeAt(tradeId, price, reason){
+    const all = trades(); const tr = all.find(t => t.id === tradeId);
+    if (!tr || tr.status !== 'open') return { error:'Trade not open.' };
+    tr.close = +price; tr.status = 'closed'; tr.closeAt = Date.now(); tr.closeReason = reason || null;
+    tr.pnl = pnlOf(tr);
+    saveTrades(all);
+    const accs = accounts(); const acc = accs.find(a => a.id === tr.accountId);
+    if (acc){ acc.balance = +(acc.balance + tr.pnl).toFixed(2); saveAccounts(accs); }
+    return { trade:tr };
+  }
+
+  /* ---------- pending orders + stop-loss / take-profit ----------
+     A pending order waits for its price: when the market reaches the level,
+     the trade opens BY ITSELF. SL/TP close an open trade BY THEMSELVES when
+     the price reaches them. Checked on every feed tick for the signed-in
+     client's accounts (same pattern as the stop-out). */
+  function placeOrder(accountId, symbol, side, lots, price, sl, tp){
+    const acc = accountById(accountId); if (!acc) return { error:'Account not found.' };
+    lots = parseFloat(lots); price = parseFloat(price);
+    if (!lots || lots < 0.01) return { error:'Minimum lot size is 0.01.' };
+    if (!price || price <= 0) return { error:'Enter the price at which the order should trigger.' };
+    const o = { id:uid('or'), accountId, symbol, side, lots, price, sl: sl ? +sl : null, tp: tp ? +tp : null,
+                ref: side === 'BUY' ? ask(symbol) : bid(symbol), status:'pending', at:Date.now(), filledAt:null, tradeId:null };
+    const all = orders(); all.push(o); saveOrders(all);
+    return { order:o };
+  }
+  function cancelOrder(orderId){
+    const all = orders(); const o = all.find(x => x.id === orderId);
+    if (!o || o.status !== 'pending') return { error:'Order not pending.' };
+    o.status = 'cancelled'; saveOrders(all); return { order:o };
+  }
+  function checkOrders(){
+    const sess = load(K.session, null); if (!sess) return;
+    const myAccs = accounts().filter(a => a.userId === sess).map(a => a.id);
+    if (!myAccs.length) return;
+    trades().filter(t => myAccs.includes(t.accountId) && t.status === 'open' && (t.sl || t.tp)).forEach(t => {
+      const cur = t.side === 'BUY' ? bid(t.symbol) : ask(t.symbol);
+      if (t.sl && ((t.side === 'BUY' && cur <= t.sl) || (t.side === 'SELL' && cur >= t.sl))){
+        closeTradeAt(t.id, t.sl, 'Stop Loss');
+        notifyUser(sess, 'Stop Loss hit: your ' + t.symbol + ' ' + t.side + ' ' + t.lots + ' lots trade was closed automatically at ' + fmtP(t.symbol, t.sl) + '.');
+      } else if (t.tp && ((t.side === 'BUY' && cur >= t.tp) || (t.side === 'SELL' && cur <= t.tp))){
+        closeTradeAt(t.id, t.tp, 'Take Profit');
+        notifyUser(sess, 'Take Profit hit: your ' + t.symbol + ' ' + t.side + ' ' + t.lots + ' lots trade was closed automatically at ' + fmtP(t.symbol, t.tp) + '.');
+      }
+    });
+    let dirty = false;
+    const all = orders();
+    all.filter(o => myAccs.includes(o.accountId) && o.status === 'pending').forEach(o => {
+      const cur = o.side === 'BUY' ? ask(o.symbol) : bid(o.symbol);
+      const hit = (o.ref <= o.price && cur >= o.price) || (o.ref >= o.price && cur <= o.price);
+      if (!hit) return;
+      const r = openTrade(o.accountId, o.symbol, o.side, o.lots, { price:o.price, sl:o.sl, tp:o.tp });
+      if (r.error){ o.status = 'cancelled'; notifyUser(sess, 'Your pending ' + o.side + ' order for ' + o.symbol + ' at ' + fmtP(o.symbol, o.price) + ' was cancelled: ' + r.error); }
+      else { o.status = 'filled'; o.filledAt = Date.now(); o.tradeId = r.trade.id; notifyUser(sess, 'Pending order filled: ' + o.symbol + ' ' + o.side + ' ' + o.lots + ' lots opened at ' + fmtP(o.symbol, o.price) + '.'); }
+      dirty = true;
+    });
+    if (dirty) saveOrders(all);
   }
 
   /* ---------- admin ---------- */
@@ -287,7 +365,7 @@ const Oryx = (() => {
            prices, hist, candles, sparkData, dayHigh, dayLow, todayHigh, todayLow, changePct, sentiment, spark,
            inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById,
-           pnlOf, floating, usedMargin, openTrade, closeTrade,
+           pnlOf, floating, usedMargin, openTrade, closeTrade, closeTradeAt, orders, placeOrder, cancelOrder,
            notifyUser, markMsgsRead, checkStopOut,
            adminPw, issueBalance, requests, createRequest, decideRequest, money, esc,
            admins, saveAdmins, adminLogin, currentAdmin, adminLogout, logAdmin, adminLog, superPw, setSuperPw,

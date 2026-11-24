@@ -40,7 +40,7 @@
     } catch (e) { return; }
     const col = db.collection('clients');
 
-    const WATCH = ['oryx_users', 'oryx_accounts', 'oryx_trades', 'oryx_txns', 'oryx_requests', 'oryx_admins', 'oryx_admin_log'];
+    const WATCH = ['oryx_users', 'oryx_accounts', 'oryx_trades', 'oryx_txns', 'oryx_requests', 'oryx_orders', 'oryx_admins', 'oryx_admin_log'];
     const TSKEY = 'oryx_cloud_ts';
     const tsLoad = () => { try { return JSON.parse(localStorage.getItem(TSKEY) || '{}'); } catch (e) { return {}; } };
     const tsSave = m => localStorage.setItem(TSKEY, JSON.stringify(m));
@@ -56,6 +56,7 @@
         trades: Oryx.trades().filter(t => ids.includes(t.accountId)),
         txns: Oryx.txns().filter(t => ids.includes(t.accountId)),
         requests: Oryx.requests().filter(r => ids.includes(r.accountId)),
+        orders: (typeof Oryx.orders === 'function' ? Oryx.orders() : []).filter(o => ids.includes(o.accountId)),
         updatedAt: Date.now()
       };
     }
@@ -153,6 +154,15 @@
         else if (cur.status !== 'pending' && r.status === 'pending') healed = true;
       });
       const newRqs = [...rqMap.values()];
+      /* Orders: union by id - a FILLED or CANCELLED order never returns to pending. */
+      const orMap = new Map((typeof Oryx.orders === 'function' ? Oryx.orders() : []).map(o => [o.id, o]));
+      (b.orders || []).forEach(o => {
+        const cur = orMap.get(o.id);
+        if (!cur) orMap.set(o.id, o);
+        else if (cur.status === 'pending' && o.status !== 'pending') orMap.set(o.id, o);
+        else if (cur.status !== 'pending' && o.status === 'pending') healed = true;
+      });
+      const newOrds = [...orMap.values()];
       /* This user's balances are RECOMPUTED from the merged ledger (money in
          txns + closed-trade P/L), so every device converges to the same
          figure no matter whose copy was written last. */
@@ -169,7 +179,8 @@
         JSON.stringify(newAccs) !== JSON.stringify(Oryx.accounts()) ||
         JSON.stringify(newTrs) !== JSON.stringify(Oryx.trades()) ||
         JSON.stringify(newTxs) !== JSON.stringify(Oryx.txns()) ||
-        JSON.stringify(newRqs) !== JSON.stringify(Oryx.requests());
+        JSON.stringify(newRqs) !== JSON.stringify(Oryx.requests()) ||
+        JSON.stringify(newOrds) !== JSON.stringify(typeof Oryx.orders === 'function' ? Oryx.orders() : []);
       m[email] = b.updatedAt; tsSave(m);
       if (changed) {
         applying = true;
@@ -179,6 +190,7 @@
           rawSet(Oryx.K.trades, JSON.stringify(newTrs));
           rawSet(Oryx.K.txns, JSON.stringify(newTxs));
           rawSet('oryx_requests', JSON.stringify(newRqs));
+          if (Oryx.K.orders) rawSet(Oryx.K.orders, JSON.stringify(newOrds));
         } catch (e) {}
         applying = false;
       }
