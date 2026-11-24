@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Oryx Markets</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div id="gate" class="auth-wrap" style="min-height:100vh">
+  <div class="auth-card">
+    <h1>🔐 Oryx Admin</h1>
+    <p class="sub">Enter the admin password to manage clients, balances and trades.</p>
+    <div class="form-err" id="gErr"></div>
+    <div class="field"><label>Admin Password</label><input id="gPass" type="password" placeholder="Password"></div>
+    <button class="btn btn-gold" style="width:100%" onclick="tryLogin()">Enter Admin Panel</button>
+    <p class="auth-alt"><a href="../index.html">← Back to website</a></p>
+  </div>
+</div>
+
+<div id="panel" style="display:none">
+  <div class="dash">
+    <aside class="side">
+      <a class="brand" href="../index.html"><svg viewBox="0 0 48 48" class="logo-mark"><path d="M14 6 C16 16, 17 24, 16 34 L11 34 C13 24, 12 15, 10 6 Z" fill="#D8A94E"/><path d="M34 6 C32 16, 31 24, 32 34 L37 34 C35 24, 36 15, 38 6 Z" fill="#D8A94E"/><circle cx="24" cy="30" r="7.5" fill="none" stroke="#F3E5C0" stroke-width="3"/></svg><span>ORYX <b>ADMIN</b></span></a>
+      <div class="who">Broker control panel<br>Balances are issued here only.</div>
+      <a href="#" data-tab="dash" class="on">📊 Dashboard</a>
+      <a href="#" data-tab="clients">👥 Clients &amp; Balances</a>
+      <a href="#" data-tab="trades">📈 All Trades</a>
+      <a href="#" data-tab="txns">💳 Transactions</a>
+      <a href="#" data-tab="settings">⚙️ Settings</a>
+      <a href="../index.html">↩ Website</a>
+      <a href="#" onclick="sessionStorage.removeItem('oryx_admin_ok');location.reload();return false;">🚪 Log Out</a>
+    </aside>
+    <main class="main">
+      <section id="tab-dash">
+        <h1>Dashboard</h1><p class="sub">Your brokerage at a glance.</p>
+        <div class="stat-grid">
+          <div class="stat"><span>Total Clients</span><b id="dClients">0</b></div>
+          <div class="stat"><span>Total Balances</span><b id="dBal">$0</b></div>
+          <div class="stat"><span>Open Trades</span><b id="dOpen">0</b></div>
+          <div class="stat"><span>Closed P/L (clients)</span><b id="dPl">$0</b></div>
+        </div>
+        <div class="panel"><h3>Latest Clients</h3><div id="dLatest"></div></div>
+        <div class="panel"><h3>Latest Trades</h3><div id="dTrades"></div></div>
+      </section>
+
+      <section id="tab-clients" style="display:none">
+        <h1>Clients &amp; Balances</h1><p class="sub">Issue balance to any client — this is the ONLY way balances increase beyond the $10 starter credit.</p>
+        <div class="panel">
+          <h3>💰 Issue Balance</h3>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1.4fr auto;gap:12px;align-items:end">
+            <div class="field" style="margin:0"><label>Client Account</label><select id="ibAcc"></select></div>
+            <div class="field" style="margin:0"><label>Amount (USD, use − to withdraw)</label><input id="ibAmt" type="number" step="0.01" placeholder="e.g. 500"></div>
+            <div class="field" style="margin:0"><label>Note</label><input id="ibNote" placeholder="e.g. Deposit received via bank"></div>
+            <button class="btn btn-gold" onclick="doIssue()">Issue Balance</button>
+          </div>
+          <div class="form-ok" id="ibOk"></div>
+        </div>
+        <div class="panel"><h3>All Clients</h3><div id="cList"></div></div>
+      </section>
+
+      <section id="tab-trades" style="display:none">
+        <h1>All Trades</h1><p class="sub">Every position opened on the platform.</p>
+        <div class="panel"><div id="tList"></div></div>
+      </section>
+
+      <section id="tab-txns" style="display:none">
+        <h1>Transactions</h1><p class="sub">Starter credits and every admin-issued balance movement.</p>
+        <div class="panel"><div id="xList"></div></div>
+      </section>
+
+      <section id="tab-settings" style="display:none">
+        <h1>Settings</h1><p class="sub">Brand, starter credit and support contacts.</p>
+        <div class="panel">
+          <div class="field"><label>Brand Name</label><input id="sBrand"></div>
+          <div class="field"><label>Tagline</label><input id="sTag"></div>
+          <div class="field"><label>Starter Credit for New Clients (USD)</label><input id="sStarter" type="number" step="0.01"></div>
+          <div class="field"><label>Default Leverage (e.g. 500 = 1:500)</label><input id="sLev" type="number"></div>
+          <div class="field"><label>Support WhatsApp (with country code, digits only)</label><input id="sWa"></div>
+          <div class="field"><label>Support Email</label><input id="sEmail"></div>
+          <div class="field"><label>Home Hero Title</label><input id="sHeroT"></div>
+          <div class="field"><label>Home Hero Subtitle</label><input id="sHeroS"></div>
+          <button class="btn btn-gold" onclick="saveSet()">Save Settings</button>
+          <span id="sOk" style="margin-left:12px;color:var(--up);font-weight:700"></span>
+        </div>
+        <div class="panel">
+          <h3>Change Admin Password</h3>
+          <div class="field"><label>New Password</label><input id="sPw" type="password" placeholder="New admin password"></div>
+          <button class="btn btn-dark" onclick="savePw()">Update Password</button>
+        </div>
+        <div class="panel">
+          <h3>Backup</h3>
+          <button class="btn btn-line" onclick="exportData()">⬇ Export All Data (JSON)</button>
+          <button class="btn btn-line" onclick="document.getElementById('impFile').click()">⬆ Import Data</button>
+          <input type="file" id="impFile" accept=".json" style="display:none" onchange="importData(this)">
+          <button class="btn btn-line" style="border-color:#EA3943;color:#EA3943" onclick="if(confirm('Delete ALL clients, accounts and trades?')){['oryx_users','oryx_accounts','oryx_trades','oryx_txns','oryx_session'].forEach(k=>localStorage.removeItem(k));alert('All data cleared.');location.reload();}">🗑 Reset Everything</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="../data/instruments.js"></script>
+<script src="../assets/store.js"></script>
+<script>
+  function tryLogin(){
+    if (document.getElementById('gPass').value === Oryx.adminPw()){ sessionStorage.setItem('oryx_admin_ok', '1'); showPanel(); }
+    else { const e = document.getElementById('gErr'); e.textContent = 'Wrong password.'; e.style.display = 'block'; }
+  }
+  document.getElementById('gPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  if (sessionStorage.getItem('oryx_admin_ok') === '1') showPanel();
+  function showPanel(){ document.getElementById('gate').style.display = 'none'; document.getElementById('panel').style.display = 'block'; renderAll(); }
+
+  document.querySelectorAll('.side a[data-tab]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.remove('on')); a.classList.add('on');
+    ['dash','clients','trades','txns','settings'].forEach(t => document.getElementById('tab-' + t).style.display = t === a.dataset.tab ? 'block' : 'none');
+    renderAll();
+  }));
+
+  function tbl(head, rows, empty){ return `<div style="overflow:auto"><table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td colspan="${head.length}" style="color:var(--mut)">${empty || 'Nothing here yet.'}</td></tr>`}</tbody></table></div>`; }
+  function clientName(uid){ const x = Oryx.users().find(u => u.id === uid); return x ? x.name : '—'; }
+  function clientEmail(uid){ const x = Oryx.users().find(u => u.id === uid); return x ? x.email : '—'; }
+
+  function renderAll(){
+    const us = Oryx.users(), ac = Oryx.accounts(), tr = Oryx.trades(), tx = Oryx.txns();
+    const open = tr.filter(t => t.status === 'open');
+    const closedPl = tr.filter(t => t.status === 'closed').reduce((s, t) => s + t.pnl, 0);
+    document.getElementById('dClients').textContent = us.length;
+    document.getElementById('dBal').textContent = Oryx.money(ac.reduce((s, a) => s + a.balance, 0));
+    document.getElementById('dOpen').textContent = open.length;
+    const dp = document.getElementById('dPl'); dp.textContent = Oryx.money(closedPl); dp.style.color = closedPl >= 0 ? 'var(--up)' : 'var(--dn)';
+    document.getElementById('dLatest').innerHTML = tbl(['Name','Email','Account','Balance','Joined'], us.slice().reverse().slice(0, 6).map(x => {
+      const a = ac.find(v => v.userId === x.id);
+      return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
+    }).join(''));
+    document.getElementById('dTrades').innerHTML = tbl(['Client','Symbol','Type','Lots','Open','Status','P/L'], tr.slice().reverse().slice(0, 8).map(t => {
+      const a = ac.find(v => v.id === t.accountId);
+      return `<tr><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td><span class="pill ${t.status==='open'?'y':'b'}">${t.status}</span></td><td>${t.status==='closed' ? Oryx.money(t.pnl) : '—'}</td></tr>`;
+    }).join(''));
+    document.getElementById('ibAcc').innerHTML = ac.map(a => `<option value="${a.id}">${a.login} — ${Oryx.esc(clientName(a.userId))} (${Oryx.esc(clientEmail(a.userId))}) · Balance ${Oryx.money(a.balance)}</option>`).join('') || '<option value="">No clients yet</option>';
+    document.getElementById('cList').innerHTML = tbl(['Name','Email','Phone','Country','Account','Balance','Open Trades','Joined'], us.slice().reverse().map(x => {
+      const a = ac.find(v => v.userId === x.id);
+      const ot = a ? tr.filter(t => t.accountId === a.id && t.status === 'open').length : 0;
+      return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.phone)}</td><td>${Oryx.esc(x.country)}</td><td>${a ? a.login : '—'}</td><td><b>${a ? Oryx.money(a.balance) : '—'}</b></td><td>${ot}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
+    }).join(''));
+    document.getElementById('tList').innerHTML = tbl(['Date','Client','Symbol','Type','Lots','Open','Close','Status','P/L'], tr.slice().reverse().map(t => {
+      const a = ac.find(v => v.id === t.accountId);
+      return `<tr><td>${new Date(t.openAt).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${t.close ? Oryx.fmtP(t.symbol, t.close) : '—'}</td><td><span class="pill ${t.status==='open'?'y':'b'}">${t.status}</span></td><td>${t.status==='closed' ? Oryx.money(t.pnl) : '—'}</td></tr>`;
+    }).join(''));
+    document.getElementById('xList').innerHTML = tbl(['Date','Account','Client','Type','Amount','Note'], tx.slice().reverse().map(t => {
+      const a = ac.find(v => v.id === t.accountId);
+      return `<tr><td>${new Date(t.at).toLocaleString()}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${t.type}</td><td style="color:${t.amount>=0?'var(--up)':'var(--dn)'}"><b>${Oryx.money(t.amount)}</b></td><td>${Oryx.esc(t.note)}</td></tr>`;
+    }).join(''));
+    const S = Oryx.settings();
+    document.getElementById('sBrand').value = S.brand; document.getElementById('sTag').value = S.tagline;
+    document.getElementById('sStarter').value = S.starter; document.getElementById('sLev').value = S.leverage;
+    document.getElementById('sWa').value = S.whatsapp; document.getElementById('sEmail').value = S.email;
+    document.getElementById('sHeroT').value = S.heroTitle; document.getElementById('sHeroS').value = S.heroSub;
+  }
+  function doIssue(){
+    const r = Oryx.issueBalance(document.getElementById('ibAcc').value, document.getElementById('ibAmt').value, document.getElementById('ibNote').value.trim());
+    const ok = document.getElementById('ibOk');
+    if (r.error){ ok.style.display = 'block'; ok.style.background = '#FDECEC'; ok.style.color = '#A11'; ok.textContent = r.error; return; }
+    ok.style.display = 'block'; ok.style.background = '#E7F8F0'; ok.style.color = '#0B6B43';
+    ok.textContent = '✔ Balance issued. New balance: ' + Oryx.money(r.account.balance);
+    document.getElementById('ibAmt').value = ''; document.getElementById('ibNote').value = '';
+    renderAll();
+  }
+  function saveSet(){
+    Oryx.saveSettings({ brand:document.getElementById('sBrand').value, tagline:document.getElementById('sTag').value,
+      starter:parseFloat(document.getElementById('sStarter').value) || 10, leverage:parseInt(document.getElementById('sLev').value) || 500,
+      whatsapp:document.getElementById('sWa').value.replace(/\D/g, ''), email:document.getElementById('sEmail').value,
+      heroTitle:document.getElementById('sHeroT').value, heroSub:document.getElementById('sHeroS').value });
+    document.getElementById('sOk').textContent = '✔ Saved'; setTimeout(() => document.getElementById('sOk').textContent = '', 2500);
+  }
+  function savePw(){ const v = document.getElementById('sPw').value; if (v.length < 6){ alert('Password must be at least 6 characters.'); return; } Oryx.setAdminPw(v); alert('Admin password updated.'); document.getElementById('sPw').value = ''; }
+  function exportData(){
+    const data = {}; ['oryx_users','oryx_accounts','oryx_trades','oryx_txns','oryx_settings'].forEach(k => data[k] = localStorage.getItem(k));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' })); a.download = 'oryx-backup.json'; a.click();
+  }
+  function importData(inp){
+    const f = inp.files[0]; if (!f) return;
+    f.text().then(t => { const d = JSON.parse(t); Object.keys(d).forEach(k => { if (d[k]) localStorage.setItem(k, d[k]); }); alert('Data imported.'); location.reload(); }).catch(() => alert('Invalid backup file.'));
+  }
+</script>
+</body>
+</html>
