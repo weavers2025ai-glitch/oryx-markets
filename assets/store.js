@@ -41,6 +41,7 @@ const Oryx = (() => {
       if (HIST[i.symbol].length > 48) HIST[i.symbol].shift();
     });
     tickCandles();
+    trackHL();
     checkStopOut();
   }
   /* ---------- live candlesticks (built from the same feed, 5-second candles) ---------- */
@@ -75,6 +76,19 @@ const Oryx = (() => {
   }
   const hist = s => HIST[s] || [];
   const dayHigh = s => Math.max(...HIST[s]);
+  /* True day high/low per symbol: tracked on every tick, kept for the whole
+     calendar day and persisted, so a reload does not reset them. */
+  const HLKEY = 'oryx_dayhl';
+  let DAYHL = {};
+  try { const saved = JSON.parse(localStorage.getItem(HLKEY) || 'null'); if (saved && saved.date === new Date().toDateString()) DAYHL = saved.m || {}; } catch (e) {}
+  INSTRUMENTS.forEach(i => { if (!DAYHL[i.symbol]) DAYHL[i.symbol] = { hi: i.base, lo: i.base }; });
+  function trackHL(){
+    let dirty = false;
+    INSTRUMENTS.forEach(i => { const p = prices[i.symbol], d = DAYHL[i.symbol]; if (p > d.hi){ d.hi = p; dirty = true; } if (p < d.lo){ d.lo = p; dirty = true; } });
+    if (dirty){ try { localStorage.setItem(HLKEY, JSON.stringify({ date: new Date().toDateString(), m: DAYHL })); } catch (e) {} }
+  }
+  const todayHigh = s => (DAYHL[s] ? DAYHL[s].hi : prices[s]);
+  const todayLow = s => (DAYHL[s] ? DAYHL[s].lo : prices[s]);
   const dayLow = s => Math.min(...HIST[s]);
   const changePct = s => (prices[s] - inst(s).base) / inst(s).base * 100;
   const sentiment = () => { const up = INSTRUMENTS.filter(i => prices[i.symbol] >= i.base).length; return Math.round(up / INSTRUMENTS.length * 100); };
@@ -270,7 +284,7 @@ const Oryx = (() => {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   return { K, settings, saveSettings, users, accounts, trades, txns, addTxn,
-           prices, hist, candles, sparkData, dayHigh, dayLow, changePct, sentiment, spark,
+           prices, hist, candles, sparkData, dayHigh, dayLow, todayHigh, todayLow, changePct, sentiment, spark,
            inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById,
            pnlOf, floating, usedMargin, openTrade, closeTrade,
