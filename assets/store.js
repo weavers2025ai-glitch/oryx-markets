@@ -24,13 +24,34 @@ const Oryx = (() => {
 
   /* ---------- price feed (simulated live feed around the seed prices) ---------- */
   const prices = {}; // symbol -> mid price
-  INSTRUMENTS.forEach(i => prices[i.symbol] = i.base);
+  const HIST = {};   // symbol -> rolling price history (for sparklines / day range)
+  INSTRUMENTS.forEach(i => {
+    prices[i.symbol] = i.base;
+    HIST[i.symbol] = [];
+    let p = i.base * (1 - (Math.random() * 0.004 - 0.002));
+    for (let n = 0; n < 28; n++){ p = p * (1 + (Math.random() - 0.48) * 0.0012); HIST[i.symbol].push(p); }
+    HIST[i.symbol].push(i.base);
+  });
   const inst = s => INSTRUMENTS.find(i => i.symbol === s);
   function tick(){
     INSTRUMENTS.forEach(i => {
       const vol = i.type === 'Crypto' ? 0.00045 : i.type === 'Forex' ? 0.00006 : 0.00022;
       prices[i.symbol] = Math.max(prices[i.symbol] * (1 + (Math.random() - 0.5) * 2 * vol), 0.00001);
+      HIST[i.symbol].push(prices[i.symbol]);
+      if (HIST[i.symbol].length > 48) HIST[i.symbol].shift();
     });
+  }
+  const hist = s => HIST[s] || [];
+  const dayHigh = s => Math.max(...HIST[s]);
+  const dayLow = s => Math.min(...HIST[s]);
+  const changePct = s => (prices[s] - inst(s).base) / inst(s).base * 100;
+  const sentiment = () => { const up = INSTRUMENTS.filter(i => prices[i.symbol] >= i.base).length; return Math.round(up / INSTRUMENTS.length * 100); };
+  function spark(s, w, h, color){
+    const d = HIST[s]; if (!d || d.length < 2) return '';
+    const min = Math.min(...d), max = Math.max(...d), rng = (max - min) || 1;
+    const pts = d.map((v, ix) => (ix / (d.length - 1) * w).toFixed(1) + ',' + (h - 3 - (v - min) / rng * (h - 6)).toFixed(1)).join(' ');
+    const c = color || (changePct(s) >= 0 ? '#16C784' : '#EA3943');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
   }
   const bid = s => prices[s] - inst(s).spread / 2;
   const ask = s => prices[s] + inst(s).spread / 2;
@@ -127,7 +148,8 @@ const Oryx = (() => {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   return { K, settings, saveSettings, users, accounts, trades, txns, addTxn,
-           prices, inst, bid, ask, fmtP, startFeed,
+           prices, hist, dayHigh, dayLow, changePct, sentiment, spark,
+           inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById,
            pnlOf, floating, usedMargin, openTrade, closeTrade,
            adminPw, issueBalance, money, esc,
