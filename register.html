@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A1128">
 <title>Open Account — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=10">
+<link rel="stylesheet" href="assets/style.css?v=13">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -45,7 +45,8 @@
   </div>
 </div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=10"></script>
+<script src="assets/store.js?v=11"></script>
+<script src="assets/cloud.js?v=2"></script>
 <script>
   if (Oryx.currentUser()) location.href = 'dashboard.html';
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
