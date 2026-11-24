@@ -114,7 +114,7 @@
 
 <script src="../data/instruments.js?v=10"></script>
 <script src="../assets/store.js?v=12"></script>
-<script src="../assets/cloud.js?v=6"></script>
+<script src="../assets/cloud.js?v=7"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function tryLogin(){
@@ -127,10 +127,12 @@
 
   document.querySelectorAll('.side a[data-tab]').forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
+    try { localStorage.setItem('oryx_super_tab', a.dataset.tab); } catch(err){}
     document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.remove('on')); a.classList.add('on');
     document.querySelectorAll('main section').forEach(s => s.style.display = s.id === 'tab-' + a.dataset.tab ? 'block' : 'none');
     renderAll();
   }));
+  (function(){ try { const t = localStorage.getItem('oryx_super_tab'); if (t && t !== 'dash'){ const l = document.querySelector('.side a[data-tab="' + t + '"]'); if (l) l.click(); } } catch(err){} })();
 
   /* ---------- drill-down tree: Admins -> one Admin -> his Clients -> one Client ---------- */
   let treeAdmin = null, treeFrom = 'clients';

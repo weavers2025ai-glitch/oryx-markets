@@ -198,8 +198,8 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=13"></script>
-<script src="../assets/cloud.js?v=6"></script>
+<script src="../assets/store.js?v=14"></script>
+<script src="../assets/cloud.js?v=7"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function tryLogin(){
@@ -219,10 +219,12 @@
 
   document.querySelectorAll('.side a[data-tab]').forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
+    try { localStorage.setItem('oryx_admin_tab', a.dataset.tab); } catch(err){}
     document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.remove('on')); a.classList.add('on');
     document.querySelectorAll('main section[id^="tab-"]').forEach(s => s.style.display = s.id === 'tab-' + a.dataset.tab ? 'block' : 'none');
     renderAll();
   }));
+  (function(){ try { const t = localStorage.getItem('oryx_admin_tab'); if (t && t !== 'dash'){ const l = document.querySelector('.side a[data-tab="' + t + '"]'); if (l) l.click(); } } catch(err){} })();
 
   function tbl(head, rows, empty){ return `<div style="overflow:auto"><table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td colspan="${head.length}" style="color:var(--mut)">${empty || 'Nothing here yet.'}</td></tr>`}</tbody></table></div>`; }
   function clientName(uid){ const x = Oryx.users().find(u => u.id === uid); return x ? x.name : '—'; }
