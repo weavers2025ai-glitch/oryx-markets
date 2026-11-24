@@ -540,9 +540,9 @@
     const syms = [...new Set(open.map(t => t.symbol).concat(['XAUUSD']))];
     document.getElementById('scSyms').innerHTML = syms.map(s => `<button class="btn ${s === scSym ? 'btn-gold' : 'btn-line'} btn-sm" onclick="scSym='${s}'; renderScreen();">${s}</button>`).join('');
     drawScreenChart(open);
-    document.getElementById('scPos').innerHTML = open.length ? tbl(['Symbol','Side','Lots','Opened At','Current','Floating P/L'],
-      open.map(t => { const cur = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol); const p = Oryx.pnlOf(t);
-        return `<tr><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, cur)}</td><td style="color:${p >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(p)}</b></td></tr>`; }).join('') +
+    document.getElementById('scPos').innerHTML = open.length ? tbl(['#','Symbol','Side','Lots','Opened At','Current','Floating P/L'],
+      open.map((t, i) => { const cur = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol); const p = Oryx.pnlOf(t);
+        return `<tr><td><b>${i + 1}</b></td><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, cur)}</td><td style="color:${p >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(p)}</b></td></tr>`; }).join('') +
       `<tr><td colspan="5" style="text-align:right"><b>Total Floating</b></td><td style="color:${fl >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(fl)}</b></td></tr>`)
       : '<p style="color:var(--mut)">No open trades right now — he is not in the market at this moment.</p>';
     const closed = Oryx.trades().filter(t => t.accountId === a.id && t.status === 'closed').slice(-6).reverse();
