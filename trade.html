@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A1128">
 <title>Web Terminal — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=2">
+<link rel="stylesheet" href="assets/style.css?v=3">
 </head>
 <body style="background:#060B1D">
 <div class="term-top">
@@ -51,12 +51,25 @@
     </div>
     <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">OPEN POSITIONS — LIVE</h5>
     <div class="pos-list" id="posBox"></div>
+    <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">MARKET OVERVIEW</h5>
+    <div class="gauge-box">
+      <div class="kv-row"><span>Symbol</span><b id="ovSym">XAUUSD</b></div>
+      <div class="kv-row"><span>Session High</span><b id="ovHigh">—</b></div>
+      <div class="kv-row"><span>Session Low</span><b id="ovLow">—</b></div>
+      <div class="kv-row"><span>Change</span><b id="ovChg">—</b></div>
+      <div class="kv-row"><span>Trend (session)</span><span id="ovSpark"></span></div>
+      <div style="margin-top:12px">Market Sentiment — <b style="color:#fff" id="ovSentTxt">—</b></div>
+      <div style="height:10px;border-radius:99px;background:linear-gradient(90deg,#EA3943,#F5B544,#16C784);position:relative;margin-top:8px">
+        <span id="ovSentDot" style="position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #0A1128;left:50%"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px"><span>Bearish</span><span>Neutral</span><span>Bullish</span></div>
+    </div>
     <p style="font-size:12px;color:#7C88A8;padding:0 16px 16px">Demo terminal: charts and prices are live, orders are simulated on your practice balance. Balance is issued by Admin only.</p>
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="data/instruments.js?v=2"></script>
-<script src="assets/store.js?v=2"></script>
+<script src="data/instruments.js?v=3"></script>
+<script src="assets/store.js?v=3"></script>
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
   const u = Oryx.currentUser();
@@ -113,6 +126,15 @@
         <button class="close-btn" onclick="closeT('${t.id}')">✕ CLOSE POSITION</button>
       </div>`;
     }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 16px 12px">No open positions yet. Place a BUY or SELL order above — it will appear here live with its profit/loss and a Close button.</p>';
+    document.getElementById('ovSym').textContent = cur;
+    document.getElementById('ovHigh').textContent = Oryx.fmtP(cur, Oryx.dayHigh(cur));
+    document.getElementById('ovLow').textContent = Oryx.fmtP(cur, Oryx.dayLow(cur));
+    const oc = Oryx.changePct(cur); const oce = document.getElementById('ovChg');
+    oce.textContent = (oc >= 0 ? '+' : '') + oc.toFixed(2) + '%'; oce.style.color = oc >= 0 ? '#16C784' : '#EA3943';
+    document.getElementById('ovSpark').innerHTML = Oryx.spark(cur, 110, 26);
+    const sv = Oryx.sentiment();
+    document.getElementById('ovSentTxt').textContent = sv + (sv >= 60 ? ' · Bullish' : sv <= 40 ? ' · Bearish' : ' · Neutral');
+    document.getElementById('ovSentDot').style.left = 'calc(' + sv + '% - 9px)';
     const closed = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'closed').slice().reverse().slice(0, 6);
     document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
   }
