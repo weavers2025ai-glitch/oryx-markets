@@ -410,3 +410,28 @@ body.dark-dash{background:var(--deep);color:#D7DEEF}
 @keyframes shine{0%{background-position:120% 0}100%{background-position:-120% 0}}
 .mkt-card,.tile,.t-card,.ins-card{transition:transform .35s ease,box-shadow .35s ease}
 .mkt-card:hover,.tile:hover,.t-card:hover,.ins-card:hover{transform:translateY(-6px);box-shadow:0 20px 44px rgba(0,0,0,.4)}
+
+/* dark page theme (Markets / Accounts / About / Contact — same theme as the rest of the site) */
+body.dark-page{background:#070D21;color:#C9D3EA}
+body.dark-page .sec{background:transparent}
+body.dark-page .sec-head h2,body.dark-page h1,body.dark-page h2,body.dark-page h3{color:#fff}
+body.dark-page .sec-head p,body.dark-page .sub{color:#93A1C4}
+body.dark-page .card{background:#0D1633;border-color:rgba(255,255,255,.1);color:#C9D3EA;box-shadow:0 16px 40px rgba(0,0,0,.35)}
+body.dark-page .panel{background:#0D1633;border-color:rgba(255,255,255,.1);color:#C9D3EA}
+body.dark-page .stat{background:#0D1633;border-color:rgba(255,255,255,.1)}
+body.dark-page .stat span{color:#93A1C4}
+body.dark-page .stat b{color:#fff}
+body.dark-page table.tbl{background:#0D1633;border-color:rgba(255,255,255,.1)}
+body.dark-page .tbl th{background:#0A1128;color:#93A1C4}
+body.dark-page .tbl td{color:#C9D3EA;border-color:rgba(255,255,255,.07)}
+body.dark-page .tbl td b{color:#fff}
+body.dark-page .tbl tr:hover td{background:rgba(255,255,255,.03)}
+body.dark-page .pill.b{background:rgba(78,168,255,.15);color:#4EA8FF;border:1px solid rgba(78,168,255,.4)}
+body.dark-page .btn-line{border-color:rgba(255,255,255,.3);color:#E7EBF5;background:transparent}
+body.dark-page .btn-dark{background:linear-gradient(135deg,#D8A94E,#C79A3F);color:#0A1128;border:0}
+body.dark-page .field label{color:#93A1C4}
+body.dark-page .field input,body.dark-page .field textarea,body.dark-page .field select{background:#0A1128;border-color:rgba(255,255,255,.16);color:#fff}
+body.dark-page .acct-card .price{color:#F5B544}
+body.dark-page .acct-card li{color:#C9D3EA}
+body.dark-page .ic{background:rgba(216,169,78,.14)}
+body.dark-page .tag{background:rgba(216,169,78,.16);color:#F5B544}
