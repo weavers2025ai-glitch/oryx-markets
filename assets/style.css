@@ -379,3 +379,23 @@ body.dark-dash{background:var(--deep);color:#D7DEEF}
 .dstat-grad b,.dstat-grad span,.dstat-grad small{position:relative;z-index:1}
 @media(max-width:1100px){ .kpi-row{grid-template-columns:repeat(3,1fr)} .dash-grid-2{grid-template-columns:1fr !important} }
 @media(max-width:640px){ .kpi-row{grid-template-columns:1fr 1fr} }
+
+/* balance requests, modal, admin polish */
+.modal-ov{position:fixed;inset:0;background:rgba(2,6,20,.74);display:none;align-items:center;justify-content:center;z-index:300;padding:16px}
+.modal-ov.open{display:flex}
+.modal{background:#0D1633;border:1px solid rgba(255,255,255,.13);border-radius:18px;max-width:470px;width:100%;padding:24px;color:#E7EBF5;max-height:92vh;overflow:auto}
+.modal h3{color:#fff}
+.modal .field label{color:#93A1C4}
+.modal .field input,.modal .field select{background:#0A1128;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:10px;padding:11px 12px;width:100%}
+.req-badge{background:#EA3943;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:2px 8px;margin-left:7px;vertical-align:middle}
+@keyframes blinkAnim{0%,100%{opacity:1}50%{opacity:.3}}
+.blink{animation:blinkAnim 1s infinite}
+.proof-thumb{width:76px;height:76px;object-fit:cover;border-radius:10px;border:2px solid rgba(255,255,255,.4);cursor:pointer;background:#fff}
+.proof-big{width:100% !important;height:auto !important}
+.kpi.mini{padding:13px 15px}
+.kpi.mini b{font-size:19px;margin:2px 0 0}
+.alert-strip{background:linear-gradient(135deg,#B45309,#F59E0B);color:#fff;border-radius:12px;padding:13px 17px;font-weight:800;margin-bottom:16px;cursor:pointer;box-shadow:0 10px 26px rgba(245,158,11,.3)}
+.st-pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:800}
+.st-pending{background:rgba(245,158,11,.18);color:#F5B544;border:1px solid rgba(245,158,11,.5)}
+.st-approved{background:rgba(22,199,132,.16);color:#16C784;border:1px solid rgba(22,199,132,.5)}
+.st-rejected{background:rgba(234,57,67,.16);color:#EA3943;border:1px solid rgba(234,57,67,.5)}

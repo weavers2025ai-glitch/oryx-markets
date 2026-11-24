@@ -167,6 +167,25 @@ const Oryx = (() => {
     return { account:acc };
   }
 
+  /* ---------- balance requests (client -> admin, with payment proof) ---------- */
+  const K_REQ = 'oryx_requests';
+  const requests = () => load(K_REQ, []);
+  function createRequest(accountId, data){
+    const all = requests();
+    const r = { id:'rq' + Date.now().toString(36), accountId, amount: parseFloat(data.amount) || 0,
+                method: data.method || 'Cash', proof: data.proof || '', note: data.note || '',
+                status:'pending', at: Date.now(), decidedAt: 0 };
+    all.push(r); save(K_REQ, all); return r;
+  }
+  function decideRequest(id, approve){
+    const all = requests(); const r = all.find(x => x.id === id);
+    if (!r || r.status !== 'pending') return false;
+    r.status = approve ? 'approved' : 'rejected'; r.decidedAt = Date.now();
+    save(K_REQ, all);
+    if (approve) issueBalance(r.accountId, r.amount, r.method + ' deposit — request approved');
+    return true;
+  }
+
   /* one-time migration: bring every existing account to the current default leverage */
   try {
     if (!load('oryx_lev2', false)) {
@@ -183,6 +202,6 @@ const Oryx = (() => {
            inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById,
            pnlOf, floating, usedMargin, openTrade, closeTrade,
-           adminPw, issueBalance, money, esc,
+           adminPw, issueBalance, requests, createRequest, decideRequest, money, esc,
            setAdminPw: v => save(K.adminpw, v) };
 })();
