@@ -165,7 +165,7 @@
   <div class="ledger-box">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
       <div><h2 id="ldName" style="margin:0;color:#fff">Client</h2><div id="ldMeta" style="color:#93A1C4;font-size:13px;margin-top:3px"></div></div>
-      <button class="btn btn-line" onclick="closeLedger()">✖ Close</button>
+      <div style="display:flex;gap:8px"><button class="btn btn-gold" onclick="openScreen()">📺 Live Trading Screen</button><button class="btn btn-line" onclick="closeLedger()">✖ Close</button></div>
     </div>
     <div id="ldStats" class="ldgrid" style="margin-top:16px"></div>
     <div class="panel" style="margin:16px 0 0"><h3>💰 Deposit / Withdraw for this client</h3>
@@ -181,8 +181,24 @@
   </div>
 </div>
 
+<div class="ledger-ov" id="screenOv" onclick="if(event.target===this) closeScreen()">
+  <div class="ledger-box" style="max-width:980px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div><h2 id="scName" style="margin:0;color:#fff">Live Trading Screen</h2><div id="scMeta" style="color:#93A1C4;font-size:13px;margin-top:3px"></div></div>
+      <button class="btn btn-line" onclick="closeScreen()">✖ Close</button>
+    </div>
+    <div id="scStats" class="ldgrid" style="margin-top:16px"></div>
+    <div class="panel" style="margin:16px 0 14px"><h3>📊 His Chart — Live</h3>
+      <div id="scSyms" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
+      <canvas id="scChart" width="920" height="340" style="width:100%;height:340px;background:#070D18;border-radius:12px"></canvas>
+    </div>
+    <div class="panel" style="margin:0 0 14px"><h3>🔴 His Open Positions — Live</h3><div id="scPos"></div></div>
+    <div class="panel" style="margin:0"><h3>Recent Closed Trades</h3><div id="scClosed"></div></div>
+  </div>
+</div>
+
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=12"></script>
+<script src="../assets/store.js?v=13"></script>
 <script src="../assets/cloud.js?v=6"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
@@ -487,6 +503,79 @@
     const rows = txs.slice().sort((x, y) => x.at - y.at).map(t => { run = +(run + t.amount).toFixed(2); return { t, run }; }).reverse();
     document.getElementById('ldTable').innerHTML = tbl(['Date','Type','Amount','Balance After','Note'],
       rows.map(({ t, run }) => `<tr><td>${new Date(t.at).toLocaleString()}</td><td>${Oryx.esc(t.type)}</td><td style="color:${t.amount >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(t.amount)}</b></td><td>${Oryx.money(run)}</td><td>${Oryx.esc(t.note || '')}</td></tr>`).join(''), 'No transactions yet.');
+  }
+
+  /* ===== his LIVE trading screen: the admin sees what the client sees ===== */
+  let scUser = null, scTimer = null, scSym = 'XAUUSD';
+  function openScreen(){
+    scUser = ldUser;
+    const a = Oryx.accounts().find(v => v.userId === scUser);
+    const open = a ? Oryx.trades().filter(t => t.accountId === a.id && t.status === 'open') : [];
+    scSym = open.length ? open[0].symbol : 'XAUUSD';
+    closeLedger();
+    document.getElementById('screenOv').classList.add('open');
+    renderScreen();
+    clearInterval(scTimer); scTimer = setInterval(renderScreen, 2000);
+  }
+  function closeScreen(){
+    document.getElementById('screenOv').classList.remove('open');
+    clearInterval(scTimer); scTimer = null;
+  }
+  function renderScreen(){
+    const u = Oryx.users().find(x => x.id === scUser); if (!u) return;
+    const a = Oryx.accounts().find(v => v.userId === u.id); if (!a) return;
+    document.getElementById('scName').textContent = u.name + ' — Live Trading Screen';
+    document.getElementById('scMeta').textContent = `Account ${a.login} · ${u.email} · 🌍 ${u.country || '—'} · This is what is running on his screen right now`;
+    const fl = Oryx.floating(a.id), mg = Oryx.usedMargin(a.id), eq = a.balance + fl;
+    document.getElementById('scStats').innerHTML =
+      ldStat('Balance', Oryx.money(a.balance)) + ldStat('Equity (live)', Oryx.money(+eq.toFixed(2))) +
+      ldStat('Margin Used', Oryx.money(mg)) + ldStat('Free Margin', Oryx.money(+(eq - mg).toFixed(2))) +
+      ldStat('Floating P/L', Oryx.money(fl));
+    const open = Oryx.trades().filter(t => t.accountId === a.id && t.status === 'open');
+    const syms = [...new Set(open.map(t => t.symbol).concat(['XAUUSD']))];
+    document.getElementById('scSyms').innerHTML = syms.map(s => `<button class="btn ${s === scSym ? 'btn-gold' : 'btn-line'} btn-sm" onclick="scSym='${s}'; renderScreen();">${s}</button>`).join('');
+    drawScreenChart(open);
+    document.getElementById('scPos').innerHTML = open.length ? tbl(['Symbol','Side','Lots','Opened At','Current','Floating P/L'],
+      open.map(t => { const cur = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol); const p = Oryx.pnlOf(t);
+        return `<tr><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, cur)}</td><td style="color:${p >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(p)}</b></td></tr>`; }).join('') +
+      `<tr><td colspan="5" style="text-align:right"><b>Total Floating</b></td><td style="color:${fl >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(fl)}</b></td></tr>`)
+      : '<p style="color:var(--mut)">No open trades right now — he is not in the market at this moment.</p>';
+    const closed = Oryx.trades().filter(t => t.accountId === a.id && t.status === 'closed').slice(-6).reverse();
+    document.getElementById('scClosed').innerHTML = closed.length ? tbl(['Symbol','Side','Lots','Open','Close','P/L'],
+      closed.map(t => `<tr><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(t.pnl)}</b></td></tr>`).join(''))
+      : '<p style="color:var(--mut)">No closed trades yet.</p>';
+  }
+  function drawScreenChart(open){
+    const cv = document.getElementById('scChart'); if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height, PAD = 10;
+    const cs = Oryx.candles(scSym).slice(-44);
+    if (!cs.length) return;
+    let lo = Math.min(...cs.map(c => c.l)), hi = Math.max(...cs.map(c => c.h));
+    const mine = open.filter(t => t.symbol === scSym);
+    mine.forEach(t => { lo = Math.min(lo, t.open); hi = Math.max(hi, t.open); });
+    const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+    const Y = p => H - PAD - ((p - lo) / (hi - lo)) * (H - PAD * 2);
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+    for (let g = 0; g <= 4; g++){ const y = PAD + (H - PAD * 2) * g / 4; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    const cw = W / cs.length;
+    cs.forEach((c, i) => {
+      const x = i * cw + cw / 2, up = c.c >= c.o;
+      ctx.strokeStyle = up ? '#16C784' : '#EA3943'; ctx.fillStyle = up ? '#16C784' : '#EA3943';
+      ctx.beginPath(); ctx.moveTo(x, Y(c.h)); ctx.lineTo(x, Y(c.l)); ctx.stroke();
+      const bw = Math.max(2, cw * 0.55);
+      ctx.fillRect(x - bw / 2, Y(Math.max(c.o, c.c)), bw, Math.max(1, Math.abs(Y(c.o) - Y(c.c))));
+    });
+    mine.forEach(t => {
+      const y = Y(t.open);
+      ctx.strokeStyle = '#F5B544'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
+      ctx.fillStyle = '#F5B544'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(`${t.side} ${t.lots} @ ${Oryx.fmtP(scSym, t.open)}`, 10, y - 6);
+    });
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(`${scSym} · ${Oryx.fmtP(scSym, cs[cs.length - 1].c)}`, 10, 20);
   }
 
   function doIssue(){
