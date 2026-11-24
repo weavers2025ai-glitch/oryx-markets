@@ -31,6 +31,7 @@
   <main class="main">
     <h1 id="hello">My Dashboard</h1>
     <p class="sub">Track. Plan. Grow. Your complete trading overview.</p>
+    <div id="msgBox"></div>
 
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px" id="statRow">
       <div class="d-stat" style="background:linear-gradient(135deg,#1D4ED8,#38BDF8);border:0"><span style="color:rgba(255,255,255,.85)">💼 Balance</span><b id="dsBal">$0.00</b><small id="dsAcc" style="color:rgba(255,255,255,.8)">Account —</small><span class="spark" id="dsSpark1"></span></div>
@@ -117,7 +118,7 @@
     </div>
   </div>
 </div>
-<script src="assets/store.js?v=11"></script>
+<script src="assets/store.js?v=13"></script>
 <script src="assets/cloud.js?v=6"></script>
 <script>
   const u = Oryx.currentUser();
@@ -195,7 +196,22 @@
     ctx.fillText(Oryx.money(d[d.length - 1]), Math.min(lx, W - 6), Math.max(ly - 10, 14));
   }
   function tbl(head, rows){ return `<div style="overflow:auto"><table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td colspan="${head.length}" style="color:#7C88A8">Nothing here yet.</td></tr>`}</tbody></table></div>`; }
+  function renderMsgs(){
+    const box = document.getElementById('msgBox'); if (!box) return;
+    const u = Oryx.currentUser(); if (!u) { box.innerHTML = ''; return; }
+    const msgs = (u.msgs || []).slice().reverse();
+    if (!msgs.length){ box.innerHTML = ''; return; }
+    const unread = msgs.filter(m => !m.read);
+    box.innerHTML =
+      (unread.length ? `<div style="background:linear-gradient(135deg,#7F1D1D,#EA3943);color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 12px 28px rgba(234,57,67,.35)">
+        <b>📩 New message${unread.length > 1 ? 's' : ''} (${unread.length})</b>
+        ${unread.map(m => `<div style="margin-top:6px;font-size:13.5px">${Oryx.esc(m.text)}</div>`).join('')}
+        <button class="btn" style="margin-top:10px;background:#fff;color:#7F1D1D;font-weight:800" onclick="Oryx.markMsgsRead('${u.id}'); render();">✔ OK — I have read this</button>
+      </div>` : '') +
+      `<div class="panel" style="margin-bottom:16px"><h3>📩 My Messages</h3>${msgs.map(m => `<div style="padding:8px 0;border-bottom:1px solid #1D2942;font-size:13.5px;color:${m.read ? '#93A1C4' : '#fff'}"><span style="color:#7C88A8;font-size:12px">${new Date(m.at).toLocaleString()}</span><br>${Oryx.esc(m.text)}</div>`).join('')}</div>`;
+  }
   function render(){
+    renderMsgs();
     const a = Oryx.accountById(acc.id);
     const fl = Oryx.floating(a.id);
     const eq = a.balance + fl;

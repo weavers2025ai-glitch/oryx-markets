@@ -104,9 +104,10 @@
     <p style="font-size:12px;color:#7C88A8;padding:0 16px 16px">Demo terminal: charts and prices are live, orders are simulated on your practice balance. Balance is issued by Admin only.</p>
   </div>
 </div>
+<div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=11"></script>
+<script src="assets/store.js?v=13"></script>
 <script src="assets/cloud.js?v=6"></script>
 <script src="assets/chart.js?v=10"></script>
 <script>
@@ -136,7 +137,18 @@
     toast('Closed ' + r.trade.symbol + ' · P/L ' + Oryx.money(r.trade.pnl));
     render();
   }
+  function renderMsgs(){
+    const box = document.getElementById('msgBox'); if (!box) return;
+    const u = Oryx.currentUser(); if (!u) { box.innerHTML = ''; return; }
+    const unread = (u.msgs || []).filter(m => !m.read);
+    if (!unread.length){ box.innerHTML = ''; return; }
+    box.innerHTML = `<div style="background:linear-gradient(135deg,#7F1D1D,#EA3943);color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 16px 40px rgba(0,0,0,.5)">
+      <b>📩 Important message</b>
+      ${unread.map(m => `<div style="margin-top:6px;font-size:13.5px">${Oryx.esc(m.text)}</div>`).join('')}
+      <button class="btn" style="margin-top:10px;background:#fff;color:#7F1D1D;font-weight:800" onclick="Oryx.markMsgsRead('${u.id}'); render();">✔ OK — I have read this</button></div>`;
+  }
   function render(){
+    renderMsgs();
     document.getElementById('instList').innerHTML = INSTRUMENTS.map(i => `
       <div class="inst-row ${i.symbol===cur?'on':''}" onclick="pick('${i.symbol}')"><div><b>${i.symbol}</b><small>${i.type}</small></div><div class="px">${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</div></div>`).join('');
     document.getElementById('tpSym').textContent = cur;
