@@ -5,6 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Oryx Markets</title>
 <link rel="stylesheet" href="../assets/style.css?v=13">
+<style>
+  .ucards{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:14px}
+  .ucard{background:#0D1424;border:1px solid #1D2942;border-radius:14px;padding:16px;cursor:pointer;transition:transform .15s,border-color .15s}
+  .ucard:hover{transform:translateY(-3px);border-color:#D8A94E}
+  .ucard h4{margin:0 0 2px;color:#fff;font-size:16px}
+  .ucard .usub{color:#7C88A8;font-size:12.5px}
+  .ucard .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .ucard .st{background:#111B31;border-radius:10px;padding:8px 10px}
+  .ucard .st span{display:block;font-size:10.5px;color:#7C88A8;text-transform:uppercase;letter-spacing:.5px}
+  .ucard .st b{font-size:14.5px;color:#fff}
+  .ledger-ov{position:fixed;inset:0;background:rgba(3,6,12,.86);display:none;z-index:220;padding:16px;overflow:auto}
+  .ledger-ov.open{display:block}
+  .ledger-box{max-width:880px;margin:22px auto;background:#0A1120;border:1px solid #1D2942;border-radius:18px;padding:22px}
+  .ldgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .ldstat{background:#111B31;border:1px solid #1D2942;border-radius:12px;padding:12px 14px}
+  .ldstat span{display:block;font-size:11px;color:#7C88A8;text-transform:uppercase;letter-spacing:.5px}
+  .ldstat b{font-size:17px;color:#fff}
+</style>
 </head>
 <body class="dark-dash">
 <div id="gate" class="auth-wrap" style="min-height:100vh">
@@ -69,7 +87,9 @@
           </div>
           <div class="form-ok" id="ibOk"></div>
         </div>
-        <div class="panel"><h3>All Clients</h3><div id="cList"></div></div>
+        <div class="panel"><h3>All Clients</h3>
+          <input id="clientSearch" placeholder="🔍 Search by name, email, account no. (e.g. 880008), phone or country…" oninput="filterClients()" style="width:100%;margin-bottom:14px">
+          <div id="cList"></div></div>
       </section>
 
       <section id="tab-trades" style="display:none">
@@ -138,6 +158,26 @@
     <div style="color:#C9D3EA;font-size:13.5px;margin-bottom:12px" id="pfMethod"></div>
     <img id="pfImg" alt="Payment proof">
     <div style="display:flex;gap:9px;margin-top:16px" id="pfActions"></div>
+  </div>
+</div>
+
+<div class="ledger-ov" id="ledgerOv" onclick="if(event.target===this) closeLedger()">
+  <div class="ledger-box">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div><h2 id="ldName" style="margin:0;color:#fff">Client</h2><div id="ldMeta" style="color:#93A1C4;font-size:13px;margin-top:3px"></div></div>
+      <button class="btn btn-line" onclick="closeLedger()">✖ Close</button>
+    </div>
+    <div id="ldStats" class="ldgrid" style="margin-top:16px"></div>
+    <div class="panel" style="margin:16px 0 0"><h3>💰 Deposit / Withdraw for this client</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <input id="ldAmt" type="number" step="0.01" placeholder="Amount (USD, use − to withdraw)" style="flex:1;min-width:170px">
+        <input id="ldNote" placeholder="Note (e.g. Deposit received via bank)" style="flex:2;min-width:210px">
+        <button class="btn btn-gold" onclick="ledgerIssue()">Issue Balance</button>
+      </div>
+      <div id="ldOk" style="display:none;margin-top:10px;padding:9px 12px;border-radius:9px;font-weight:700"></div>
+    </div>
+    <div class="panel" style="margin:16px 0 14px"><h3>🔴 Live Now — Open Trades</h3><div id="ldLive"></div></div>
+    <div class="panel" style="margin:0"><h3>📒 Ledger — Full Money History</h3><div id="ldTable"></div></div>
   </div>
 </div>
 
@@ -318,11 +358,31 @@
       mini('g2','🏦','Total Issued', Oryx.money(issuedPos), 'credits in') + mini('g5','💸','Withdrawals', Oryx.money(wdAbs), 'debits out') +
       mini('g4','⚖️','Net Flow', Oryx.money(issuedPos - wdAbs), 'in minus out') + mini('g1','🧾','Transactions', tx.length, 'records');
     document.getElementById('ibAcc').innerHTML = ac.map(a => `<option value="${a.id}">${a.login} — ${Oryx.esc(clientName(a.userId))} (${Oryx.esc(clientEmail(a.userId))}) · Balance ${Oryx.money(a.balance)}</option>`).join('') || '<option value="">No clients yet</option>';
-    document.getElementById('cList').innerHTML = tbl(['Name','Email','Phone','Country','Account','Balance','Open Trades','Joined'], us.slice().reverse().map(x => {
+    document.getElementById('cList').innerHTML = us.length ? `<div class="ucards">${us.slice().reverse().map(x => {
       const a = ac.find(v => v.userId === x.id);
-      const ot = a ? tr.filter(t => t.accountId === a.id && t.status === 'open').length : 0;
-      return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.phone)}</td><td>${Oryx.esc(x.country)}</td><td>${a ? a.login : '—'}</td><td><b>${a ? Oryx.money(a.balance) : '—'}</b></td><td>${ot}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
-    }).join(''));
+      if (!a) return '';
+      const atx = tx.filter(t => t.accountId === a.id);
+      const dep = atx.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+      const wd = Math.abs(atx.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0));
+      const cl = tr.filter(t => t.accountId === a.id && t.status === 'closed');
+      const prof = cl.filter(t => t.pnl > 0).reduce((s, t) => s + t.pnl, 0);
+      const loss = Math.abs(cl.filter(t => t.pnl < 0).reduce((s, t) => s + t.pnl, 0));
+      const ot = tr.filter(t => t.accountId === a.id && t.status === 'open').length;
+      const fl = Oryx.floating(a.id);
+      return `<div class="ucard" data-q="${Oryx.esc((x.name + ' ' + x.email + ' ' + a.login + ' ' + (x.phone || '') + ' ' + (x.country || '')).toLowerCase())}" onclick="openLedger('${x.id}')">
+        <h4>${Oryx.esc(x.name)}</h4>
+        <div class="usub">🌍 ${Oryx.esc(x.country || '—')} · Account ${a.login} · 📱 ${Oryx.esc(x.phone || '—')}</div>
+        <div class="stats">
+          <div class="st"><span>Balance</span><b>${Oryx.money(a.balance)}</b></div>
+          <div class="st"><span>Floating Now</span><b style="color:${fl >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(fl)}</b></div>
+          <div class="st"><span>Total Deposit</span><b>${Oryx.money(dep)}</b></div>
+          <div class="st"><span>Total Withdraw</span><b>${Oryx.money(wd)}</b></div>
+          <div class="st"><span>Profit</span><b style="color:#16C784">${Oryx.money(prof)}</b></div>
+          <div class="st"><span>Loss</span><b style="color:#EA3943">${Oryx.money(loss)}</b></div>
+        </div>
+        <div style="margin-top:10px;font-size:12.5px;color:#D8A94E">${ot} open trade${ot === 1 ? '' : 's'} · Click to open his ledger →</div>
+      </div>`;
+    }).join('')}</div>` : '<p style="color:#7C88A8">No clients yet.</p>';
     document.getElementById('tList').innerHTML = tbl(['Date','Client','Symbol','Type','Lots','Open','Close','Status','P/L'], tr.slice().reverse().map(t => {
       const a = ac.find(v => v.id === t.accountId);
       return `<tr><td>${new Date(t.openAt).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${t.close ? Oryx.fmtP(t.symbol, t.close) : '—'}</td><td><span class="pill ${t.status==='open'?'y':'b'}">${t.status}</span></td><td>${t.status==='closed' ? Oryx.money(t.pnl) : '—'}</td></tr>`;
@@ -336,6 +396,7 @@
     document.getElementById('sStarter').value = S.starter; document.getElementById('sLev').value = S.leverage;
     document.getElementById('sWa').value = S.whatsapp; document.getElementById('sEmail').value = S.email;
     document.getElementById('sHeroT').value = S.heroTitle; document.getElementById('sHeroS').value = S.heroSub;
+    filterClients();
   }
   function decideRq(id, approve){
     const r = Oryx.requests().find(x => x.id === id);
@@ -363,6 +424,69 @@
     document.getElementById('proofOv').classList.add('open');
   }
   function closeProof(){ document.getElementById('proofOv').classList.remove('open'); }
+
+  /* ===== client search (name / email / account no. / phone / country) ===== */
+  function filterClients(){
+    const inp = document.getElementById('clientSearch');
+    const q = (inp ? inp.value : '').trim().toLowerCase();
+    document.querySelectorAll('#cList .ucard').forEach(c => { c.style.display = !q || (c.dataset.q || '').includes(q) ? '' : 'none'; });
+  }
+
+  /* ===== client ledger: full money history + what he is doing LIVE ===== */
+  let ldUser = null, ldTimer = null;
+  function ledgerIssue(){
+    const a = Oryx.accounts().find(v => v.userId === ldUser); if (!a) return;
+    const amt = document.getElementById('ldAmt').value;
+    const r = Oryx.issueBalance(a.id, amt, document.getElementById('ldNote').value.trim());
+    const ok = document.getElementById('ldOk');
+    if (r.error){ ok.style.display = 'block'; ok.style.background = '#FDECEC'; ok.style.color = '#A11'; ok.textContent = r.error; return; }
+    ok.style.display = 'block'; ok.style.background = '#E7F8F0'; ok.style.color = '#0B6B43';
+    ok.textContent = '✔ Done. New balance: ' + Oryx.money(r.account.balance);
+    Oryx.logAdmin('Balance issued', `${clientName(a.userId)} · ${Oryx.money(parseFloat(amt) || 0)} · new balance ${Oryx.money(r.account.balance)}`,
+      { clientId: a.userId, amount: parseFloat(amt) || 0 });
+    document.getElementById('ldAmt').value = ''; document.getElementById('ldNote').value = '';
+    renderLedger(); renderAll();
+  }
+  function ldStat(label, val){ return `<div class="ldstat"><span>${label}</span><b>${val}</b></div>`; }
+  function openLedger(userId){
+    ldUser = userId;
+    renderLedger();
+    document.getElementById('ledgerOv').classList.add('open');
+    clearInterval(ldTimer);
+    ldTimer = setInterval(renderLedger, 2000);
+  }
+  function closeLedger(){
+    document.getElementById('ledgerOv').classList.remove('open');
+    clearInterval(ldTimer); ldTimer = null;
+  }
+  function renderLedger(){
+    const u = Oryx.users().find(x => x.id === ldUser); if (!u) return;
+    const a = Oryx.accounts().find(v => v.userId === u.id); if (!a) return;
+    document.getElementById('ldName').textContent = u.name;
+    document.getElementById('ldMeta').textContent = `Account ${a.login} · ${u.email} · 📱 ${u.phone || '—'} · 🌍 ${u.country || '—'} · Joined ${new Date(u.created).toLocaleDateString()}`;
+    const txs = Oryx.txns().filter(t => t.accountId === a.id);
+    const dep = txs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const wd = Math.abs(txs.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0));
+    const trs = Oryx.trades().filter(t => t.accountId === a.id);
+    const cl = trs.filter(t => t.status === 'closed');
+    const prof = cl.filter(t => t.pnl > 0).reduce((s, t) => s + t.pnl, 0);
+    const loss = Math.abs(cl.filter(t => t.pnl < 0).reduce((s, t) => s + t.pnl, 0));
+    const fl = Oryx.floating(a.id);
+    document.getElementById('ldStats').innerHTML =
+      ldStat('Balance', Oryx.money(a.balance)) + ldStat('Equity (live)', Oryx.money(+(a.balance + fl).toFixed(2))) +
+      ldStat('Total Deposit', Oryx.money(dep)) + ldStat('Total Withdraw', Oryx.money(wd)) +
+      ldStat('Profit', Oryx.money(prof)) + ldStat('Loss', Oryx.money(loss)) + ldStat('Net P/L', Oryx.money(prof - loss));
+    const open = trs.filter(t => t.status === 'open');
+    document.getElementById('ldLive').innerHTML = open.length ? tbl(['Symbol','Side','Lots','Opened At','Current','Floating P/L'],
+      open.map(t => { const cur = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol); const p = Oryx.pnlOf(t);
+        return `<tr><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, cur)}</td><td style="color:${p >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(p)}</b></td></tr>`; }).join('') +
+      `<tr><td colspan="5" style="text-align:right"><b>Total Floating</b></td><td style="color:${fl >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(fl)}</b></td></tr>`)
+      : '<p style="color:var(--mut)">No open trades right now — he is not in the market at this moment.</p>';
+    let run = 0;
+    const rows = txs.slice().sort((x, y) => x.at - y.at).map(t => { run = +(run + t.amount).toFixed(2); return { t, run }; }).reverse();
+    document.getElementById('ldTable').innerHTML = tbl(['Date','Type','Amount','Balance After','Note'],
+      rows.map(({ t, run }) => `<tr><td>${new Date(t.at).toLocaleString()}</td><td>${Oryx.esc(t.type)}</td><td style="color:${t.amount >= 0 ? 'var(--up)' : 'var(--dn)'}"><b>${Oryx.money(t.amount)}</b></td><td>${Oryx.money(run)}</td><td>${Oryx.esc(t.note || '')}</td></tr>`).join(''), 'No transactions yet.');
+  }
 
   function doIssue(){
     const r = Oryx.issueBalance(document.getElementById('ibAcc').value, document.getElementById('ibAmt').value, document.getElementById('ibNote').value.trim());
