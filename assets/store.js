@@ -40,7 +40,32 @@ const Oryx = (() => {
       HIST[i.symbol].push(prices[i.symbol]);
       if (HIST[i.symbol].length > 48) HIST[i.symbol].shift();
     });
+    tickCandles();
   }
+  /* ---------- live candlesticks (built from the same feed, 5-second candles) ---------- */
+  const CANDLES = {}; const BUCKET = 5000;
+  INSTRUMENTS.forEach(i => {
+    CANDLES[i.symbol] = [];
+    let p = i.base * (1 - (Math.random() * 0.006 - 0.003));
+    for (let n = 0; n < 64; n++){
+      const o = p; const drift = (Math.random() - 0.485) * i.base * 0.0011;
+      const c = o + drift; const h = Math.max(o, c) + Math.random() * i.base * 0.00035; const l = Math.min(o, c) - Math.random() * i.base * 0.00035;
+      CANDLES[i.symbol].push({ o, h, l, c }); p = c;
+    }
+    const last = CANDLES[i.symbol][CANDLES[i.symbol].length - 1];
+    last.c = i.base; last.h = Math.max(last.h, i.base); last.l = Math.min(last.l, i.base);
+  });
+  let bucketStart = Date.now();
+  function tickCandles(){
+    const now = Date.now();
+    INSTRUMENTS.forEach(i => {
+      const arr = CANDLES[i.symbol]; const cur = arr[arr.length - 1]; const px = prices[i.symbol];
+      cur.c = px; if (px > cur.h) cur.h = px; if (px < cur.l) cur.l = px;
+      if (now - bucketStart >= BUCKET){ arr.push({ o: px, h: px, l: px, c: px }); if (arr.length > 90) arr.shift(); }
+    });
+    if (now - bucketStart >= BUCKET) bucketStart = now;
+  }
+  const candles = s => CANDLES[s] || [];
   const hist = s => HIST[s] || [];
   const dayHigh = s => Math.max(...HIST[s]);
   const dayLow = s => Math.min(...HIST[s]);
@@ -148,7 +173,7 @@ const Oryx = (() => {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   return { K, settings, saveSettings, users, accounts, trades, txns, addTxn,
-           prices, hist, dayHigh, dayLow, changePct, sentiment, spark,
+           prices, hist, candles, dayHigh, dayLow, changePct, sentiment, spark,
            inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById,
            pnlOf, floating, usedMargin, openTrade, closeTrade,

@@ -343,3 +343,6 @@ body.dark-dash{background:var(--deep);color:#D7DEEF}
 .kv-row b{color:#fff}
 @media(max-width:1020px){ .mkt-cards{grid-template-columns:1fr 1fr} .cat-tiles{grid-template-columns:repeat(3,1fr)} .stats-band{grid-template-columns:1fr 1fr} .float-card{display:none} }
 @media(max-width:600px){ .mkt-cards{grid-template-columns:1fr} .cat-tiles{grid-template-columns:1fr 1fr} }
+
+.pos-strip{border-top:1px solid rgba(255,255,255,.08)}
+.chart-box canvas{display:block}
