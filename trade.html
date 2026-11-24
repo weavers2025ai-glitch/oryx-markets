@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A1128">
 <title>Web Terminal — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=8">
+<link rel="stylesheet" href="assets/style.css?v=10">
 <style>
   /* terminal-critical styles (self-contained so a stale shared stylesheet can never break the terminal) */
   .term .rail{max-height:none;overflow:visible}
@@ -34,6 +34,14 @@
   .ob-row span{position:relative}
   .ob-a{color:#C9D3EA}
   .ob-spread{text-align:center;color:#7C88A8;font-size:12.5px;padding:8px 0;border-top:1px dashed rgba(255,255,255,.1);border-bottom:1px dashed rgba(255,255,255,.1);margin:6px 0}
+  /* dashboard-style top boxes + chart fitted to the screen */
+  .eq-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;background:none;border:0;border-radius:0;padding:0;margin:0 14px 14px}
+  .chart-box{flex:none;height:460px;min-height:0}
+  .pos-rows{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:9px 0 10px}
+  .pos-rows div{background:rgba(255,255,255,.05);border-radius:8px;padding:6px 9px}
+  .pos-rows span{display:block;color:#7C88A8;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+  .pos-rows b{color:#fff;font-size:13px}
+  @media(max-width:900px){ .chart-box{height:340px} .eq-bar{grid-template-columns:repeat(2,1fr)} }
 </style>
 </head>
 <body style="background:#060B1D">
@@ -93,9 +101,9 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="data/instruments.js?v=8"></script>
-<script src="assets/store.js?v=8"></script>
-<script src="assets/chart.js?v=8"></script>
+<script src="data/instruments.js?v=10"></script>
+<script src="assets/store.js?v=10"></script>
+<script src="assets/chart.js?v=10"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
@@ -136,15 +144,18 @@
     const a = Oryx.accountById(acc.id);
     const fl = Oryx.floating(acc.id);
     const eq = a.balance + fl, mg = Oryx.usedMargin(acc.id);
+    const kbox = (g, ic, label, val) => `<div class="kpi mini ${g}"><span class="kic" style="width:30px;height:30px;font-size:14px">${ic}</span><span>${label}</span><b>${val}</b></div>`;
     document.getElementById('eqBar').innerHTML =
-      `<span>Balance <b>${Oryx.money(a.balance)}</b></span><span>Equity <b>${Oryx.money(eq)}</b></span><span>Margin <b>${Oryx.money(mg)}</b></span><span>Free Margin <b>${Oryx.money(eq - mg)}</b></span><span>Floating P/L <b style="color:${fl>=0?'#16C784':'#EA3943'}">${Oryx.money(fl)}</b></span>`;
+      kbox('g4','💼','Balance', Oryx.money(a.balance)) + kbox('g2','📈','Equity', Oryx.money(eq)) +
+      kbox('g3','🔒','Margin Used', Oryx.money(mg)) + kbox('g6','🆓','Free Margin', Oryx.money(eq - mg)) +
+      kbox(fl >= 0 ? 'g2' : 'g5','🌊','Floating P/L', Oryx.money(fl));
     try { drawLiveChart(document.getElementById('tvchart'), cur); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
     document.getElementById('posBox').innerHTML = open.length ? open.map(t => {
       const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
       return `<div class="pos-card" style="margin:0 12px 10px">
         <div class="pos-top"><b>${t.symbol}</b><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots} lots</span><span class="pos-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
-        <div class="pos-sub">Opened at ${Oryx.fmtP(t.symbol, t.open)} &nbsp;→&nbsp; Now ${Oryx.fmtP(t.symbol, now)} &nbsp;·&nbsp; ${new Date(t.openAt).toLocaleTimeString()}</div>
+        <div class="pos-rows"><div><span>Opened</span><b>${Oryx.fmtP(t.symbol, t.open)}</b></div><div><span>Now</span><b>${Oryx.fmtP(t.symbol, now)}</b></div><div><span>Time</span><b>${new Date(t.openAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b></div></div>
         <div class="pos-foot"><span>${p>=0?'Profit — green button':'Loss — red button'}</span><button class="close-btn ${p>=0?'win':''}" onclick="closeT('${t.id}')">✕ CLOSE</button></div>
       </div>`;
     }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 12px 12px">No open positions yet. Place a BUY or SELL order — it will appear here live with its profit/loss and a small Close button (green in profit, red in loss).</p>';
@@ -175,5 +186,6 @@
   }
   Oryx.startFeed(render, 1000);
 </script>
+<script src="assets/support.js?v=10"></script>
 </body>
 </html>
