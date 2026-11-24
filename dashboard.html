@@ -28,10 +28,10 @@
     <p class="sub">Track. Plan. Grow. Your complete trading overview.</p>
 
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px" id="statRow">
-      <div class="d-stat"><span>💼 Balance</span><b id="dsBal">$0.00</b><small id="dsAcc">Account —</small><span class="spark" id="dsSpark1"></span></div>
-      <div class="d-stat"><span>📈 Equity (Live)</span><b id="dsEq">$0.00</b><small>incl. floating P/L</small><span class="spark" id="dsSpark2"></span></div>
-      <div class="d-stat"><span>🎯 Win Rate</span><b id="dsWin">—</b><small id="dsWinSub">no closed trades yet</small></div>
-      <div class="d-stat"><span>🔥 Active Positions</span><b id="dsOpen">0</b><small id="dsPl">Floating $0.00</small></div>
+      <div class="d-stat" style="background:linear-gradient(135deg,#1D4ED8,#38BDF8);border:0"><span style="color:rgba(255,255,255,.85)">💼 Balance</span><b id="dsBal">$0.00</b><small id="dsAcc" style="color:rgba(255,255,255,.8)">Account —</small><span class="spark" id="dsSpark1"></span></div>
+      <div class="d-stat" style="background:linear-gradient(135deg,#065F46,#10B981);border:0"><span style="color:rgba(255,255,255,.85)">📈 Equity (Live)</span><b id="dsEq">$0.00</b><small style="color:rgba(255,255,255,.8)">incl. floating P/L</small><span class="spark" id="dsSpark2"></span></div>
+      <div class="d-stat" style="background:linear-gradient(135deg,#6D28D9,#8B5CF6);border:0"><span style="color:rgba(255,255,255,.85)">🎯 Win Rate</span><b id="dsWin">—</b><small id="dsWinSub" style="color:rgba(255,255,255,.8)">no closed trades yet</small></div>
+      <div class="d-stat" style="background:linear-gradient(135deg,#B45309,#F59E0B);border:0"><span style="color:rgba(255,255,255,.85)">🔥 Active Positions</span><b id="dsOpen">0</b><small id="dsPl" style="color:rgba(255,255,255,.8)">Floating $0.00</small></div>
     </div>
 
     <div style="display:grid;grid-template-columns:1.9fr 1fr;gap:16px;margin-bottom:20px" id="midGrid">
@@ -58,6 +58,8 @@
         </div>
         <h3 style="margin-top:20px">Profit by Instrument</h3>
         <div id="instBars"></div>
+        <h3 style="margin-top:20px">P/L by Day — Last 7 Days</h3>
+        <div id="dayBars"></div>
       </div>
     </div>
 
@@ -170,6 +172,18 @@
     document.getElementById('actBox').innerHTML = acts.map(x => `
       <div class="act-row"><span class="act-ic" style="background:${x.bg}">${x.ic}</span><div style="flex:1">${x.txt}<div style="color:#7C88A8;font-size:12px">${new Date(x.at).toLocaleString()}</div></div><b style="color:${x.amt>=0?'#16C784':'#EA3943'}">${Oryx.money(x.amt)}</b></div>`).join('') || '<p style="color:#7C88A8;font-size:13.5px">No activity yet.</p>';
     document.getElementById('txnBox').innerHTML = tbl(['Date','Type','Amount','Note'], tx.map(t => `<tr><td>${new Date(t.at).toLocaleString()}</td><td>${t.type}</td><td style="color:${t.amount>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.amount)}</b></td><td>${Oryx.esc(t.note)}</td></tr>`).join(''));
+    const sparkArr = eqHist.slice(-40);
+    document.getElementById('dsSpark1').innerHTML = Oryx.sparkData(sparkArr, 86, 26, 'rgba(255,255,255,.92)');
+    document.getElementById('dsSpark2').innerHTML = Oryx.sparkData(sparkArr, 86, 26, 'rgba(255,255,255,.92)');
+    const DAY = 86400000, nowT = Date.now(), dayRows = [];
+    for (let d = 6; d >= 0; d--){
+      const st = nowT - (d + 1) * DAY, en = nowT - d * DAY;
+      const v = closed.filter(t => t.closeAt >= st && t.closeAt < en).reduce((s, t) => s + t.pnl, 0);
+      dayRows.push({ label: d === 0 ? 'Today' : new Date(en - 1).toLocaleDateString(undefined, { weekday:'short' }), v });
+    }
+    const mxD = Math.max(...dayRows.map(r => Math.abs(r.v)), 0.01);
+    document.getElementById('dayBars').innerHTML = dayRows.map(r => `
+      <div class="bars-row"><span style="width:52px;color:#C9D3EA">${r.label}</span><span class="bar-track"><span class="bar-fill" style="display:block;width:${Math.max(Math.abs(r.v) / mxD * 100, r.v ? 3 : 0)}%;background:${r.v>=0?'#16C784':'#EA3943'}"></span></span><b style="color:${r.v>=0?'#16C784':'#EA3943'}">${Oryx.money(r.v)}</b></div>`).join('');
     drawEq();
   }
   Oryx.startFeed(render, 1500);
