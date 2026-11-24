@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open Account — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-root="">
+<div id="site-header"></div>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h1>Create Your Account</h1>
+    <p class="sub">Free forever to open. Your account starts with a <b>$10 welcome credit</b> — further balance is issued by our admin team.</p>
+    <div class="form-err" id="err"></div>
+    <div class="field"><label>Full Name</label><input id="rName" placeholder="e.g. Ahmed Khan"></div>
+    <div class="field"><label>Email Address</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
+    <div class="field"><label>Phone / WhatsApp</label><input id="rPhone" placeholder="+92 ..."></div>
+    <div class="field"><label>Country</label><input id="rCountry" placeholder="e.g. Pakistan"></div>
+    <div class="field"><label>Password</label><input id="rPass" type="password" placeholder="Choose a password"></div>
+    <button class="btn btn-gold" style="width:100%" onclick="doRegister()">Open My Account</button>
+    <p class="auth-alt">Already have an account? <a href="login.html">Log in</a></p>
+    <p style="font-size:12px;color:var(--mut);margin-top:14px;text-align:center">By opening an account you accept the risk warning shown in the footer. Demo accounts hold virtual funds only.</p>
+  </div>
+</div>
+<div id="site-footer"></div>
+<script src="data/instruments.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/chrome.js"></script>
+<script>
+  if (Oryx.currentUser()) location.href = 'dashboard.html';
+  function doRegister(){
+    const name = document.getElementById('rName').value.trim();
+    const email = document.getElementById('rEmail').value.trim();
+    const pass = document.getElementById('rPass').value;
+    const phone = document.getElementById('rPhone').value.trim();
+    const country = document.getElementById('rCountry').value.trim();
+    const err = document.getElementById('err');
+    if (!name || !email || !pass){ err.textContent = 'Please fill your name, email and password.'; err.style.display = 'block'; return; }
+    if (pass.length < 6){ err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+    const r = Oryx.register(name, email, pass, phone, country);
+    if (r.error){ err.textContent = r.error; err.style.display = 'block'; return; }
+    location.href = 'dashboard.html';
+  }
+</script>
+</body>
+</html>

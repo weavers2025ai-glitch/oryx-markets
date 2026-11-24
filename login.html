@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-root="">
+<div id="site-header"></div>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h1>Welcome Back</h1>
+    <p class="sub">Log in to your dashboard and web terminal.</p>
+    <div class="form-err" id="err"></div>
+    <div class="field"><label>Email Address</label><input id="lEmail" type="email" placeholder="you@email.com"></div>
+    <div class="field"><label>Password</label><input id="lPass" type="password" placeholder="Your password"></div>
+    <button class="btn btn-gold" style="width:100%" onclick="doLogin()">Log In</button>
+    <p class="auth-alt">New to Oryx Markets? <a href="register.html">Open a free account</a></p>
+  </div>
+</div>
+<div id="site-footer"></div>
+<script src="data/instruments.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/chrome.js"></script>
+<script>
+  if (Oryx.currentUser()) location.href = 'dashboard.html';
+  function doLogin(){
+    const r = Oryx.login(document.getElementById('lEmail').value.trim(), document.getElementById('lPass').value);
+    const err = document.getElementById('err');
+    if (r.error){ err.textContent = r.error; err.style.display = 'block'; return; }
+    location.href = 'dashboard.html';
+  }
+  document.getElementById('lPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

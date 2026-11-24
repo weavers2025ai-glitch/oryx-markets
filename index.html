@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oryx Markets — Trade Forex, Gold, Crypto & Indices Online</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-root="">
+<div id="site-header"></div>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1 id="heroTitle">Trade the <span>World Markets</span></h1>
+      <p id="heroSub">Forex, Gold, Oil, Crypto and Global Indices — one account, one powerful platform, spreads from 0.1 pips.</p>
+      <a class="btn btn-gold" href="register.html">Open Free Account</a>
+      <a class="btn btn-ghost" href="trade.html" style="margin-left:10px">Try Web Terminal</a>
+      <div class="hero-badges">
+        <div><b>140+</b>Instruments</div>
+        <div><b>0.1</b>Spreads from (pips)</div>
+        <div><b>1:500</b>Leverage up to</div>
+        <div><b>24/5</b>Live Support</div>
+      </div>
+    </div>
+    <div class="hero-panel">
+      <h5>LIVE MARKET PRICES</h5>
+      <div id="heroPrices"></div>
+      <p style="color:#7C88A8;font-size:12px;margin-top:10px">Prices refresh every second on the terminal. Charts are powered by TradingView.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Why Oryx Markets</div>
+      <h2>Built for Serious Traders</h2>
+      <p>An international-standard trading experience — fast, transparent and designed around you.</p>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="ic">⚡</div><h3>Fast Execution</h3><p>Orders are filled in milliseconds with deep liquidity pricing on every instrument, day and night.</p></div>
+      <div class="card"><div class="ic">🛡️</div><h3>Funds Protection</h3><p>Client balances are managed with strict controls, transparent statements and a full transaction history in your dashboard.</p></div>
+      <div class="card"><div class="ic">📊</div><h3>Pro Web Terminal</h3><p>Trade directly in your browser with live TradingView charts, one-click Buy/Sell and real-time profit &amp; loss.</p></div>
+      <div class="card"><div class="ic">💬</div><h3>24/5 Human Support</h3><p>Real people on WhatsApp and email — in English, Urdu and Hindi — whenever the markets are open.</p></div>
+      <div class="card"><div class="ic">🎓</div><h3>Learn While You Trade</h3><p>Start on a practice balance, learn the platform risk-free, and move at your own pace with our team beside you.</p></div>
+      <div class="card"><div class="ic">🌍</div><h3>Global Access</h3><p>One account for Forex, Metals, Energies, Crypto, Indices and Shares — wherever you are in the world.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Markets</div>
+      <h2>Popular Instruments</h2>
+      <p>Tight spreads on the instruments the world trades most.</p>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Instrument</th><th>Name</th><th>Bid</th><th>Ask</th><th>Spread</th><th></th></tr></thead>
+      <tbody id="mktRows"></tbody>
+    </table>
+    <p style="text-align:center;margin-top:22px"><a class="btn btn-dark" href="markets.html">View All Markets</a></p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Get Started</div>
+      <h2>Start in Three Simple Steps</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Create Your Account</h3><p style="color:var(--mut)">Register in under a minute with your name and email.</p></div>
+      <div class="step"><div class="n">2</div><h3>Receive Your Balance</h3><p style="color:var(--mut)">Your account opens with a $10 welcome credit. Further balance is issued by our team on request.</p></div>
+      <div class="step"><div class="n">3</div><h3>Trade the Markets</h3><p style="color:var(--mut)">Open the web terminal, pick an instrument, and place your first trade.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">FAQ</div>
+      <h2>Questions, Answered</h2>
+    </div>
+    <div class="faq" style="max-width:820px;margin:0 auto">
+      <details><summary>How much money do I need to start?</summary><p>Your account opens with a $10 welcome credit so you can learn the platform right away. Any further balance is issued by our admin team — contact support on WhatsApp to arrange it.</p></details>
+      <details><summary>Can I practise before trading seriously?</summary><p>Yes. The web terminal works exactly like live trading — live charts, live prices, real profit &amp; loss calculation — so you can build confidence first.</p></details>
+      <details><summary>Which markets can I trade?</summary><p>Major and minor Forex pairs, Gold and Silver, US Oil, Bitcoin and Ethereum, the Dow Jones and Nasdaq indices, and selected US shares.</p></details>
+      <details><summary>How do I contact support?</summary><p>WhatsApp and email, 24/5 while markets are open. Details are in the footer of every page and inside your dashboard.</p></details>
+    </div>
+    <div class="cta-band" style="margin-top:50px">
+      <h2>Your Market Journey Starts Here</h2>
+      <p>Open your free account today and get your $10 welcome credit instantly.</p>
+      <a class="btn btn-gold" href="register.html">Open Free Account</a>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="data/instruments.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/chrome.js"></script>
+<script>
+  const S = Oryx.settings();
+  document.getElementById('heroTitle').innerHTML = S.heroTitle.replace(/World/i, '<span>World</span>');
+  document.getElementById('heroSub').textContent = S.heroSub;
+  const heroPicks = ['XAUUSD','EURUSD','BTCUSD','GBPUSD','WTIUSD'];
+  function renderPrices(){
+    document.getElementById('heroPrices').innerHTML = heroPicks.map(s => {
+      const i = Oryx.inst(s);
+      return `<div class="mini-row"><div><b>${s}</b><span>${i.name}</span></div><div style="text-align:right"><b>${Oryx.fmtP(s, Oryx.bid(s))}</b><span>Spread ${(i.spread/Math.pow(10,-i.digits+1)).toFixed(1)} pts</span></div></div>`;
+    }).join('');
+    document.getElementById('mktRows').innerHTML = INSTRUMENTS.slice(0, 8).map(i => `
+      <tr><td><b>${i.symbol}</b></td><td>${i.name}</td><td>${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</td><td>${Oryx.fmtP(i.symbol, Oryx.ask(i.symbol))}</td><td>${(i.spread/Math.pow(10,-i.digits+1)).toFixed(1)} pts</td><td><a class="btn btn-dark btn-sm" href="trade.html">Trade</a></td></tr>`).join('');
+  }
+  Oryx.startFeed(renderPrices, 1000);
+</script>
+</body>
+</html>

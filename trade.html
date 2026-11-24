@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Terminal — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body style="background:#060B1D">
+<div class="term-top">
+  <a href="dashboard.html">← Dashboard</a>
+  <span style="color:#D8A94E;font-weight:800;letter-spacing:.1em">ORYX WEB TERMINAL</span>
+  <span id="whoLine" style="color:#7C88A8;font-size:13px;margin-left:auto"></span>
+</div>
+<div class="eq-bar" id="eqBar"></div>
+<div class="term">
+  <div class="col">
+    <h5>INSTRUMENTS — CLICK TO OPEN</h5>
+    <div class="inst-list" id="instList"></div>
+  </div>
+  <div class="col">
+    <div class="chart-box" id="tvchart"></div>
+    <div class="pos-wrap">
+      <h5 style="padding-left:0">OPEN POSITIONS</h5>
+      <div id="posBox" style="overflow:auto"></div>
+    </div>
+  </div>
+  <div class="col">
+    <h5>NEW ORDER</h5>
+    <div class="trade-panel">
+      <div class="sym" id="tpSym">XAUUSD</div>
+      <div style="color:#7C88A8;font-size:12.5px" id="tpName">Gold vs US Dollar</div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <div style="flex:1"><label>BID (Sell)</label><div class="big" id="tpBid">—</div></div>
+        <div style="flex:1"><label>ASK (Buy)</label><div class="big" id="tpAsk">—</div></div>
+      </div>
+      <label>Volume (lots)</label>
+      <input id="tpLots" type="number" step="0.01" min="0.01" value="0.01">
+      <label>Leverage</label>
+      <input id="tpLev" disabled>
+      <div style="font-size:12.5px;color:#93A1C4;margin-top:10px" id="tpMargin"></div>
+      <div class="bs-btns">
+        <button style="background:var(--dn)" onclick="place('SELL')">SELL</button>
+        <button style="background:var(--up)" onclick="place('BUY')">BUY</button>
+      </div>
+      <div id="tpMsg" style="margin-top:12px;font-size:13.5px"></div>
+      <p style="font-size:12px;color:#7C88A8;margin-top:16px">Demo terminal: prices and charts are live, orders are simulated on your practice balance. Balance is issued by Admin only.</p>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="data/instruments.js"></script>
+<script src="assets/store.js"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+  const u = Oryx.currentUser();
+  if (!u) location.href = 'login.html';
+  const acc = Oryx.myAccounts()[0];
+  let cur = 'XAUUSD';
+  document.getElementById('whoLine').textContent = u.name + ' · Account ' + acc.login + ' · 1:' + acc.leverage;
+  document.getElementById('tpLev').value = '1:' + acc.leverage;
+
+  function loadChart(){
+    document.getElementById('tvchart').innerHTML = '';
+    new TradingView.widget({ container_id:'tvchart', autosize:true, symbol:Oryx.inst(cur).tv, interval:'15', timezone:'Asia/Dubai', theme:'dark', style:'1', locale:'en', hide_side_toolbar:false, allow_symbol_change:false, studies:['STD;RSI'] });
+  }
+  function pick(s){ cur = s; render(); loadChart(); }
+  function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3200); }
+  function place(side){
+    const lots = parseFloat(document.getElementById('tpLots').value);
+    const r = Oryx.openTrade(acc.id, cur, side, lots);
+    const m = document.getElementById('tpMsg');
+    if (r.error){ m.style.color = '#EA3943'; m.textContent = r.error; return; }
+    m.style.color = '#16C784'; m.textContent = side + ' ' + lots + ' lots ' + cur + ' opened at ' + Oryx.fmtP(cur, r.trade.open);
+    toast('Order filled: ' + side + ' ' + cur);
+    render();
+  }
+  function closeT(id){
+    const r = Oryx.closeTrade(id);
+    if (r.error){ toast(r.error); return; }
+    toast('Closed ' + r.trade.symbol + ' · P/L ' + Oryx.money(r.trade.pnl));
+    render();
+  }
+  function render(){
+    document.getElementById('instList').innerHTML = INSTRUMENTS.map(i => {
+      const b = Oryx.bid(i.symbol);
+      return `<div class="inst-row ${i.symbol===cur?'on':''}" onclick="pick('${i.symbol}')"><div><b>${i.symbol}</b><small>${i.type}</small></div><div class="px">${Oryx.fmtP(i.symbol, b)}</div></div>`;
+    }).join('');
+    document.getElementById('tpSym').textContent = cur;
+    document.getElementById('tpName').textContent = Oryx.inst(cur).name;
+    document.getElementById('tpBid').textContent = Oryx.fmtP(cur, Oryx.bid(cur));
+    document.getElementById('tpAsk').textContent = Oryx.fmtP(cur, Oryx.ask(cur));
+    const lots = parseFloat(document.getElementById('tpLots').value) || 0;
+    const need = (lots * Oryx.inst(cur).contract * Oryx.prices[cur]) / acc.leverage;
+    document.getElementById('tpMargin').textContent = 'Margin required: $' + need.toFixed(2);
+    const a = Oryx.accountById(acc.id);
+    const fl = Oryx.floating(acc.id);
+    const eq = a.balance + fl, mg = Oryx.usedMargin(acc.id);
+    document.getElementById('eqBar').innerHTML =
+      `<span>Balance <b>${Oryx.money(a.balance)}</b></span><span>Equity <b>${Oryx.money(eq)}</b></span><span>Margin <b>${Oryx.money(mg)}</b></span><span>Free Margin <b>${Oryx.money(eq - mg)}</b></span><span>Floating P/L <b style="color:${fl>=0?'#16C784':'#EA3943'}">${Oryx.money(fl)}</b></span>`;
+    const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
+    document.getElementById('posBox').innerHTML = open.length ? `<table><thead><tr><th>Symbol</th><th>Type</th><th>Lots</th><th>Open</th><th>Now</th><th>P/L</th><th></th></tr></thead><tbody>${
+      open.map(t => { const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
+        return `<tr><td><b style="color:#fff">${t.symbol}</b></td><td style="color:${t.side==='BUY'?'#16C784':'#EA3943'}">${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, now)}</td><td style="color:${p>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(p)}</b></td><td><button class="x-btn" onclick="closeT('${t.id}')">Close</button></td></tr>`; }).join('')
+    }</tbody></table>` : '<p style="color:#7C88A8;font-size:13.5px;padding:6px 0 12px">No open positions. Pick an instrument and place your first trade.</p>';
+  }
+  loadChart();
+  Oryx.startFeed(render, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markets & Spreads — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-root="">
+<div id="site-header"></div>
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Markets</div>
+      <h2>Instruments &amp; Live Spreads</h2>
+      <p>Every instrument available on your Oryx account, with live bid/ask prices. Prices refresh every second.</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:24px" id="typeTabs"></div>
+    <table class="tbl">
+      <thead><tr><th>Instrument</th><th>Name</th><th>Type</th><th>Bid</th><th>Ask</th><th>Spread</th><th>Min Lot</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p style="color:var(--mut);font-size:13px;margin-top:16px">Spreads are shown in points and float with market conditions. Contract size and leverage (up to 1:500) apply per your account type.</p>
+  </div>
+</section>
+<div id="site-footer"></div>
+<script src="data/instruments.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/chrome.js"></script>
+<script>
+  let filter = 'All';
+  const types = ['All', ...new Set(INSTRUMENTS.map(i => i.type))];
+  document.getElementById('typeTabs').innerHTML = types.map(t => `<button class="btn ${t==='All'?'btn-dark':'btn-line'} btn-sm" onclick="setF('${t}',this)">${t}</button>`).join('');
+  function setF(t, el){ filter = t; document.querySelectorAll('#typeTabs .btn').forEach(b => { b.className = 'btn btn-line btn-sm'; }); el.className = 'btn btn-dark btn-sm'; render(); }
+  function render(){
+    document.getElementById('rows').innerHTML = INSTRUMENTS.filter(i => filter === 'All' || i.type === filter).map(i => `
+      <tr><td><b>${i.symbol}</b></td><td>${i.name}</td><td><span class="pill b">${i.type}</span></td>
+      <td>${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</td><td>${Oryx.fmtP(i.symbol, Oryx.ask(i.symbol))}</td>
+      <td>${(i.spread/Math.pow(10,-i.digits+1)).toFixed(1)} pts</td><td>0.01</td>
+      <td><a class="btn btn-dark btn-sm" href="trade.html">Trade</a></td></tr>`).join('');
+  }
+  Oryx.startFeed(render, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-root="">
+<div id="site-header"></div>
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Contact</div>
+      <h2>Talk to Our Team</h2>
+      <p>Questions about your account, your balance, or the platform? We reply fast — usually within the hour while markets are open.</p>
+    </div>
+    <div class="grid3" style="margin-bottom:34px">
+      <div class="card" style="text-align:center"><div class="ic">💬</div><h3>WhatsApp</h3><p id="waLine">Chat with support</p><a class="btn btn-dark btn-sm" id="waBtn" target="_blank" rel="noopener" style="margin-top:12px">Open WhatsApp</a></div>
+      <div class="card" style="text-align:center"><div class="ic">✉️</div><h3>Email</h3><p id="emLine">Write to us any time</p><a class="btn btn-dark btn-sm" id="emBtn" style="margin-top:12px">Send Email</a></div>
+      <div class="card" style="text-align:center"><div class="ic">🕐</div><h3>Support Hours</h3><p>Monday to Friday, 24 hours while global markets are open.</p></div>
+    </div>
+    <div class="panel" style="max-width:680px;margin:0 auto">
+      <h3>Send a Message</h3>
+      <div class="field"><label>Your Name</label><input id="cName" placeholder="Full name"></div>
+      <div class="field"><label>Your Email</label><input id="cEmail" placeholder="you@email.com"></div>
+      <div class="field"><label>Message</label><textarea id="cMsg" rows="4" placeholder="How can we help?"></textarea></div>
+      <button class="btn btn-gold" onclick="sendMsg()">Send via WhatsApp</button>
+      <p style="color:var(--mut);font-size:13px;margin-top:10px">This opens WhatsApp with your message ready to send to our support team.</p>
+    </div>
+  </div>
+</section>
+<div id="site-footer"></div>
+<script src="data/instruments.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/chrome.js"></script>
+<script>
+  const S = Oryx.settings();
+  document.getElementById('waLine').textContent = '+' + S.whatsapp;
+  document.getElementById('waBtn').href = 'https://wa.me/' + S.whatsapp;
+  document.getElementById('emLine').textContent = S.email;
+  document.getElementById('emBtn').href = 'mailto:' + S.email;
+  function sendMsg(){
+    const n = document.getElementById('cName').value.trim(), e = document.getElementById('cEmail').value.trim(), m = document.getElementById('cMsg').value.trim();
+    const text = encodeURIComponent(`Hello Oryx Markets, I am ${n} (${e}). ${m}`);
+    window.open('https://wa.me/' + S.whatsapp + '?text=' + text, '_blank');
+  }
+</script>
+</body>
+</html>

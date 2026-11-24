@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="dash">
+  <aside class="side">
+    <a class="brand" href="index.html"><svg viewBox="0 0 48 48" class="logo-mark"><path d="M14 6 C16 16, 17 24, 16 34 L11 34 C13 24, 12 15, 10 6 Z" fill="#D8A94E"/><path d="M34 6 C32 16, 31 24, 32 34 L37 34 C35 24, 36 15, 38 6 Z" fill="#D8A94E"/><circle cx="24" cy="30" r="7.5" fill="none" stroke="#F3E5C0" stroke-width="3"/></svg><span>ORYX <b>MARKETS</b></span></a>
+    <div class="who" id="whoBox"></div>
+    <a href="dashboard.html" class="on">🏠 Overview</a>
+    <a href="trade.html">📈 Web Terminal</a>
+    <a href="markets.html">🌍 Markets</a>
+    <a href="index.html">↩ Back to Website</a>
+    <a href="#" onclick="Oryx.logout();location.href='index.html';return false;">🚪 Log Out</a>
+  </aside>
+  <main class="main">
+    <h1 id="hello">My Dashboard</h1>
+    <p class="sub">Your account, balance and trading activity — all in one place.</p>
+    <div class="stat-grid">
+      <div class="stat"><span>Balance</span><b id="stBal">$0.00</b></div>
+      <div class="stat"><span>Equity (live)</span><b id="stEq">$0.00</b></div>
+      <div class="stat"><span>Open Trades</span><b id="stOpen">0</b></div>
+      <div class="stat"><span>Floating P/L</span><b id="stPl">$0.00</b></div>
+    </div>
+    <div class="panel">
+      <h3>My Trading Account</h3>
+      <div id="accBox"></div>
+      <p style="margin-top:14px"><a class="btn btn-gold" href="trade.html">Open Web Terminal</a>
+      <a class="btn btn-line" id="topupBtn" target="_blank" rel="noopener" style="margin-left:8px">Request More Balance (WhatsApp)</a></p>
+      <p style="color:var(--mut);font-size:13px;margin-top:10px">Balances are issued by the Oryx admin team only. Message us on WhatsApp and your balance will be credited after a quick review.</p>
+    </div>
+    <div class="panel">
+      <h3>Open Positions</h3>
+      <div id="openBox"></div>
+    </div>
+    <div class="panel">
+      <h3>Trade History</h3>
+      <div id="histBox"></div>
+    </div>
+    <div class="panel">
+      <h3>Balance Transactions</h3>
+      <div id="txnBox"></div>
+    </div>
+  </main>
+</div>
+<script src="data/instruments.js"></script>
+<script src="assets/store.js"></script>
+<script>
+  const u = Oryx.currentUser();
+  if (!u) location.href = 'login.html';
+  const accs = Oryx.myAccounts();
+  const acc = accs[0];
+  const S = Oryx.settings();
+  document.getElementById('whoBox').innerHTML = `<b style="color:#fff">${Oryx.esc(u.name)}</b><br>${Oryx.esc(u.email)}`;
+  document.getElementById('hello').textContent = 'Hello, ' + u.name.split(' ')[0] + ' 👋';
+  document.getElementById('topupBtn').href = 'https://wa.me/' + S.whatsapp + '?text=' + encodeURIComponent(`Hello Oryx Markets, I am ${u.name} (account ${acc ? acc.login : ''}). Please issue more balance to my account.`);
+  function tbl(head, rows){ return `<table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td colspan="${head.length}" style="color:var(--mut)">Nothing here yet.</td></tr>`}</tbody></table>`; }
+  function render(){
+    const a = Oryx.accountById(acc.id);
+    const fl = Oryx.floating(a.id);
+    const open = Oryx.trades().filter(t => t.accountId === a.id && t.status === 'open');
+    const closed = Oryx.trades().filter(t => t.accountId === a.id && t.status === 'closed').slice().reverse();
+    document.getElementById('stBal').textContent = Oryx.money(a.balance);
+    document.getElementById('stEq').textContent = Oryx.money(a.balance + fl);
+    document.getElementById('stOpen').textContent = open.length;
+    const pl = document.getElementById('stPl'); pl.textContent = Oryx.money(fl); pl.style.color = fl >= 0 ? 'var(--up)' : 'var(--dn)';
+    document.getElementById('accBox').innerHTML = tbl(['Account No.','Type','Currency','Leverage','Balance','Status'], `<tr><td><b>${a.login}</b></td><td>${a.type}</td><td>${a.currency}</td><td>1:${a.leverage}</td><td><b>${Oryx.money(a.balance)}</b></td><td><span class="pill g">Active</span></td></tr>`);
+    document.getElementById('openBox').innerHTML = tbl(['Symbol','Type','Lots','Open Price','Current','P/L',''], open.map(t => {
+      const cur = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
+      const p = Oryx.pnlOf(t);
+      return `<tr><td><b>${t.symbol}</b></td><td><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side}</span></td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, cur)}</td><td style="color:${p>=0?'var(--up)':'var(--dn)'}"><b>${Oryx.money(p)}</b></td><td><a class="btn btn-dark btn-sm" href="trade.html">Manage</a></td></tr>`;
+    }).join(''));
+    document.getElementById('histBox').innerHTML = tbl(['Symbol','Type','Lots','Open','Close','Result'], closed.slice(0, 15).map(t => `<tr><td><b>${t.symbol}</b></td><td>${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'var(--up)':'var(--dn)'}"><b>${Oryx.money(t.pnl)}</b></td></tr>`).join(''));
+    const tx = Oryx.txns().filter(t => t.accountId === a.id).slice().reverse();
+    document.getElementById('txnBox').innerHTML = tbl(['Date','Type','Amount','Note'], tx.map(t => `<tr><td>${new Date(t.at).toLocaleString()}</td><td>${t.type}</td><td style="color:${t.amount>=0?'var(--up)':'var(--dn)'}"><b>${Oryx.money(t.amount)}</b></td><td>${Oryx.esc(t.note)}</td></tr>`).join(''));
+  }
+  Oryx.startFeed(render, 1200);
+</script>
+</body>
+</html>
