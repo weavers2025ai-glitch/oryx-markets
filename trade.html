@@ -5,7 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A1128">
 <title>Web Terminal — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=5">
+<link rel="stylesheet" href="assets/style.css?v=6">
+<style>
+  /* terminal-critical styles (self-contained so a stale shared stylesheet can never break the terminal) */
+  .term .rail{max-height:none;overflow:visible}
+  .pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.03em}
+  .pill.g{background:rgba(22,199,132,.16);color:#16C784;border:1px solid rgba(22,199,132,.45)}
+  .pill.r{background:rgba(234,57,67,.16);color:#EA3943;border:1px solid rgba(234,57,67,.45)}
+  .pos-card{background:#12224E;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 14px}
+  .pos-top{display:flex;align-items:center;gap:9px}
+  .pos-top b{color:#fff;font-size:15.5px}
+  .pos-pl{margin-left:auto;font-size:17px;font-weight:800}
+  .pos-sub{color:#93A1C4;font-size:12.5px;margin:7px 0 10px}
+  .pos-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pos-foot span{color:#7C88A8;font-size:11.5px}
+  .close-btn{display:inline-block;width:auto;background:linear-gradient(135deg,#EA3943,#C22530);color:#fff;border:0;border-radius:8px;padding:7px 16px;font-weight:800;font-size:12.5px;cursor:pointer;letter-spacing:.03em}
+  .close-btn:hover{filter:brightness(1.12)}
+  .close-btn.win{background:linear-gradient(135deg,#16C784,#0E9F6E)}
+  .sym-strip{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+  .ss-main b{color:#fff;font-size:19px;display:block}
+  .ss-main span{color:#7C88A8;font-size:12px}
+  .ss-it span{display:block;color:#7C88A8;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+  .ss-it b{color:#fff;font-size:15.5px}
+  .ob-box{padding:2px 16px 14px}
+  .ob-head{display:flex;justify-content:space-between;color:#7C88A8;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:4px 0 6px}
+  .ob-row{position:relative;display:flex;justify-content:space-between;padding:3.5px 6px;font-size:12.5px;font-variant-numeric:tabular-nums}
+  .ob-row i{position:absolute;right:0;top:0;bottom:0;border-radius:3px}
+  .ob-row span{position:relative}
+  .ob-a{color:#C9D3EA}
+  .ob-spread{text-align:center;color:#7C88A8;font-size:12.5px;padding:8px 0;border-top:1px dashed rgba(255,255,255,.1);border-bottom:1px dashed rgba(255,255,255,.1);margin:6px 0}
+</style>
 </head>
 <body style="background:#060B1D">
 <div class="term-top">
@@ -64,9 +93,9 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="data/instruments.js?v=5"></script>
-<script src="assets/store.js?v=5"></script>
-<script src="assets/chart.js?v=5"></script>
+<script src="data/instruments.js?v=6"></script>
+<script src="assets/store.js?v=6"></script>
+<script src="assets/chart.js?v=6"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
@@ -130,8 +159,8 @@
     const bid0 = Oryx.bid(cur), ask0 = Oryx.ask(cur);
     const tStep = Math.max((ask0 - bid0) / 2, Oryx.prices[cur] * 0.00004);
     const aRows = [], bRows = [];
-    for (let r = 7; r >= 1; r--) aRows.push({ p: ask0 + tStep * (r - 1), a: 0.05 + Math.random() * 3.4 });
-    for (let r = 1; r <= 7; r++) bRows.push({ p: bid0 - tStep * (r - 1), a: 0.05 + Math.random() * 3.4 });
+    for (let r = 6; r >= 1; r--) aRows.push({ p: ask0 + tStep * (r - 1), a: 0.05 + Math.random() * 3.4 });
+    for (let r = 1; r <= 6; r++) bRows.push({ p: bid0 - tStep * (r - 1), a: 0.05 + Math.random() * 3.4 });
     const mxA = Math.max(...aRows.map(x => x.a), ...bRows.map(x => x.a));
     const rowHtml = (x, col) => `<div class="ob-row"><i style="width:${Math.round(x.a / mxA * 100)}%;background:${col === '#EA3943' ? 'rgba(234,57,67,.13)' : 'rgba(22,199,132,.13)'}"></i><span style="color:${col}">${Oryx.fmtP(cur, x.p)}</span><span class="ob-a">${x.a.toFixed(3)}</span></div>`;
     document.getElementById('obAsks').innerHTML = aRows.map(x => rowHtml(x, '#EA3943')).join('');
