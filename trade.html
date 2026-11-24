@@ -63,7 +63,7 @@
   .top-strip .eq-bar{flex:1;margin:0}
   .hlbar{display:flex;flex-direction:row;gap:8px;width:312px;flex:none;margin:0}
   .hl-box{flex:1;border-radius:12px;padding:7px 11px;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:1px;box-shadow:0 6px 14px rgba(0,0,0,.22)}
-  .hl-box span{font-size:9.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;opacity:.95;white-space:nowrap}
+  .hl-box span{font-size:8.5px;font-weight:700;letter-spacing:0;text-transform:uppercase;opacity:.95;white-space:nowrap}
   .hl-box b{font-size:16px;font-weight:800}
   .hl-box.hi{background:linear-gradient(135deg,#0B8A5F,#16C784)}
   .hl-box.lo{background:linear-gradient(135deg,#C81E1E,#EA3943)}
@@ -71,16 +71,17 @@
   .ot-btn{flex:1;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:#0E1626;color:#93A1C4;font-weight:700;font-size:12.5px;cursor:pointer}
   .ot-btn.on{background:#F5B544;color:#171106;border-color:transparent}
   /* compact trade ROWS (one row per trade) + instrument dropdown */
-  .trow{background:#12224E;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:5px 9px;margin:0 12px 6px}
-  .tr-main{display:flex;align-items:center;gap:7px;flex-wrap:nowrap}
-  .tr-main b{color:#fff;font-size:13.5px;white-space:nowrap}
+  .trow{background:#12224E;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:4px 8px;margin:0 12px 5px}
+  .tr-main{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;line-height:1.15}
+  .tr-main b{color:#fff;font-size:14px;white-space:nowrap}
   .tr-main .pill{padding:2px 7px;font-size:10px;white-space:nowrap;flex:none}
-  .tr-pl{margin-left:auto;font-weight:800;font-size:14px;white-space:nowrap}
-  .tr-sub{color:#93A1C4;font-size:11px;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
-  .tr-close{display:block;width:100%;margin-top:4px;height:19px;border:0;border-radius:6px;background:rgba(234,57,67,.85);color:#fff;font-size:10px;font-weight:800;letter-spacing:.1em;cursor:pointer}
-  .tr-close.win{background:rgba(22,199,132,.85)}
-  .tr-close.pend{background:rgba(245,181,68,.16);color:#F5B544;border:1px solid rgba(245,181,68,.4)}
-  #posBox{max-height:600px;overflow-y:auto}
+  .tr-pl{margin-left:6px;font-weight:800;font-size:17px;white-space:nowrap}
+  .tr-sub{color:#C2CDE6;font-size:11.5px;font-weight:600;margin-top:1px;line-height:1.25;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
+  .tr-foot{display:flex;align-items:center;gap:7px;margin-top:3px}
+  .tr-close2{margin-left:auto;width:76px;height:21px;border:0;border-radius:6px;background:linear-gradient(135deg,#EA3943,#C22530);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.05em;cursor:pointer;flex:none}
+  .tr-close2.win{background:linear-gradient(135deg,#16C784,#0E9F6E)}
+  .tr-close2.pend{background:rgba(245,181,68,.16);color:#F5B544;border:1px solid rgba(245,181,68,.4)}
+  #posBox{max-height:600px;overflow-y:auto;padding-right:2px;scrollbar-width:thin}
   #ordBox{max-height:230px;overflow-y:auto}
   .dd{position:relative;margin:2px 12px 12px}
   .dd-btn{width:100%;display:flex;align-items:center;gap:8px;background:#0E1626;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:11px;padding:10px 12px;cursor:pointer;font-size:13.5px;text-align:left}
@@ -90,10 +91,11 @@
   .dd.open .dd-list{display:block}
   .dd-list .inst-row{border-radius:8px}
   /* user polish: narrower translucent KPI boxes, gap, HL pair = right-column width */
-  .top-strip{gap:18px;max-width:100%}
-  .top-strip .eq-bar{flex:1 1 auto;min-width:0;width:auto}
+  .top-strip{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px;max-width:100%}
+  .top-strip .eq-bar{width:min(850px,100%);justify-self:start;min-width:0}
   .eq-bar .kpi{min-width:0}
-  .hlbar{width:250px;flex:none;margin-left:0}
+  .hlbar{width:250px;margin:0}
+  .hl-box{overflow:hidden}
   body{overflow-x:hidden}
   .eq-bar .kpi{border:1px solid rgba(255,255,255,.16);box-shadow:none}
   .eq-bar .kpi.g4{background:rgba(56,120,246,.60)}
@@ -266,24 +268,24 @@
       kbox('g3','🔒','Margin Used', Oryx.money(mg)) + kbox('g6','🆓','Free Margin', Oryx.money(eq - mg)) +
       kbox(fl >= 0 ? 'g2' : 'g5','🌊','Floating P/L', Oryx.money(fl));
     document.getElementById('hlBar').innerHTML =
-      `<div class="hl-box hi"><span>📈 Today High · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayHigh(cur))}</b></div>` +
-      `<div class="hl-box lo"><span>📉 Today Low · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>`;
+      `<div class="hl-box hi"><span>Today High · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayHigh(cur))}</b></div>` +
+      `<div class="hl-box lo"><span>Today Low · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>`;
     try { drawLiveChart(document.getElementById('tvchart'), cur); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
     document.getElementById('posBox').innerHTML = open.length ? open.map((t, ix) => {
       const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
       return `<div class="trow">
-        <div class="tr-main"><span style="color:#7C88A8;font-size:11px">${ix + 1}</span><b>${t.symbol}</b><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots}</span><span class="tr-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
+        <div class="tr-main"><span style="color:#7C88A8;font-size:11px">${ix + 1}</span><b>${t.symbol}</b><span class="tr-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
         <div class="tr-sub">${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, now)}${t.sl ? ' · SL <b style="color:#EA3943">' + Oryx.fmtP(t.symbol, t.sl) + '</b>' : ''}${t.tp ? ' · TP <b style="color:#16C784">' + Oryx.fmtP(t.symbol, t.tp) + '</b>' : ''} · ${new Date(t.openAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-        <button class="tr-close ${p>=0?'win':''}" onclick="closeT('${t.id}')">✕ CLOSE</button>
+        <div class="tr-foot"><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots}</span><button class="tr-close2 ${p>=0?'win':''}" onclick="closeT('${t.id}')">✕ CLOSE</button></div>
       </div>`;
     }).join('') : '<p style="color:#7C88A8;font-size:13px;padding:2px 12px 12px">No open positions yet. Place a BUY or SELL order — it will appear here as one compact row.</p>';
     const pends = Oryx.orders().filter(o => o.accountId === acc.id && o.status === 'pending');
     document.getElementById('ordBox').innerHTML = pends.length ? pends.map((o, ix) => `
       <div class="trow">
-        <div class="tr-main"><span style="color:#7C88A8;font-size:11px">${ix + 1}</span><b>${o.symbol}</b><span class="pill ${o.side==='BUY'?'g':'r'}">${o.side} · ${o.lots}</span><span class="tr-pl" style="color:#F5B544">⏳ ${Oryx.fmtP(o.symbol, o.price)}</span></div>
+        <div class="tr-main"><span style="color:#7C88A8;font-size:11px">${ix + 1}</span><b>${o.symbol}</b><span class="tr-pl" style="color:#F5B544">⏳ ${Oryx.fmtP(o.symbol, o.price)}</span></div>
         <div class="tr-sub">Now ${Oryx.fmtP(o.symbol, Oryx.prices[o.symbol])}${o.sl ? ' · SL <b style="color:#EA3943">' + Oryx.fmtP(o.symbol, o.sl) + '</b>' : ''}${o.tp ? ' · TP <b style="color:#16C784">' + Oryx.fmtP(o.symbol, o.tp) + '</b>' : ''} · opens by itself at the trigger</div>
-        <button class="tr-close pend" onclick="cancelOrd('${o.id}')">✕ CANCEL</button>
+        <div class="tr-foot"><span class="pill ${o.side==='BUY'?'g':'r'}">${o.side} · ${o.lots}</span><button class="tr-close2 pend" onclick="cancelOrd('${o.id}')">✕ CANCEL</button></div>
       </div>`).join('') : '<p style="color:#7C88A8;font-size:13px;padding:2px 12px 12px">No pending orders. Switch Order Type to ⏳ Pending and set a price — the trade opens by itself there.</p>';
     const ins = Oryx.inst(cur); const cp = Oryx.changePct(cur);
     document.getElementById('symStrip').innerHTML = `
