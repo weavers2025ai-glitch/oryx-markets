@@ -42,6 +42,12 @@
   .pos-rows span{display:block;color:#7C88A8;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
   .pos-rows b{color:#fff;font-size:13px}
   @media(max-width:900px){ .chart-box{height:340px} .eq-bar{grid-template-columns:repeat(2,1fr)} }
+  .hlbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .hl-box{border-radius:14px;padding:12px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+  .hl-box span{font-size:12.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;opacity:.95}
+  .hl-box b{font-size:21px;font-weight:800}
+  .hl-box.hi{background:linear-gradient(135deg,#0B8A5F,#16C784)}
+  .hl-box.lo{background:linear-gradient(135deg,#C81E1E,#EA3943)}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -55,6 +61,7 @@
   <span id="whoLine" style="color:#7C88A8;font-size:13px;margin-left:auto"></span>
 </div>
 <div class="eq-bar" id="eqBar"></div>
+    <div id="hlBar" class="hlbar"></div>
 <div class="term">
   <div class="col">
     <h5>⚡ OPEN POSITIONS — LIVE</h5>
@@ -107,7 +114,7 @@
 <div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=14"></script>
+<script src="assets/store.js?v=15"></script>
 <script src="assets/cloud.js?v=7"></script>
 <script src="assets/chart.js?v=10"></script>
 <script>
@@ -166,6 +173,9 @@
       kbox('g4','💼','Balance', Oryx.money(a.balance)) + kbox('g2','📈','Equity', Oryx.money(eq)) +
       kbox('g3','🔒','Margin Used', Oryx.money(mg)) + kbox('g6','🆓','Free Margin', Oryx.money(eq - mg)) +
       kbox(fl >= 0 ? 'g2' : 'g5','🌊','Floating P/L', Oryx.money(fl));
+    document.getElementById('hlBar').innerHTML =
+      `<div class="hl-box hi"><span>📈 Today High · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayHigh(cur))}</b></div>` +
+      `<div class="hl-box lo"><span>📉 Today Low · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>`;
     try { drawLiveChart(document.getElementById('tvchart'), cur); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
     document.getElementById('posBox').innerHTML = open.length ? open.map(t => {
@@ -181,8 +191,8 @@
       <div class="ss-main"><b>${cur}</b><span>${ins.name}</span></div>
       <div class="ss-it"><span>Last Price</span><b>${Oryx.fmtP(cur, Oryx.prices[cur])}</b></div>
       <div class="ss-it"><span>Change</span><b style="color:${cp>=0?'#16C784':'#EA3943'}">${cp>=0?'+':''}${cp.toFixed(2)}%</b></div>
-      <div class="ss-it"><span>Session High</span><b>${Oryx.fmtP(cur, Oryx.dayHigh(cur))}</b></div>
-      <div class="ss-it"><span>Session Low</span><b>${Oryx.fmtP(cur, Oryx.dayLow(cur))}</b></div>
+      <div class="ss-it"><span>Day High</span><b>${Oryx.fmtP(cur, Oryx.todayHigh(cur))}</b></div>
+      <div class="ss-it"><span>Day Low</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>
       <div class="ss-it"><span>Spread</span><b>${ins.spread.toFixed(ins.digits)}</b></div>`;
     const bid0 = Oryx.bid(cur), ask0 = Oryx.ask(cur);
     const tStep = Math.max((ask0 - bid0) / 2, Oryx.prices[cur] * 0.00004);
