@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Dashboard — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=2">
 </head>
 <body>
 <div class="dash">
@@ -20,6 +20,12 @@
   <main class="main">
     <h1 id="hello">My Dashboard</h1>
     <p class="sub">Your account, balance and trading activity — all in one place.</p>
+    <div class="bal-card">
+      <span>Account Balance · <span id="bcAcc" style="color:#D8A94E"></span></span>
+      <div class="big" id="bcBal">$0.00</div>
+      <div class="row"><span>Equity (live) <b id="bcEq">$0.00</b></span><span>Floating P/L <b id="bcPl">$0.00</b></span><span>Leverage <b id="bcLev">1:1000</b></span></div>
+      <div style="margin-top:18px"><a class="btn btn-gold" href="trade.html">📈 Trade Now</a> <a class="btn btn-ghost" id="bcTopup" target="_blank" rel="noopener">Request More Balance</a></div>
+    </div>
     <div class="stat-grid">
       <div class="stat"><span>Balance</span><b id="stBal">$0.00</b></div>
       <div class="stat"><span>Equity (live)</span><b id="stEq">$0.00</b></div>
@@ -47,8 +53,8 @@
     </div>
   </main>
 </div>
-<script src="data/instruments.js"></script>
-<script src="assets/store.js"></script>
+<script src="data/instruments.js?v=2"></script>
+<script src="assets/store.js?v=2"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
@@ -57,13 +63,20 @@
   const S = Oryx.settings();
   document.getElementById('whoBox').innerHTML = `<b style="color:#fff">${Oryx.esc(u.name)}</b><br>${Oryx.esc(u.email)}`;
   document.getElementById('hello').textContent = 'Hello, ' + u.name.split(' ')[0] + ' 👋';
-  document.getElementById('topupBtn').href = 'https://wa.me/' + S.whatsapp + '?text=' + encodeURIComponent(`Hello Oryx Markets, I am ${u.name} (account ${acc ? acc.login : ''}). Please issue more balance to my account.`);
+  const topupUrl = 'https://wa.me/' + S.whatsapp + '?text=' + encodeURIComponent(`Hello Oryx Markets, I am ${u.name} (account ${acc ? acc.login : ''}). Please issue more balance to my account.`);
+  document.getElementById('topupBtn').href = topupUrl;
+  document.getElementById('bcTopup').href = topupUrl;
+  document.getElementById('bcAcc').textContent = 'No. ' + (acc ? acc.login : '');
+  document.getElementById('bcLev').textContent = '1:' + (acc ? acc.leverage : 1000);
   function tbl(head, rows){ return `<table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td colspan="${head.length}" style="color:var(--mut)">Nothing here yet.</td></tr>`}</tbody></table>`; }
   function render(){
     const a = Oryx.accountById(acc.id);
     const fl = Oryx.floating(a.id);
     const open = Oryx.trades().filter(t => t.accountId === a.id && t.status === 'open');
     const closed = Oryx.trades().filter(t => t.accountId === a.id && t.status === 'closed').slice().reverse();
+    document.getElementById('bcBal').textContent = Oryx.money(a.balance);
+    document.getElementById('bcEq').textContent = Oryx.money(a.balance + fl);
+    const bpl = document.getElementById('bcPl'); bpl.textContent = Oryx.money(fl); bpl.style.color = fl >= 0 ? '#16C784' : '#EA3943';
     document.getElementById('stBal').textContent = Oryx.money(a.balance);
     document.getElementById('stEq').textContent = Oryx.money(a.balance + fl);
     document.getElementById('stOpen').textContent = open.length;

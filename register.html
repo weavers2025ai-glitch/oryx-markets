@@ -3,32 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A1128">
 <title>Open Account — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=2">
 </head>
 <body data-root="">
-<div id="site-header"></div>
-<div class="auth-wrap">
-  <div class="auth-card">
-    <h1>Create Your Account</h1>
-    <p class="sub">Free forever to open. Your account starts with a <b>$10 welcome credit</b> — further balance is issued by our admin team.</p>
-    <div class="form-err" id="err"></div>
-    <div class="field"><label>Full Name</label><input id="rName" placeholder="e.g. Ahmed Khan"></div>
-    <div class="field"><label>Email Address</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
-    <div class="field"><label>Phone / WhatsApp</label><input id="rPhone" placeholder="+92 ..."></div>
-    <div class="field"><label>Country</label><input id="rCountry" placeholder="e.g. Pakistan"></div>
-    <div class="field"><label>Password</label><input id="rPass" type="password" placeholder="Choose a password"></div>
-    <button class="btn btn-gold" style="width:100%" onclick="doRegister()">Open My Account</button>
-    <p class="auth-alt">Already have an account? <a href="login.html">Log in</a></p>
-    <p style="font-size:12px;color:var(--mut);margin-top:14px;text-align:center">By opening an account you accept the risk warning shown in the footer. Demo accounts hold virtual funds only.</p>
+<div class="auth-shell">
+  <aside class="auth-side">
+    <a class="brand" href="index.html"><svg viewBox="0 0 48 48" class="logo-mark"><path d="M14 6 C16 16, 17 24, 16 34 L11 34 C13 24, 12 15, 10 6 Z" fill="#D8A94E"/><path d="M34 6 C32 16, 31 24, 32 34 L37 34 C35 24, 36 15, 38 6 Z" fill="#D8A94E"/><circle cx="24" cy="30" r="7.5" fill="none" stroke="#F3E5C0" stroke-width="3"/></svg><span>ORYX <b>MARKETS</b></span></a>
+    <div>
+      <h2>Your first trade is <span>60 seconds</span> away.</h2>
+      <p>Create your free account and receive a $10 welcome credit instantly. Learn the platform, practise on live charts, and grow at your own pace.</p>
+      <div class="auth-points">
+        <div><b>$10</b> Welcome credit on signup — automatically</div>
+        <div><b>⚡</b> No documents needed to start practising</div>
+        <div><b>🔒</b> Further balance issued personally by our team</div>
+      </div>
+    </div>
+    <p style="color:#7C88A8;font-size:12.5px;margin-top:40px">Trading involves risk. Demo accounts hold virtual funds only.</p>
+  </aside>
+  <div class="auth-form-side">
+    <div class="auth-form">
+      <h1>Create your free account</h1>
+      <p class="sub">Fill in your details — your trading account opens instantly with a <b>$10 welcome credit</b>.</p>
+      <div class="form-err" id="err"></div>
+      <div class="field"><label>Full Name</label><input id="rName" placeholder="e.g. Ahmed Khan"></div>
+      <div class="field"><label>Email Address</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
+      <div class="field"><label>Phone / WhatsApp</label><input id="rPhone" placeholder="+92 ..."></div>
+      <div class="field"><label>Country</label><input id="rCountry" placeholder="e.g. Pakistan"></div>
+      <div class="field"><label>Create Password</label>
+        <div class="pw-wrap"><input id="rPass" type="password" placeholder="At least 6 characters"><button type="button" class="pw-eye" onclick="togglePw('rPass', this)" title="Show password">👁️</button></div>
+      </div>
+      <button class="btn btn-gold" style="width:100%;padding:14px" onclick="doRegister()">Open My Account →</button>
+      <p class="auth-alt">Already have an account? <a href="login.html">Log in</a></p>
+      <p style="font-size:12px;color:var(--mut);margin-top:12px;text-align:center">By opening an account you accept the risk warning in the footer. Demo accounts hold virtual funds only.</p>
+    </div>
   </div>
 </div>
-<div id="site-footer"></div>
-<script src="data/instruments.js"></script>
-<script src="assets/store.js"></script>
-<script src="assets/chrome.js"></script>
+<script src="data/instruments.js?v=2"></script>
+<script src="assets/store.js?v=2"></script>
 <script>
   if (Oryx.currentUser()) location.href = 'dashboard.html';
+  function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function doRegister(){
     const name = document.getElementById('rName').value.trim();
     const email = document.getElementById('rEmail').value.trim();

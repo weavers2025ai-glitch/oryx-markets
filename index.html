@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A1128">
 <title>Oryx Markets — Trade Forex, Gold, Crypto & Indices Online</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=2">
 </head>
 <body data-root="">
 <div id="site-header"></div>
@@ -12,6 +13,7 @@
 <section class="hero">
   <div class="hero-inner">
     <div>
+      <span class="kicker-chip"><i></i> MARKETS OPEN · TRADING 24/5</span>
       <h1 id="heroTitle">Trade the <span>World Markets</span></h1>
       <p id="heroSub">Forex, Gold, Oil, Crypto and Global Indices — one account, one powerful platform, spreads from 0.1 pips.</p>
       <a class="btn btn-gold" href="register.html">Open Free Account</a>
@@ -19,19 +21,55 @@
       <div class="hero-badges">
         <div><b>140+</b>Instruments</div>
         <div><b>0.1</b>Spreads from (pips)</div>
-        <div><b>1:500</b>Leverage up to</div>
-        <div><b>24/5</b>Live Support</div>
+        <div><b>1:1000</b>Leverage up to</div>
+        <div><b>$10</b>Welcome credit</div>
       </div>
     </div>
-    <div class="hero-panel">
-      <h5>LIVE MARKET PRICES</h5>
+    <div class="term-card">
+      <div class="tc-head"><span class="tc-dot" style="background:#EA3943"></span><span class="tc-dot" style="background:#F5B544"></span><span class="tc-dot" style="background:#16C784"></span><span class="tc-title">ORYX TERMINAL — LIVE PRICES</span></div>
       <div id="heroPrices"></div>
-      <p style="color:#7C88A8;font-size:12px;margin-top:10px">Prices refresh every second on the terminal. Charts are powered by TradingView.</p>
+      <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08)"><a href="trade.html" style="color:var(--gold);font-weight:700;font-size:14px">Open the full trading terminal →</a></div>
     </div>
   </div>
 </section>
 
+<div class="pay-strip">
+  <div class="wrap">
+    <span>BALANCE ISSUED VIA</span>
+    <span class="pay-chip">💳 Visa</span><span class="pay-chip">💳 Mastercard</span><span class="pay-chip">🏦 Bank Transfer</span><span class="pay-chip">₮ USDT</span><span class="pay-chip">📱 Local Wallets</span>
+    <span style="margin-left:auto">Every credit is issued personally by our admin team — recorded in your dashboard.</span>
+  </div>
+</div>
+
+<section class="chart-sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Live Trading Chart</div>
+      <h2>Watch the Market Move — Live</h2>
+      <p>Real-time charts powered by TradingView. Pick an instrument and see exactly what our traders see.</p>
+    </div>
+    <div class="sym-tabs" id="symTabs"></div>
+    <div class="chart-frame"><div id="homeChart" style="width:100%;height:100%"></div></div>
+    <p style="text-align:center;margin-top:22px"><a class="btn btn-gold" href="register.html">Create Account &amp; Start Trading</a></p>
+  </div>
+</section>
+
 <section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Markets</div>
+      <h2>Popular Instruments — Live Prices</h2>
+      <p>Tight spreads on the instruments the world trades most. Prices refresh every second.</p>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Instrument</th><th>Name</th><th>Bid</th><th>Ask</th><th>Change</th><th>Spread</th><th></th></tr></thead>
+      <tbody id="mktRows"></tbody>
+    </table>
+    <p style="text-align:center;margin-top:22px"><a class="btn btn-dark" href="markets.html">View All Markets</a></p>
+  </div>
+</section>
+
+<section class="sec alt">
   <div class="wrap">
     <div class="sec-head">
       <div class="kicker">Why Oryx Markets</div>
@@ -49,21 +87,6 @@
   </div>
 </section>
 
-<section class="sec alt">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">Markets</div>
-      <h2>Popular Instruments</h2>
-      <p>Tight spreads on the instruments the world trades most.</p>
-    </div>
-    <table class="tbl">
-      <thead><tr><th>Instrument</th><th>Name</th><th>Bid</th><th>Ask</th><th>Spread</th><th></th></tr></thead>
-      <tbody id="mktRows"></tbody>
-    </table>
-    <p style="text-align:center;margin-top:22px"><a class="btn btn-dark" href="markets.html">View All Markets</a></p>
-  </div>
-</section>
-
 <section class="sec">
   <div class="wrap">
     <div class="sec-head">
@@ -72,13 +95,27 @@
     </div>
     <div class="steps">
       <div class="step"><div class="n">1</div><h3>Create Your Account</h3><p style="color:var(--mut)">Register in under a minute with your name and email.</p></div>
-      <div class="step"><div class="n">2</div><h3>Receive Your Balance</h3><p style="color:var(--mut)">Your account opens with a $10 welcome credit. Further balance is issued by our team on request.</p></div>
+      <div class="step"><div class="n">2</div><h3>Receive Your Balance</h3><p style="color:var(--mut)">Your account opens with a $10 welcome credit. Further balance is issued by our admin team on request.</p></div>
       <div class="step"><div class="n">3</div><h3>Trade the Markets</h3><p style="color:var(--mut)">Open the web terminal, pick an instrument, and place your first trade.</p></div>
     </div>
   </div>
 </section>
 
 <section class="sec alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Traders Say</div>
+      <h2>Loved by Traders Worldwide</h2>
+    </div>
+    <div class="grid3">
+      <div class="card testi-card"><div class="stars">★★★★★</div><p>"The terminal is fast and the charts are exactly what I used on big international platforms. Balance was issued the same day I asked."</p><div class="who">Ahmed R.<small>Dubai, UAE</small></div></div>
+      <div class="card testi-card"><div class="stars">★★★★★</div><p>"I started with the $10 credit just to learn. Support answered on WhatsApp in Urdu and guided me trade by trade. Very professional."</p><div class="who">Bilal K.<small>Lahore, Pakistan</small></div></div>
+      <div class="card testi-card"><div class="stars">★★★★★</div><p>"Gold spreads are tight and my positions are always in front of me — open, close, profit, everything clear. This is how a broker should feel."</p><div class="who">Sarah M.<small>London, UK</small></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
   <div class="wrap">
     <div class="sec-head">
       <div class="kicker">FAQ</div>
@@ -99,23 +136,30 @@
 </section>
 
 <div id="site-footer"></div>
-<script src="data/instruments.js"></script>
-<script src="assets/store.js"></script>
-<script src="assets/chrome.js"></script>
+<script src="data/instruments.js?v=2"></script>
+<script src="assets/store.js?v=2"></script>
+<script src="assets/chrome.js?v=2"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
 <script>
   const S = Oryx.settings();
-  document.getElementById('heroTitle').innerHTML = S.heroTitle.replace(/World/i, '<span>World</span>');
   document.getElementById('heroSub').textContent = S.heroSub;
-  const heroPicks = ['XAUUSD','EURUSD','BTCUSD','GBPUSD','WTIUSD'];
+  const heroPicks = ['XAUUSD','EURUSD','BTCUSD','GBPUSD','WTIUSD','NAS100'];
+  function chgPct(s){ const i = Oryx.inst(s); return (Oryx.prices[s] - i.base) / i.base * 100; }
   function renderPrices(){
     document.getElementById('heroPrices').innerHTML = heroPicks.map(s => {
-      const i = Oryx.inst(s);
-      return `<div class="mini-row"><div><b>${s}</b><span>${i.name}</span></div><div style="text-align:right"><b>${Oryx.fmtP(s, Oryx.bid(s))}</b><span>Spread ${(i.spread/Math.pow(10,-i.digits+1)).toFixed(1)} pts</span></div></div>`;
+      const i = Oryx.inst(s); const c = chgPct(s);
+      return `<div class="mini-row"><div><b>${s}</b><span>${i.name}</span></div><div style="text-align:right"><b>${Oryx.fmtP(s, Oryx.bid(s))}</b><span class="chg ${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</span></div></div>`;
     }).join('');
-    document.getElementById('mktRows').innerHTML = INSTRUMENTS.slice(0, 8).map(i => `
-      <tr><td><b>${i.symbol}</b></td><td>${i.name}</td><td>${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</td><td>${Oryx.fmtP(i.symbol, Oryx.ask(i.symbol))}</td><td>${(i.spread/Math.pow(10,-i.digits+1)).toFixed(1)} pts</td><td><a class="btn btn-dark btn-sm" href="trade.html">Trade</a></td></tr>`).join('');
+    document.getElementById('mktRows').innerHTML = INSTRUMENTS.slice(0, 8).map(i => { const c = chgPct(i.symbol); return `
+      <tr><td><b>${i.symbol}</b></td><td>${i.name}</td><td>${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</td><td>${Oryx.fmtP(i.symbol, Oryx.ask(i.symbol))}</td><td class="${c>=0?'up':'dn'}"><b>${c>=0?'+':''}${c.toFixed(2)}%</b></td><td>${(i.spread/Math.pow(10,-i.digits+1)).toFixed(1)} pts</td><td><a class="btn btn-dark btn-sm" href="trade.html">Trade</a></td></tr>`; }).join('');
   }
   Oryx.startFeed(renderPrices, 1000);
+  const chartSyms = ['XAUUSD','EURUSD','GBPUSD','BTCUSD','WTIUSD','NAS100'];
+  const tabs = document.getElementById('symTabs');
+  tabs.innerHTML = chartSyms.map((s, ix) => `<button class="${ix===0?'on':''}" onclick="homeSym('${s}',this)">${s}</button>`).join('');
+  function loadHomeChart(s){ new TradingView.widget({ container_id:'homeChart', autosize:true, symbol:Oryx.inst(s).tv, interval:'15', timezone:'Asia/Dubai', theme:'dark', style:'1', locale:'en', hide_side_toolbar:true, allow_symbol_change:false }); }
+  function homeSym(s, el){ document.querySelectorAll('#symTabs button').forEach(b => b.classList.remove('on')); el.classList.add('on'); document.getElementById('homeChart').innerHTML = ''; loadHomeChart(s); }
+  loadHomeChart('XAUUSD');
 </script>
 </body>
 </html>

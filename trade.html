@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A1128">
 <title>Web Terminal — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=2">
 </head>
 <body style="background:#060B1D">
 <div class="term-top">
@@ -20,12 +21,12 @@
   </div>
   <div class="col">
     <div class="chart-box" id="tvchart"></div>
-    <div class="pos-wrap">
-      <h5 style="padding-left:0">OPEN POSITIONS</h5>
-      <div id="posBox" style="overflow:auto"></div>
+    <div class="hist-wrap">
+      <h5 style="padding-left:0">RECENTLY CLOSED</h5>
+      <div id="histBox"></div>
     </div>
   </div>
-  <div class="col">
+  <div class="col rail" id="rail">
     <h5>NEW ORDER</h5>
     <div class="trade-panel">
       <div class="sym" id="tpSym">XAUUSD</div>
@@ -36,6 +37,9 @@
       </div>
       <label>Volume (lots)</label>
       <input id="tpLots" type="number" step="0.01" min="0.01" value="0.01">
+      <div class="lot-chips">
+        <button onclick="setLot(0.01)">0.01</button><button onclick="setLot(0.05)">0.05</button><button onclick="setLot(0.10)">0.10</button><button onclick="setLot(0.50)">0.50</button><button onclick="setLot(1)">1.00</button>
+      </div>
       <label>Leverage</label>
       <input id="tpLev" disabled>
       <div style="font-size:12.5px;color:#93A1C4;margin-top:10px" id="tpMargin"></div>
@@ -44,13 +48,15 @@
         <button style="background:var(--up)" onclick="place('BUY')">BUY</button>
       </div>
       <div id="tpMsg" style="margin-top:12px;font-size:13.5px"></div>
-      <p style="font-size:12px;color:#7C88A8;margin-top:16px">Demo terminal: prices and charts are live, orders are simulated on your practice balance. Balance is issued by Admin only.</p>
     </div>
+    <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">OPEN POSITIONS — LIVE</h5>
+    <div class="pos-list" id="posBox"></div>
+    <p style="font-size:12px;color:#7C88A8;padding:0 16px 16px">Demo terminal: charts and prices are live, orders are simulated on your practice balance. Balance is issued by Admin only.</p>
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="data/instruments.js"></script>
-<script src="assets/store.js"></script>
+<script src="data/instruments.js?v=2"></script>
+<script src="assets/store.js?v=2"></script>
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
   const u = Oryx.currentUser();
@@ -65,14 +71,16 @@
     new TradingView.widget({ container_id:'tvchart', autosize:true, symbol:Oryx.inst(cur).tv, interval:'15', timezone:'Asia/Dubai', theme:'dark', style:'1', locale:'en', hide_side_toolbar:false, allow_symbol_change:false, studies:['STD;RSI'] });
   }
   function pick(s){ cur = s; render(); loadChart(); }
-  function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3200); }
+  function setLot(v){ document.getElementById('tpLots').value = v; render(); }
+  function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3400); }
   function place(side){
     const lots = parseFloat(document.getElementById('tpLots').value);
     const r = Oryx.openTrade(acc.id, cur, side, lots);
     const m = document.getElementById('tpMsg');
     if (r.error){ m.style.color = '#EA3943'; m.textContent = r.error; return; }
-    m.style.color = '#16C784'; m.textContent = side + ' ' + lots + ' lots ' + cur + ' opened at ' + Oryx.fmtP(cur, r.trade.open);
-    toast('Order filled: ' + side + ' ' + cur);
+    m.style.color = '#16C784'; m.textContent = '✔ ' + side + ' ' + lots + ' lots ' + cur + ' opened at ' + Oryx.fmtP(cur, r.trade.open) + ' — see it live on the right →';
+    toast('Order filled: ' + side + ' ' + cur + ' ' + lots + ' lots');
+    const rail = document.getElementById('rail'); rail.classList.remove('flash'); void rail.offsetWidth; rail.classList.add('flash');
     render();
   }
   function closeT(id){
@@ -82,10 +90,8 @@
     render();
   }
   function render(){
-    document.getElementById('instList').innerHTML = INSTRUMENTS.map(i => {
-      const b = Oryx.bid(i.symbol);
-      return `<div class="inst-row ${i.symbol===cur?'on':''}" onclick="pick('${i.symbol}')"><div><b>${i.symbol}</b><small>${i.type}</small></div><div class="px">${Oryx.fmtP(i.symbol, b)}</div></div>`;
-    }).join('');
+    document.getElementById('instList').innerHTML = INSTRUMENTS.map(i => `
+      <div class="inst-row ${i.symbol===cur?'on':''}" onclick="pick('${i.symbol}')"><div><b>${i.symbol}</b><small>${i.type}</small></div><div class="px">${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</div></div>`).join('');
     document.getElementById('tpSym').textContent = cur;
     document.getElementById('tpName').textContent = Oryx.inst(cur).name;
     document.getElementById('tpBid').textContent = Oryx.fmtP(cur, Oryx.bid(cur));
@@ -99,10 +105,16 @@
     document.getElementById('eqBar').innerHTML =
       `<span>Balance <b>${Oryx.money(a.balance)}</b></span><span>Equity <b>${Oryx.money(eq)}</b></span><span>Margin <b>${Oryx.money(mg)}</b></span><span>Free Margin <b>${Oryx.money(eq - mg)}</b></span><span>Floating P/L <b style="color:${fl>=0?'#16C784':'#EA3943'}">${Oryx.money(fl)}</b></span>`;
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
-    document.getElementById('posBox').innerHTML = open.length ? `<table><thead><tr><th>Symbol</th><th>Type</th><th>Lots</th><th>Open</th><th>Now</th><th>P/L</th><th></th></tr></thead><tbody>${
-      open.map(t => { const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
-        return `<tr><td><b style="color:#fff">${t.symbol}</b></td><td style="color:${t.side==='BUY'?'#16C784':'#EA3943'}">${t.side}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${Oryx.fmtP(t.symbol, now)}</td><td style="color:${p>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(p)}</b></td><td><button class="x-btn" onclick="closeT('${t.id}')">Close</button></td></tr>`; }).join('')
-    }</tbody></table>` : '<p style="color:#7C88A8;font-size:13.5px;padding:6px 0 12px">No open positions. Pick an instrument and place your first trade.</p>';
+    document.getElementById('posBox').innerHTML = open.length ? open.map(t => {
+      const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
+      return `<div class="pos-card">
+        <div class="pos-top"><b>${t.symbol}</b><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots} lots</span><span class="pos-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
+        <div class="pos-sub">Opened at ${Oryx.fmtP(t.symbol, t.open)} &nbsp;→&nbsp; Now ${Oryx.fmtP(t.symbol, now)} &nbsp;·&nbsp; ${new Date(t.openAt).toLocaleTimeString()}</div>
+        <button class="close-btn" onclick="closeT('${t.id}')">✕ CLOSE POSITION</button>
+      </div>`;
+    }).join('') : '<p style="color:#7C88A8;font-size:13.5px;padding:2px 16px 12px">No open positions yet. Place a BUY or SELL order above — it will appear here live with its profit/loss and a Close button.</p>';
+    const closed = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'closed').slice().reverse().slice(0, 6);
+    document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
   }
   loadChart();
   Oryx.startFeed(render, 1000);
