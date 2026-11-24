@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Markets & Spreads — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=10">
+<link rel="stylesheet" href="assets/style.css?v=11">
 </head>
-<body data-root="">
+<body data-root="" class="dark-page">
 <div id="site-header"></div>
 <section class="sec">
   <div class="wrap">
@@ -16,31 +16,43 @@
       <p>Every instrument available on your Oryx account, with live bid/ask prices. Prices refresh every second.</p>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:24px" id="typeTabs"></div>
-    <table class="tbl">
-      <thead><tr><th>Instrument</th><th>Name</th><th>Type</th><th>Bid</th><th>Ask</th><th>Spread</th><th>Min Lot</th><th></th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <p style="color:var(--mut);font-size:13px;margin-top:16px">Spreads are shown in points and float with market conditions. Contract size and leverage (up to 1:500) apply per your account type.</p>
+    <div id="cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:16px"></div>
+    <p style="color:#7C88A8;font-size:13px;margin-top:18px;text-align:center">Spreads are shown in points and float with market conditions. Contract size and leverage (up to 1:1000) apply per your account type.</p>
   </div>
 </section>
 <div id="site-footer"></div>
-<script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=10"></script>
-<script src="assets/chrome.js?v=10"></script>
+<script src="data/instruments.js?v=11"></script>
+<script src="assets/store.js?v=11"></script>
+<script src="assets/chrome.js?v=11"></script>
 <script>
   let filter = 'All';
   const types = ['All', ...new Set(INSTRUMENTS.map(i => i.type))];
   document.getElementById('typeTabs').innerHTML = types.map(t => `<button class="btn ${t==='All'?'btn-dark':'btn-line'} btn-sm" onclick="setF('${t}',this)">${t}</button>`).join('');
   function setF(t, el){ filter = t; document.querySelectorAll('#typeTabs .btn').forEach(b => { b.className = 'btn btn-line btn-sm'; }); el.className = 'btn btn-dark btn-sm'; render(); }
   function render(){
-    document.getElementById('rows').innerHTML = INSTRUMENTS.filter(i => filter === 'All' || i.type === filter).map(i => `
-      <tr><td><b>${i.symbol}</b></td><td>${i.name}</td><td><span class="pill b">${i.type}</span></td>
-      <td>${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</td><td>${Oryx.fmtP(i.symbol, Oryx.ask(i.symbol))}</td>
-      <td>${(i.spread/Math.pow(10,-i.digits+1)).toFixed(1)} pts</td><td>0.01</td>
-      <td><a class="btn btn-dark btn-sm" href="trade.html">Trade</a></td></tr>`).join('');
+    document.getElementById('cards').innerHTML = INSTRUMENTS.filter(i => filter === 'All' || i.type === filter).map(i => {
+      const cp = Oryx.changePct(i.symbol);
+      const pts = (i.spread / Math.pow(10, -i.digits + 1)).toFixed(1);
+      return `<div class="mkt-card" style="background:#0D1633;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:18px;box-shadow:0 16px 40px rgba(0,0,0,.35)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div><b style="color:#fff;font-size:18px">${i.symbol}</b><div style="color:#7C88A8;font-size:12.5px">${i.name}</div></div>
+          <span class="pill b">${i.type}</span>
+        </div>
+        <div style="margin:12px 0 2px">${Oryx.spark(i.symbol)}</div>
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;color:#7C88A8"><span>24h change</span><b style="color:${cp >= 0 ? '#16C784' : '#EA3943'}">${cp >= 0 ? '▲' : '▼'} ${Math.abs(cp).toFixed(2)}%</b></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px">
+          <div style="background:rgba(255,255,255,.04);border-radius:9px;padding:8px 11px"><span style="display:block;font-size:10.5px;color:#7C88A8;letter-spacing:.07em;font-weight:700">BID · SELL</span><b style="color:#fff;font-size:15.5px">${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</b></div>
+          <div style="background:rgba(255,255,255,.04);border-radius:9px;padding:8px 11px"><span style="display:block;font-size:10.5px;color:#7C88A8;letter-spacing:.07em;font-weight:700">ASK · BUY</span><b style="color:#fff;font-size:15.5px">${Oryx.fmtP(i.symbol, Oryx.ask(i.symbol))}</b></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:13px">
+          <span style="color:#7C88A8;font-size:12.5px">Spread ${pts} pts · Min 0.01</span>
+          <a class="btn btn-gold btn-sm" href="trade.html">Trade →</a>
+        </div>
+      </div>`;
+    }).join('');
   }
   Oryx.startFeed(render, 1000);
 </script>
-<script src="assets/support.js?v=10"></script>
+<script src="assets/support.js?v=11"></script>
 </body>
 </html>
