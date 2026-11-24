@@ -4,15 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Oryx Markets</title>
-<link rel="stylesheet" href="../assets/style.css?v=10">
+<link rel="stylesheet" href="../assets/style.css?v=13">
 </head>
 <body class="dark-dash">
 <div id="gate" class="auth-wrap" style="min-height:100vh">
   <div class="auth-card">
     <h1>🔐 Oryx Admin</h1>
-    <p class="sub">Enter the admin password to manage clients, balances and trades.</p>
+    <p class="sub">Sign in with your admin account to manage clients, balances and trades. Admin accounts are created by the Super Admin.</p>
     <div class="form-err" id="gErr"></div>
-    <div class="field"><label>Admin Password</label>
+    <div class="field"><label>Admin Email</label><input id="gEmail" type="email" placeholder="admin@oryx.local"></div>
+    <div class="field"><label>Password</label>
       <div class="pw-wrap"><input id="gPass" type="password" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePw('gPass', this)" title="Show password">👁️</button></div>
     </div>
     <button class="btn btn-gold" style="width:100%" onclick="tryLogin()">Enter Admin Panel</button>
@@ -24,15 +25,16 @@
   <div class="dash">
     <aside class="side">
       <a class="brand" href="../index.html"><svg viewBox="0 0 48 48" class="logo-mark"><path d="M14 6 C16 16, 17 24, 16 34 L11 34 C13 24, 12 15, 10 6 Z" fill="#D8A94E"/><path d="M34 6 C32 16, 31 24, 32 34 L37 34 C35 24, 36 15, 38 6 Z" fill="#D8A94E"/><circle cx="24" cy="30" r="7.5" fill="none" stroke="#F3E5C0" stroke-width="3"/></svg><span>ORYX <b>ADMIN</b></span></a>
-      <div class="who">Broker control panel<br>Balances are issued here only.</div>
+      <div class="who" id="adminWho">Broker control panel<br>Balances are issued here only.</div>
       <a href="#" data-tab="dash" class="on">📊 Dashboard</a>
       <a href="#" data-tab="clients">👥 Clients &amp; Balances</a>
       <a href="#" data-tab="trades">📈 All Trades</a>
       <a href="#" data-tab="txns">💳 Transactions</a>
       <a href="#" data-tab="reqs">💸 Balance Requests<span id="reqBadge"></span></a>
+      <a href="#" data-tab="history">📜 Request History</a>
       <a href="#" data-tab="settings">⚙️ Settings</a>
       <a href="../index.html">↩ Website</a>
-      <a href="#" onclick="sessionStorage.removeItem('oryx_admin_ok');location.reload();return false;">🚪 Log Out</a>
+      <a href="#" onclick="Oryx.adminLogout();sessionStorage.removeItem('oryx_admin_ok');location.reload();return false;">🚪 Log Out</a>
     </aside>
     <main class="main">
       <section id="tab-dash">
@@ -83,8 +85,14 @@
       </section>
 
       <section id="tab-reqs" style="display:none">
-        <h1>Balance Requests</h1><p class="sub">Clients send deposit requests with payment proof. Approve one and the amount is credited to their account instantly.</p>
+        <h1>Balance Requests</h1><p class="sub">Clients send deposit requests with payment proof. Approve one and the amount is credited to their account instantly — decided requests move to Request History.</p>
         <div id="rqList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px"></div>
+      </section>
+
+      <section id="tab-history" style="display:none">
+        <h1>Request History</h1><p class="sub">The permanent record of every decided balance request — approved and rejected.</p>
+        <div class="kpis" id="rqHistKpis" style="margin-bottom:18px"></div>
+        <div id="rqHistory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px"></div>
       </section>
 
       <section id="tab-settings" style="display:none">
@@ -120,17 +128,38 @@
   </div>
 </div>
 
+<div class="proof-ov" id="proofOv">
+  <div class="proof-box">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div><b style="font-size:17px;color:#fff" id="pfName">Client</b><div style="color:#93A1C4;font-size:12.5px" id="pfMeta"></div></div>
+      <button class="btn btn-ghost btn-sm" onclick="closeProof()">✖ Close</button>
+    </div>
+    <div style="font-size:28px;font-weight:800;margin:12px 0 2px" id="pfAmt"></div>
+    <div style="color:#C9D3EA;font-size:13.5px;margin-bottom:12px" id="pfMethod"></div>
+    <img id="pfImg" alt="Payment proof">
+    <div style="display:flex;gap:9px;margin-top:16px" id="pfActions"></div>
+  </div>
+</div>
+
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=10"></script>
+<script src="../assets/store.js?v=11"></script>
+<script src="../assets/cloud.js?v=2"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function tryLogin(){
-    if (document.getElementById('gPass').value === Oryx.adminPw()){ sessionStorage.setItem('oryx_admin_ok', '1'); showPanel(); }
-    else { const e = document.getElementById('gErr'); e.textContent = 'Wrong password.'; e.style.display = 'block'; }
+    const r = Oryx.adminLogin(document.getElementById('gEmail').value.trim(), document.getElementById('gPass').value);
+    if (r.error){ const e = document.getElementById('gErr'); e.textContent = r.error; e.style.display = 'block'; return; }
+    sessionStorage.setItem('oryx_admin_ok', '1'); showPanel();
   }
   document.getElementById('gPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-  if (sessionStorage.getItem('oryx_admin_ok') === '1') showPanel();
-  function showPanel(){ document.getElementById('gate').style.display = 'none'; document.getElementById('panel').style.display = 'block'; renderAll(); }
+  document.getElementById('gEmail').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  if (sessionStorage.getItem('oryx_admin_ok') === '1' && Oryx.currentAdmin()) showPanel();
+  function showPanel(){
+    document.getElementById('gate').style.display = 'none'; document.getElementById('panel').style.display = 'block';
+    const a = Oryx.currentAdmin();
+    if (a) document.getElementById('adminWho').innerHTML = `<b style="color:#fff">${Oryx.esc(a.name)}</b><br>${Oryx.esc(a.email)}<br><span style="color:#7C88A8">Balances are issued here only.</span>`;
+    renderAll();
+  }
 
   document.querySelectorAll('.side a[data-tab]').forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
@@ -244,7 +273,7 @@
     document.getElementById('reqBadge').innerHTML = rqPend.length ? `<span class="req-badge blink">${rqPend.length}</span>` : '';
     document.getElementById('dashAlert').innerHTML = rqPend.length ? `<div class="alert-strip blink" onclick="document.querySelector('[data-tab=reqs]').click()">💸 ${rqPend.length} balance request${rqPend.length > 1 ? 's' : ''} waiting for your approval — click to review</div>` : '';
     const grads = ['linear-gradient(135deg,#6D28D9,#8B5CF6)','linear-gradient(135deg,#065F46,#10B981)','linear-gradient(135deg,#B45309,#F59E0B)','linear-gradient(135deg,#1D4ED8,#38BDF8)','linear-gradient(135deg,#BE185D,#F472B6)','linear-gradient(135deg,#0F766E,#2DD4BF)'];
-    document.getElementById('rqList').innerHTML = rqAll.length ? rqAll.slice().reverse().map((r, ix) => {
+    const rqCard = (r, ix) => {
       const a = ac.find(v => v.id === r.accountId);
       return `<div style="background:${grads[ix % 6]};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
@@ -253,15 +282,26 @@
         </div>
         <div style="font-size:30px;font-weight:800;margin:10px 0 2px">${Oryx.money(r.amount)}</div>
         <div style="opacity:.92;font-size:13px">Paid via: <b>${Oryx.esc(r.method)}</b>${r.note ? ' · ' + Oryx.esc(r.note) : ''}</div>
-        ${r.proof ? `<div style="margin-top:10px"><img src="${r.proof}" class="proof-thumb" title="Payment proof — click to enlarge" onclick="this.classList.toggle('proof-big')"></div>` : '<div style="margin-top:10px;font-size:12.5px;opacity:.85">No proof attached</div>'}
+        ${r.proof ? `<div style="margin-top:10px"><img src="${r.proof}" class="proof-thumb" title="Payment proof — click to verify" onclick="viewProof('${r.id}')"><div style="font-size:11.5px;opacity:.85;margin-top:4px">🔍 Click the proof to verify it</div></div>` : '<div style="margin-top:10px;font-size:12.5px;opacity:.85">No proof attached</div>'}
         ${r.status === 'pending' ? `<div style="display:flex;gap:9px;margin-top:14px">
           <button class="btn" style="flex:1;background:#fff;color:#065F46;font-weight:800" onclick="decideRq('${r.id}', true)">✔ Approve &amp; Credit</button>
           <button class="btn" style="background:rgba(0,0,0,.3);color:#fff;font-weight:700" onclick="decideRq('${r.id}', false)">✖ Reject</button>
         </div>` : `<div style="margin-top:12px;font-size:12.5px;opacity:.85">${r.status === 'approved' ? '✔ Credited to the client account' : '✖ Rejected'} · ${r.decidedAt ? new Date(r.decidedAt).toLocaleString() : ''}</div>`}
       </div>`;
-    }).join('') : '<p style="color:#7C88A8">No balance requests yet. When a client sends one from their dashboard, it appears here.</p>';
+    };
+    /* pending only on the Balance Requests page — decided ones live in History */
+    document.getElementById('rqList').innerHTML = rqPend.length ? rqPend.slice().reverse().map(rqCard).join('')
+      : '<p style="color:#7C88A8">No pending requests. When a client sends one from their dashboard, it appears here — decided requests are kept in 📜 Request History.</p>';
+    const rqDone = rqAll.filter(r => r.status !== 'pending');
+    const rqApproved = rqDone.filter(r => r.status === 'approved');
+    document.getElementById('rqHistory').innerHTML = rqDone.length ? rqDone.slice().reverse().map(rqCard).join('')
+      : '<p style="color:#7C88A8">No decided requests yet. Approved and rejected requests will be recorded here permanently.</p>';
     /* ===== per-page KPI strips (same theme as dashboard) ===== */
     const mini = (g, ic, label, val, sub) => `<div class="kpi mini ${g}"><span class="kic" style="width:30px;height:30px;font-size:14px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
+    document.getElementById('rqHistKpis').innerHTML =
+      mini('g2','✔','Approved', rqApproved.length, 'requests credited') +
+      mini('g4','💰','Total Credited', Oryx.money(rqApproved.reduce((s, r) => s + r.amount, 0)), 'via requests') +
+      mini('g3','✖','Rejected', rqDone.length - rqApproved.length, 'requests declined');
     document.getElementById('cKpis').innerHTML =
       mini('g1','👥','Total Clients', us.length, 'registered') + mini('g4','💰','Total Balances', Oryx.money(totalBal), 'all accounts') +
       mini('g2','🏦','Balance Issued', Oryx.money(issuedPos), 'starter + admin') + mini('g5','🔥','Open Trades', open.length, 'right now');
@@ -293,7 +333,30 @@
     document.getElementById('sWa').value = S.whatsapp; document.getElementById('sEmail').value = S.email;
     document.getElementById('sHeroT').value = S.heroTitle; document.getElementById('sHeroS').value = S.heroSub;
   }
-  function decideRq(id, approve){ Oryx.decideRequest(id, approve); renderAll(); }
+  function decideRq(id, approve){
+    const r = Oryx.requests().find(x => x.id === id);
+    const a = r ? Oryx.accounts().find(v => v.id === r.accountId) : null;
+    if (Oryx.decideRequest(id, approve)){
+      Oryx.logAdmin(approve ? 'Request approved' : 'Request rejected',
+        `${a ? clientName(a.userId) : 'Client'} · ${r ? Oryx.money(r.amount) : ''} · ${r ? r.method : ''}`);
+    }
+    renderAll();
+  }
+  function viewProof(id){
+    const r = Oryx.requests().find(x => x.id === id); if (!r) return;
+    const a = Oryx.accounts().find(v => v.id === r.accountId);
+    document.getElementById('pfName').textContent = a ? clientName(a.userId) : 'Unknown client';
+    document.getElementById('pfMeta').textContent = `Account ${a ? a.login : '—'} · Sent ${new Date(r.at).toLocaleString()} · Status: ${r.status.toUpperCase()}`;
+    document.getElementById('pfAmt').textContent = Oryx.money(r.amount);
+    document.getElementById('pfMethod').innerHTML = `Paid via: <b>${Oryx.esc(r.method)}</b>${r.note ? ' · ' + Oryx.esc(r.note) : ''}<br><span style="color:#93A1C4;font-size:12.5px">Verify this proof really matches the payment before you approve.</span>`;
+    document.getElementById('pfImg').src = r.proof || '';
+    document.getElementById('pfActions').innerHTML = r.status === 'pending' ? `
+      <button class="btn btn-green" style="flex:1" onclick="decideRq('${r.id}', true); closeProof();">✔ Verified — Approve &amp; Credit</button>
+      <button class="btn" style="background:rgba(234,57,67,.18);color:#EA3943;border:1px solid rgba(234,57,67,.5)" onclick="decideRq('${r.id}', false); closeProof();">✖ Reject</button>`
+      : `<span style="color:#93A1C4;font-size:13px">${r.status === 'approved' ? '✔ Already approved and credited' : '✖ Already rejected'}${r.decidedAt ? ' · ' + new Date(r.decidedAt).toLocaleString() : ''}</span>`;
+    document.getElementById('proofOv').classList.add('open');
+  }
+  function closeProof(){ document.getElementById('proofOv').classList.remove('open'); }
 
   function doIssue(){
     const r = Oryx.issueBalance(document.getElementById('ibAcc').value, document.getElementById('ibAmt').value, document.getElementById('ibNote').value.trim());
@@ -301,6 +364,7 @@
     if (r.error){ ok.style.display = 'block'; ok.style.background = '#FDECEC'; ok.style.color = '#A11'; ok.textContent = r.error; return; }
     ok.style.display = 'block'; ok.style.background = '#E7F8F0'; ok.style.color = '#0B6B43';
     ok.textContent = '✔ Balance issued. New balance: ' + Oryx.money(r.account.balance);
+    Oryx.logAdmin('Balance issued', `${clientName(r.account.userId)} · ${Oryx.money(parseFloat(document.getElementById('ibAmt').value) || 0)} · new balance ${Oryx.money(r.account.balance)}`);
     document.getElementById('ibAmt').value = ''; document.getElementById('ibNote').value = '';
     renderAll();
   }
@@ -310,8 +374,18 @@
       whatsapp:document.getElementById('sWa').value.replace(/\D/g, ''), email:document.getElementById('sEmail').value,
       heroTitle:document.getElementById('sHeroT').value, heroSub:document.getElementById('sHeroS').value });
     document.getElementById('sOk').textContent = '✔ Saved'; setTimeout(() => document.getElementById('sOk').textContent = '', 2500);
+    Oryx.logAdmin('Settings updated', 'Brand, starter credit, leverage or contacts changed');
   }
-  function savePw(){ const v = document.getElementById('sPw').value; if (v.length < 6){ alert('Password must be at least 6 characters.'); return; } Oryx.setAdminPw(v); alert('Admin password updated.'); document.getElementById('sPw').value = ''; }
+  function savePw(){
+    const v = document.getElementById('sPw').value;
+    if (v.length < 6){ alert('Password must be at least 6 characters.'); return; }
+    const me = Oryx.currentAdmin(); if (!me) return;
+    const list = Oryx.admins(); const rec = list.find(x => x.id === me.id);
+    if (rec){ rec.pass = v; Oryx.saveAdmins(list); }
+    Oryx.logAdmin('Password changed', me.name + ' changed their admin password');
+    alert('Your admin password has been updated.');
+    document.getElementById('sPw').value = '';
+  }
   function exportData(){
     const data = {}; ['oryx_users','oryx_accounts','oryx_trades','oryx_txns','oryx_settings'].forEach(k => data[k] = localStorage.getItem(k));
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' })); a.download = 'oryx-backup.json'; a.click();

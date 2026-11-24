@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin — Oryx Markets</title>
+<link rel="stylesheet" href="../assets/style.css?v=13">
+</head>
+<body class="dark-dash">
+<div id="gate" class="auth-wrap" style="min-height:100vh">
+  <div class="auth-card">
+    <h1>👑 Oryx Super Admin</h1>
+    <p class="sub">The control room above the Admin panel — manage admin accounts and watch everything they do.</p>
+    <div class="form-err" id="gErr"></div>
+    <div class="field"><label>Super Admin Password</label>
+      <div class="pw-wrap"><input id="gPass" type="password" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePw('gPass', this)" title="Show password">👁️</button></div>
+    </div>
+    <button class="btn btn-gold" style="width:100%" onclick="tryLogin()">Enter Super Admin</button>
+    <p class="auth-alt"><a href="admin.html">← Go to Admin panel</a> · <a href="../index.html">Website</a></p>
+  </div>
+</div>
+
+<div id="panel" style="display:none">
+  <div class="dash">
+    <aside class="side">
+      <a class="brand" href="../index.html"><svg viewBox="0 0 48 48" class="logo-mark"><path d="M14 6 C16 16, 17 24, 16 34 L11 34 C13 24, 12 15, 10 6 Z" fill="#D8A94E"/><path d="M34 6 C32 16, 31 24, 32 34 L37 34 C35 24, 36 15, 38 6 Z" fill="#D8A94E"/><circle cx="24" cy="30" r="7.5" fill="none" stroke="#F3E5C0" stroke-width="3"/></svg><span>ORYX <b>SUPER</b></span></a>
+      <div class="who"><b style="color:#fff">Super Admin</b><br>Owner level — sees every admin and every action.</div>
+      <a href="#" data-tab="dash" class="on">📊 Dashboard</a>
+      <a href="#" data-tab="admins">🛡️ Admins</a>
+      <a href="#" data-tab="log">📋 Activity Log</a>
+      <a href="#" data-tab="clients">👥 All Clients</a>
+      <a href="#" data-tab="settings">⚙️ Settings</a>
+      <a href="admin.html">🔐 Admin Panel</a>
+      <a href="../index.html">↩ Website</a>
+      <a href="#" onclick="sessionStorage.removeItem('oryx_super_ok');location.reload();return false;">🚪 Log Out</a>
+    </aside>
+    <main class="main">
+      <section id="tab-dash">
+        <h1>Super Dashboard</h1><p class="sub">The whole platform, and the people who run it.</p>
+        <div class="kpi-row" id="sKpis"></div>
+        <div class="panel"><h3>🛡️ Admin Activity</h3><div id="sAdminActivity"></div></div>
+        <div class="panel"><h3>🕘 Latest Actions</h3><div id="sLatest"></div></div>
+      </section>
+
+      <section id="tab-admins" style="display:none">
+        <h1>Admins</h1><p class="sub">Create admin accounts, disable them, or reset their passwords. A disabled admin cannot sign in.</p>
+        <div class="panel">
+          <h3>➕ Create Admin</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+            <div class="field"><label>Full Name</label><input id="naName" placeholder="e.g. Ali Khan"></div>
+            <div class="field"><label>Email (login)</label><input id="naEmail" type="email" placeholder="ali@oryx.local"></div>
+            <div class="field"><label>Password</label><input id="naPass" type="text" placeholder="min 6 characters"></div>
+          </div>
+          <div class="form-err" id="naErr"></div>
+          <button class="btn btn-gold" onclick="createAdmin()">Create Admin Account</button>
+        </div>
+        <div class="panel"><h3>All Admins</h3><div id="sAdmins"></div></div>
+      </section>
+
+      <section id="tab-log" style="display:none">
+        <h1>Activity Log</h1><p class="sub">Every important action taken in the Admin panel — who did it, what, and when.</p>
+        <div class="panel"><div id="sLog"></div>
+        <button class="btn btn-line" style="border-color:#EA3943;color:#EA3943;margin-top:14px" onclick="clearLog()">🗑 Clear Log</button></div>
+      </section>
+
+      <section id="tab-clients" style="display:none">
+        <h1>All Clients</h1><p class="sub">Read-only oversight of every client on the platform.</p>
+        <div class="panel"><div id="sClients"></div></div>
+      </section>
+
+      <section id="tab-settings" style="display:none">
+        <h1>Settings</h1><p class="sub">Super Admin security.</p>
+        <div class="panel">
+          <h3>Change Super Admin Password</h3>
+          <div class="field"><label>New Password</label>
+            <div class="pw-wrap"><input id="sPw" type="password" placeholder="New super password"><button type="button" class="pw-eye" onclick="togglePw('sPw', this)" title="Show password">👁️</button></div>
+          </div>
+          <button class="btn btn-gold" onclick="saveSuperPw()">Save Password</button>
+          <span id="sOk" style="margin-left:12px;color:var(--up);font-weight:700"></span>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="../data/instruments.js?v=10"></script>
+<script src="../assets/store.js?v=11"></script>
+<script src="../assets/cloud.js?v=2"></script>
+<script>
+  function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
+  function tryLogin(){
+    if (document.getElementById('gPass').value === Oryx.superPw()){ sessionStorage.setItem('oryx_super_ok', '1'); showPanel(); }
+    else { const e = document.getElementById('gErr'); e.textContent = 'Wrong super admin password.'; e.style.display = 'block'; }
+  }
+  document.getElementById('gPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  if (sessionStorage.getItem('oryx_super_ok') === '1') showPanel();
+  function showPanel(){ document.getElementById('gate').style.display = 'none'; document.getElementById('panel').style.display = 'block'; renderAll(); }
+
+  document.querySelectorAll('.side a[data-tab]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.remove('on')); a.classList.add('on');
+    document.querySelectorAll('main section[id^="tab-"]').forEach(s => s.style.display = s.id === 'tab-' + a.dataset.tab ? 'block' : 'none');
+    renderAll();
+  }));
+
+  function tbl(head, rows, empty){ return `<div style="overflow:auto"><table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td colspan="${head.length}" style="color:var(--mut)">${empty || 'Nothing here yet.'}</td></tr>`}</tbody></table></div>`; }
+  const kpi = (g, ic, label, val, sub) => `<div class="kpi ${g}"><span class="kic">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
+
+  function renderAll(){
+    const ads = Oryx.admins(), log = Oryx.adminLog(), us = Oryx.users(), ac = Oryx.accounts(), rq = Oryx.requests();
+    const totalBal = ac.reduce((s, a) => s + a.balance, 0);
+    const credited = rq.filter(r => r.status === 'approved').reduce((s, r) => s + r.amount, 0);
+    document.getElementById('sKpis').innerHTML =
+      kpi('g1','🛡️','Admins', ads.length, ads.filter(a => a.active).length + ' active') +
+      kpi('g3','📋','Admin Actions', log.length, 'in the activity log') +
+      kpi('g4','👥','Total Clients', us.length, ac.length + ' accounts') +
+      kpi('g2','💰','Total Balances', Oryx.money(totalBal), 'all client accounts') +
+      kpi('g5','💸','Credited via Requests', Oryx.money(credited), rq.filter(r => r.status === 'pending').length + ' pending now');
+    const perAdmin = ads.map(a => {
+      const mine = log.filter(l => l.email === a.email);
+      const last = mine.length ? new Date(mine[mine.length - 1].at).toLocaleString() : 'Never';
+      return `<tr><td><b>${Oryx.esc(a.name)}</b></td><td>${Oryx.esc(a.email)}</td><td>${a.active ? '<span style="color:#16C784;font-weight:700">Active</span>' : '<span style="color:#EA3943;font-weight:700">Disabled</span>'}</td><td>${mine.length}</td><td>${last}</td></tr>`;
+    }).join('');
+    document.getElementById('sAdminActivity').innerHTML = tbl(['Admin','Email','Status','Actions','Last Active'], perAdmin, 'No admins yet.');
+    document.getElementById('sLatest').innerHTML = tbl(['When','Admin','Action','Details'],
+      log.slice().reverse().slice(0, 8).map(l => `<tr><td>${new Date(l.at).toLocaleString()}</td><td><b>${Oryx.esc(l.admin)}</b></td><td>${Oryx.esc(l.action)}</td><td>${Oryx.esc(l.detail)}</td></tr>`).join(''), 'No activity recorded yet.');
+    document.getElementById('sAdmins').innerHTML = tbl(['Name','Email','Status','Created','Actions'],
+      ads.map(a => `<tr><td><b>${Oryx.esc(a.name)}</b></td><td>${Oryx.esc(a.email)}</td>
+        <td>${a.active ? '<span style="color:#16C784;font-weight:700">Active</span>' : '<span style="color:#EA3943;font-weight:700">Disabled</span>'}</td>
+        <td>${new Date(a.created).toLocaleDateString()}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-line btn-sm" onclick="toggleAdmin('${a.id}')">${a.active ? 'Disable' : 'Enable'}</button>
+          <button class="btn btn-line btn-sm" onclick="resetAdminPw('${a.id}')">Reset Password</button>
+          <button class="btn btn-line btn-sm" style="border-color:#EA3943;color:#EA3943" onclick="deleteAdmin('${a.id}')">Delete</button>
+        </td></tr>`).join(''), 'No admins yet.');
+    document.getElementById('sLog').innerHTML = tbl(['When','Admin','Action','Details'],
+      log.slice().reverse().map(l => `<tr><td style="white-space:nowrap">${new Date(l.at).toLocaleString()}</td><td><b>${Oryx.esc(l.admin)}</b><br><span style="color:var(--mut);font-size:12px">${Oryx.esc(l.email)}</span></td><td>${Oryx.esc(l.action)}</td><td>${Oryx.esc(l.detail)}</td></tr>`).join(''), 'No activity recorded yet.');
+    document.getElementById('sClients').innerHTML = tbl(['Name','Email','Account','Balance','Joined'],
+      us.slice().reverse().map(u => { const a = ac.find(v => v.userId === u.id); return `<tr><td><b>${Oryx.esc(u.name)}</b></td><td>${Oryx.esc(u.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(u.created).toLocaleDateString()}</td></tr>`; }).join(''), 'No clients yet.');
+  }
+
+  function createAdmin(){
+    const name = document.getElementById('naName').value.trim();
+    const email = document.getElementById('naEmail').value.trim();
+    const pass = document.getElementById('naPass').value;
+    const err = document.getElementById('naErr');
+    if (!name || !email || pass.length < 6){ err.textContent = 'Fill the name, email and a password of at least 6 characters.'; err.style.display = 'block'; return; }
+    const list = Oryx.admins();
+    if (list.some(a => a.email.toLowerCase() === email.toLowerCase())){ err.textContent = 'An admin with this email already exists.'; err.style.display = 'block'; return; }
+    list.push({ id:'adm' + Date.now().toString(36), name, email, pass, active:true, created:Date.now() });
+    Oryx.saveAdmins(list);
+    err.style.display = 'none';
+    document.getElementById('naName').value = ''; document.getElementById('naEmail').value = ''; document.getElementById('naPass').value = '';
+    renderAll();
+  }
+  function toggleAdmin(id){
+    const list = Oryx.admins(); const a = list.find(x => x.id === id); if (!a) return;
+    if (a.active && list.filter(x => x.active).length <= 1){ alert('You cannot disable the last active admin.'); return; }
+    a.active = !a.active; Oryx.saveAdmins(list); renderAll();
+  }
+  function resetAdminPw(id){
+    const list = Oryx.admins(); const a = list.find(x => x.id === id); if (!a) return;
+    const v = prompt('New password for ' + a.name + ' (min 6 characters):');
+    if (!v) return;
+    if (v.length < 6){ alert('Password must be at least 6 characters.'); return; }
+    a.pass = v; Oryx.saveAdmins(list); alert('Password updated for ' + a.name + '.');
+  }
+  function deleteAdmin(id){
+    const list = Oryx.admins(); const a = list.find(x => x.id === id); if (!a) return;
+    if (list.length <= 1){ alert('You cannot delete the last admin.'); return; }
+    if (!confirm('Delete admin ' + a.name + '? They will no longer be able to sign in.')) return;
+    Oryx.saveAdmins(list.filter(x => x.id !== id)); renderAll();
+  }
+  function clearLog(){
+    if (!confirm('Clear the whole activity log?')) return;
+    localStorage.setItem('oryx_admin_log', '[]');
+    Oryx.logAdmin('Log cleared', 'The Super Admin cleared the activity log');
+    renderAll();
+  }
+  function saveSuperPw(){
+    const v = document.getElementById('sPw').value;
+    if (v.length < 6){ alert('Password must be at least 6 characters.'); return; }
+    Oryx.setSuperPw(v);
+    document.getElementById('sOk').textContent = '✔ Saved';
+    setTimeout(() => document.getElementById('sOk').textContent = '', 2500);
+    document.getElementById('sPw').value = '';
+  }
+</script>
+</body>
+</html>
