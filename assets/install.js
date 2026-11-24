@@ -3,6 +3,16 @@
    browser offers installation (Android/Chrome). On iPhone the pill explains
    the Share → Add to Home Screen steps instead. */
 (function () {
+  /* Mobile / app entry: on a phone (or when running as the installed app),
+     the home page goes straight to the client Dashboard — the app is just
+     the Dashboard and the Trade terminal. Desktop keeps the full website. */
+  const p = location.pathname;
+  if (p.endsWith('/') || p.endsWith('index.html')) {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const mobile = window.matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (standalone || mobile) { location.replace('dashboard.html'); return; }
+  }
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').catch(() => {});
