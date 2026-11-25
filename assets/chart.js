@@ -2,7 +2,7 @@
    Self-contained: no external widgets, updates with the site's own feed.
    Includes MA lines and candlestick-pattern labels (Hammer, Shooting Star,
    Doji, Engulfing), like a pro exchange terminal. */
-function drawLiveChart(cv, symbol){
+function drawLiveChart(cv, symbol, startIdx, visible){
   if (!cv || typeof Oryx === 'undefined') return;
   const LIGHT = document.documentElement.classList.contains('light');
   const dpr = window.devicePixelRatio || 1;
@@ -13,7 +13,10 @@ function drawLiveChart(cv, symbol){
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#070D1D'; ctx.fillRect(0, 0, W, H);
-  const data = Oryx.candles(symbol).slice(-42); /* fewer, BOLDER candles on screen, like a pro chart */
+  const all = Oryx.candles(symbol), vis = visible || 30;
+  const start = Math.max(0, Math.min(startIdx || 0, Math.max(0, all.length - vis)));
+  const live = start + vis >= all.length;
+  const data = all.slice(start, start + vis); /* big, clear candles — scroll back for history */
   if (!data.length) return;
   const axisW = 64, padT = 12;
   const plotW = W - axisW;
@@ -97,7 +100,7 @@ function drawLiveChart(cv, symbol){
   /* legend */
   const chg = Oryx.changePct(symbol);
   ctx.fillStyle = LIGHT ? '#5B6B8C' : '#93A1C4'; ctx.font = 'bold 11px Segoe UI';
-  ctx.fillText(symbol + '  ·  LIVE  ·  5s candles', 10, H - 6);
+  ctx.fillText(symbol + '  ·  ' + (live ? 'LIVE' : 'HISTORY') + '  ·  5s candles', 10, H - 6);
   ctx.fillStyle = chg >= 0 ? '#16C784' : '#EA3943';
   ctx.fillText((chg >= 0 ? '▲ +' : '▼ ') + chg.toFixed(2) + '%', 196, H - 6);
   ctx.fillStyle = '#F5B544'; ctx.fillText('— MA10', 268, H - 6);
