@@ -93,7 +93,7 @@ table.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid v
 
 /* footer */
 .site-foot{background:#060B1D;color:#AEB9D4;margin-top:0}
-.foot-grid{max-width:1200px;margin:0 auto;padding:56px 20px 30px;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr 1fr 1fr;gap:30px}
+.foot-grid{max-width:1240px;margin:0 auto;padding:56px 20px 30px;display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr 1fr 1fr;gap:30px;align-items:start}.foot-contact{line-height:1.9}
 .foot-grid h4{color:#fff;font-size:17px;margin-bottom:14px;letter-spacing:.05em}
 .foot-grid a{display:block;padding:5px 0;font-size:15.5px}
 .foot-grid a:hover{color:var(--gold)}
