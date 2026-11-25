@@ -219,14 +219,6 @@
     <div class="trade-panel">
       <div class="sym" id="tpSym">XAUUSD</div>
       <div style="color:#7C88A8;font-size:12.5px" id="tpName">Gold vs US Dollar</div>
-      <label>Volume (lots)</label>
-      <input id="tpLots" type="number" step="0.01" min="0.01" value="0.01">
-      <div class="lot-chips">
-        <button onclick="setLot(0.01)">0.01</button><button onclick="setLot(0.05)">0.05</button><button onclick="setLot(0.10)">0.10</button><button onclick="setLot(0.50)">0.50</button><button onclick="setLot(1)">1.00</button>
-      </div>
-      <label>Leverage</label>
-      <input id="tpLev" disabled>
-      <div style="font-size:12.5px;color:#93A1C4;margin-top:10px" id="tpMargin"></div>
       <label>Order Type</label>
       <div class="ot-row">
         <button type="button" id="otMarket" class="ot-btn on" onclick="setOtype('market')">⚡ Market — now</button>
@@ -240,6 +232,14 @@
         <div style="flex:1"><label>Stop Loss (optional)</label><input id="tpSL" type="number" step="any" placeholder="Auto-close price"></div>
         <div style="flex:1"><label>Take Profit (optional)</label><input id="tpTP" type="number" step="any" placeholder="Auto-close price"></div>
       </div>
+      <label>Volume (lots)</label>
+      <input id="tpLots" type="number" step="0.01" min="0.01" value="0.01">
+      <div class="lot-chips">
+        <button onclick="setLot(0.01)">0.01</button><button onclick="setLot(0.05)">0.05</button><button onclick="setLot(0.10)">0.10</button><button onclick="setLot(0.50)">0.50</button><button onclick="setLot(1)">1.00</button>
+      </div>
+      <label>Leverage</label>
+      <input id="tpLev" disabled>
+      <div style="font-size:12.5px;color:#93A1C4;margin-top:10px" id="tpMargin"></div>
       <div id="tpMsg" style="margin-top:12px;font-size:13.5px"></div>
     </div>
     <h5>⚡ OPEN POSITIONS — LIVE</h5>
