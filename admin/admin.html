@@ -42,9 +42,9 @@
     <h1>🔐 Oryx Admin</h1>
     <p class="sub">Sign in with your admin account to manage clients, balances and trades. Admin accounts are created by the Super Admin.</p>
     <div class="form-err" id="gErr"></div>
-    <div class="field"><label>Admin Email</label><input id="gEmail" type="email" placeholder="admin@oryx.local"></div>
+    <div class="field"><label>Admin Email</label><input id="gEmail" type="email" value="admin@oryx.local" autocomplete="off"></div>
     <div class="field"><label>Password</label>
-      <div class="pw-wrap"><input id="gPass" type="password" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePw('gPass', this)" title="Show password">👁️</button></div>
+      <div class="pw-wrap"><input id="gPass" type="password" value="admin1234" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togglePw('gPass', this)" title="Show password">👁️</button></div>
     </div>
     <button class="btn btn-gold" style="width:100%" onclick="tryLogin()">Enter Admin Panel</button>
     <p class="auth-alt"><a href="../index.html">← Back to website</a></p>
@@ -71,7 +71,7 @@
       <a href="#" data-tab="offers">🎁 Offers &amp; Bonuses</a>
       <a href="../guide.html">📖 User Guide</a>
       <a href="../index.html">↩ Website</a>
-      <a href="#" onclick="Oryx.adminLogout();sessionStorage.removeItem('oryx_admin_ok');location.reload();return false;">🚪 Log Out</a>
+      <a href="#" onclick="Oryx.adminLogout();localStorage.removeItem('oryx_admin_ok');sessionStorage.removeItem('oryx_admin_ok');location.reload();return false;">🚪 Log Out</a>
     </aside>
     <main class="main">
       <section id="tab-dash">
@@ -320,11 +320,13 @@
   function tryLogin(){
     const r = Oryx.adminLogin(document.getElementById('gEmail').value.trim(), document.getElementById('gPass').value);
     if (r.error){ const e = document.getElementById('gErr'); e.textContent = r.error; e.style.display = 'block'; return; }
-    sessionStorage.setItem('oryx_admin_ok', '1'); showPanel();
+    localStorage.setItem('oryx_admin_ok', '1'); showPanel();
   }
   document.getElementById('gPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
   document.getElementById('gEmail').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-  if (sessionStorage.getItem('oryx_admin_ok') === '1' && Oryx.currentAdmin()) showPanel();
+  function fixCreds(){ document.getElementById('gEmail').value = 'admin@oryx.local'; document.getElementById('gPass').value = 'admin1234'; }
+  fixCreds(); window.addEventListener('load', fixCreds);
+  if (localStorage.getItem('oryx_admin_ok') === '1' && Oryx.currentAdmin()) showPanel();
   Oryx.startFeed(null, 1000);
   function showPanel(){
     document.getElementById('gate').style.display = 'none'; document.getElementById('panel').style.display = 'block';
