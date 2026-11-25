@@ -450,7 +450,7 @@
     const wins = closed.filter(t => t.pnl > 0).length;
     document.getElementById('tKpis').innerHTML =
       mini('g3','📈','Total Trades', tr.length, 'all time', "showKpi('alltrades')") + mini('g5','🔥','Open Now', open.length, 'live positions', "showKpi('trades')") +
-      mini('g4','✔','Closed', closed.length, 'completed', "showKpi('closedtrades')") + mini('g2','🎯','Client Win Rate', closed.length ? Math.round(wins / closed.length * 100) + '%' : '—', wins + ' winning trades', "showKpi('closedtrades')");
+      mini('g4','✔','Closed', closed.length, 'completed', "showKpi('closedtrades')") + mini('g2','🎯','Client Win Rate', closed.length ? Math.round(wins / closed.length * 100) + '%' : '—', wins + ' winning trades', "showKpi('winrate')");
     const wdAbs = Math.abs(tx.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0));
     document.getElementById('xKpis').innerHTML =
       mini('g2','🏦','Total Issued', Oryx.money(issuedPos), 'credits in', "showKpi('issued')") + mini('g5','💸','Withdrawals', Oryx.money(wdAbs), 'debits out', "showKpi('wd')") +
@@ -642,6 +642,12 @@
       title = kind === 'netflow' ? `Net Flow — ${Oryx.money(pos + neg)}` : `Transactions — ${tx.length} records`;
       sub = kind === 'netflow' ? 'All movements: credits in minus debits out, newest first.' : 'Every transaction on the platform, newest first.';
       body = tbl(['Date','Client','Type','Note','Amount'], tx.slice().reverse().map(t => txnRow(t)).join(''));
+    } else if (kind === 'winrate'){
+      const closed = tr.filter(t => t.status === 'closed');
+      const wins = closed.filter(t => t.pnl > 0);
+      title = `Client Win Rate — ${closed.length ? Math.round(wins.length / closed.length * 100) : 0}% · ${wins.length} of ${closed.length} won`;
+      sub = 'The winning trades behind the win rate, newest first.';
+      body = tbl(['Client','Symbol','Side','Lots','Open Price','Status','P/L','Opened'], wins.slice().reverse().map(t => trRow(t)).join(''));
     } else if (kind === 'alltrades' || kind === 'closedtrades'){
       const list = kind === 'closedtrades' ? tr.filter(t => t.status === 'closed') : tr;
       title = kind === 'closedtrades' ? `Closed Trades — ${list.length} completed` : `Total Trades — ${list.length} all time`;
