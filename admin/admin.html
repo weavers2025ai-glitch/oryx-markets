@@ -118,8 +118,9 @@
       </section>
 
       <section id="tab-approvals" style="display:none">
-        <h1>Account Approvals</h1><p class="sub">New signups wait here. Approve one and their trading account opens with the $10 starter credit — until then they cannot log in.</p>
+        <h1>Account Approvals</h1><p class="sub">New signups first verify mobile + email OTP, then wait here. Approve one and their trading account opens with the $10 starter credit — until then they cannot log in.</p>
         <div id="apprList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px"></div>
+        <div class="panel" style="margin-top:16px"><h3>Waiting for OTP Verification</h3><div id="apprUnverified"></div></div>
         <div class="panel" style="margin-top:16px"><h3>Rejected Registrations</h3><div id="apprRejected"></div></div>
       </section>
 
@@ -304,7 +305,7 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=23"></script>
+<script src="../assets/store.js?v=25"></script>
 <script src="../assets/cloud.js?v=8"></script>
 <script>
   const mini = (g, ic, label, val, sub, click) => `<div class="kpi mini ${g}${click ? ' clickable' : ''}"${click ? ` onclick="${click}" title="Click to see details"` : ''}><span class="kic" style="width:42px;height:42px;font-size:19px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
@@ -446,6 +447,7 @@
     const rqPend = rqAll.filter(r => r.status === 'pending');
     const apprPend = us.filter(u => u.status === 'pending');
     const apprRej = us.filter(u => u.status === 'rejected');
+    const apprUnverified = us.filter(u => u.status === 'unverified');
     const apprOk = us.filter(u => !u.status || u.status === 'approved');
     const kycPend = [];
     us.forEach(u2 => { if (u2.kyc) ['id', 'address'].forEach(k => { const d = u2.kyc[k]; if (d && d.status === 'pending') kycPend.push({ u: u2, kind: k, doc: d }); }); });
@@ -510,6 +512,7 @@
           <div>👤 Username: <b>${Oryx.esc(u.name)}</b></div>
           <div>🔑 Password: <b>${Oryx.esc(u.pass)}</b></div>
           <div>📱 Phone: <b>${Oryx.esc(u.phone || '—')}</b> &nbsp;·&nbsp; 🌍 Country: <b>${Oryx.esc(u.country || '—')}</b></div>
+          <div>📱 Mobile: <b>${u.phoneVerified ? '✔ Verified' : 'Not verified'}</b> &nbsp;·&nbsp; ✉️ Email: <b>${u.emailVerified ? '✔ Verified' : 'Not verified'}</b></div>
           <div>🆔 User ID: <b>${Oryx.esc(u.id)}</b></div>
         </div>
         <div style="display:flex;gap:9px;margin-top:14px">
@@ -519,6 +522,9 @@
       </div>`;
     document.getElementById('apprList').innerHTML = apprPend.length ? apprPend.slice().reverse().map(apprCard).join('')
       : '<p style="color:#7C88A8">No pending signups. When a new user registers, they appear here — their login stays blocked until you approve them.</p>';
+    document.getElementById('apprUnverified').innerHTML = apprUnverified.length ? apprUnverified.slice().reverse().map(u =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)"><div><b style="color:#fff">${Oryx.esc(u.name)}</b> · ${Oryx.esc(u.email)} · ${Oryx.esc(u.phone || '—')}<div style="color:#7C88A8;font-size:12px">Mobile ${u.phoneVerified ? '✔ Verified' : '⏳ Waiting'} · Email ${u.emailVerified ? '✔ Verified' : '⏳ Waiting'} · ${new Date(u.created).toLocaleString()}</div></div><button class="btn" style="background:rgba(255,255,255,.08);color:#fff;font-weight:700" onclick="rejectU('${u.id}')">✖ Reject</button></div>`).join('')
+      : '<p style="color:#7C88A8">No signups are waiting for OTP verification.</p>';
     document.getElementById('apprRejected').innerHTML = apprRej.length ? apprRej.slice().reverse().map(u =>
       `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)"><div><b style="color:#fff">${Oryx.esc(u.name)}</b> · ${Oryx.esc(u.email)} · ${new Date(u.rejectedAt || u.created).toLocaleString()}</div><button class="btn" style="background:#fff;color:#065F46;font-weight:800" onclick="approveU('${u.id}')">✔ Approve</button></div>`).join('')
       : '<p style="color:#7C88A8">No rejected registrations.</p>';
@@ -648,6 +654,7 @@
   function approveU(id){
     const me = Oryx.currentAdmin();
     const r = Oryx.approveUser(id, me ? me.email : '');
+    if (r.error) alert(r.error);
     if (r.user) Oryx.logAdmin('Account approved', `${r.user.name} · ${r.user.email} · Account ${r.account ? r.account.login : '—'} · $10 starter credit`, { clientId: r.user.id });
     renderAll();
   }
