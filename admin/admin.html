@@ -18,6 +18,12 @@
   .ledger-ov{position:fixed;inset:0;background:rgba(3,6,12,.86);display:none;z-index:220;padding:16px;overflow:auto}
   .kpi.clickable{cursor:pointer;transition:filter .15s}
   .kpi.clickable:hover{filter:brightness(1.18)}
+  .match-tag{display:inline-block;padding:5px 11px;border-radius:20px;font-weight:800;font-size:12px;margin-top:8px}
+  .match-ok{background:linear-gradient(135deg,#F59E0B,#FDE68A);color:#451A03}
+  .match-bad{background:#7F1D1D;color:#FECACA}
+  .match-none{background:rgba(0,0,0,.3);color:#E2E8F0}
+  #ltList .tbl td{font-size:15.5px;padding:13px 12px}
+  #ltList .tbl th{font-size:13.5px}
   .ledger-ov.open{display:block}
   .ledger-box{max-width:880px;margin:22px auto;background:#0A1120;border:1px solid #1D2942;border-radius:18px;padding:22px}
   .ldgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
@@ -53,6 +59,7 @@
       <a href="#" data-tab="trades">📈 All Trades</a>
       <a href="#" data-tab="txns">💳 Transactions</a>
       <a href="#" data-tab="reqs">💸 Balance Requests<span id="reqBadge"></span></a>
+      <a href="#" data-tab="bank">🏦 Bank Entries</a>
       <a href="#" data-tab="history">📜 Request History</a>
       <a href="#" data-tab="userhist">📜 User History</a>
       <a href="#" data-tab="settings">⚙️ Settings</a>
@@ -98,7 +105,7 @@
       </section>
 
       <section id="tab-livetraders" style="display:none">
-        <h1>🔴 Live Traders</h1><p class="sub"><span id="ltCount">No one is trading right now.</span> Loss-makers blink and come first, then profit-makers. Figures update live as prices move — click a row to open that client's ledger.</p>
+        <h1>🔴 Live Traders</h1><p class="sub"><span id="ltCount">No one is trading right now.</span> Loss-makers come first, then profit-makers — profit rows blink. A white line separates the two groups. Figures update live as prices move — click a row to open that client's ledger.</p>
         <div class="kpi-row" id="ltKpis" style="grid-template-columns:repeat(2,1fr)"></div>
         <div class="panel"><div id="ltList"></div></div>
       </section>
@@ -126,6 +133,22 @@
         <div id="rqList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px"></div>
       </section>
 
+      <section id="tab-bank" style="display:none">
+        <h1>🏦 Bank Entries</h1><p class="sub">Every payment that arrived in your EasyPaisa / JazzCash / bank app — add it here the moment it lands. The panel auto-matches each entry with the client's proof: a golden blinking ✓ CHECKED tag means amount + reference match. An entry is consumed the moment its payment is approved, so one proof can never be credited twice.</p>
+        <div class="panel" style="margin-bottom:16px">
+          <h3 style="margin-top:0">+ Add Received Payment</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+            <div class="field" style="margin:0;min-width:150px"><label>Method</label><select id="bkMethod"><option>Easypaisa</option><option>JazzCash</option><option>Online Bank Transfer</option><option>Cash</option><option>Other</option></select></div>
+            <div class="field" style="margin:0;min-width:130px"><label>Amount (USD)</label><input id="bkAmt" type="number" step="0.01" placeholder="e.g. 500"></div>
+            <div class="field" style="margin:0;min-width:200px;flex:1"><label>Transaction ID / Reference</label><input id="bkTxn" placeholder="e.g. TID from the receipt"></div>
+            <div class="field" style="margin:0;min-width:180px"><label>Sender Name (optional)</label><input id="bkSender" placeholder="e.g. Waheed Ahmad"></div>
+            <button class="btn btn-gold" onclick="addBank()">+ Add Entry</button>
+          </div>
+          <div id="bkErr" style="color:#FCA5A5;font-size:13px;margin-top:8px"></div>
+        </div>
+        <div class="panel"><div id="bkList"></div></div>
+      </section>
+
       <section id="tab-history" style="display:none">
         <h1>Request History</h1><p class="sub">The permanent record of every decided balance request — approved and rejected.</p>
         <div class="kpis" id="rqHistKpis" style="margin-bottom:18px"></div>
@@ -151,6 +174,20 @@
           <div class="field"><label>Home Hero Subtitle</label><input id="sHeroS"></div>
           <button class="btn btn-gold" onclick="saveSet()">Save Settings</button>
           <span id="sOk" style="margin-left:12px;color:var(--up);font-weight:700"></span>
+        </div>
+        <div class="panel">
+          <h3>💳 Payment Accounts — shown to clients on the deposit form</h3>
+          <p style="color:#93A1C4;font-size:13px;margin:0 0 12px">Clients send money to these accounts from their own app, then paste the Transaction ID + screenshot as proof. Fill in only the methods you accept.</p>
+          <div class="field"><label>Easypaisa Number</label><input id="pEpNum" placeholder="e.g. 0333-xxxxxxx"></div>
+          <div class="field"><label>Easypaisa Account Title</label><input id="pEpTitle" placeholder="e.g. Syed Mahmood Shah"></div>
+          <div class="field"><label>JazzCash Number</label><input id="pJcNum" placeholder="e.g. 0300-xxxxxxx"></div>
+          <div class="field"><label>JazzCash Account Title</label><input id="pJcTitle" placeholder="e.g. Syed Mahmood Shah"></div>
+          <div class="field"><label>Bank Name</label><input id="pBkName" placeholder="e.g. Meezan Bank"></div>
+          <div class="field"><label>Bank Account Title</label><input id="pBkTitle" placeholder="e.g. Syed Mahmood Shah"></div>
+          <div class="field"><label>Bank Account Number</label><input id="pBkAcct" placeholder="e.g. 0101-xxxxxxx"></div>
+          <div class="field"><label>Bank IBAN</label><input id="pBkIban" placeholder="e.g. PKxx MEZN xxxx xxxx xxxx xxxx"></div>
+          <button class="btn btn-gold" onclick="savePay()">Save Payment Accounts</button>
+          <span id="pOk" style="margin-left:12px;color:var(--up);font-weight:700"></span>
         </div>
         <div class="panel">
           <h3>Change Admin Password</h3>
@@ -231,7 +268,7 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=19"></script>
+<script src="../assets/store.js?v=20"></script>
 <script src="../assets/cloud.js?v=8"></script>
 <script>
   const mini = (g, ic, label, val, sub, click) => `<div class="kpi mini ${g}${click ? ' clickable' : ''}"${click ? ` onclick="${click}" title="Click to see details"` : ''}><span class="kic" style="width:42px;height:42px;font-size:19px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
@@ -393,15 +430,22 @@
         </div>
         <div style="font-size:30px;font-weight:800;margin:10px 0 2px">${Oryx.money(r.amount)}</div>
         <div style="opacity:.92;font-size:13px">Paid via: <b>${Oryx.esc(r.method)}</b>${r.note ? ' · ' + Oryx.esc(r.note) : ''}</div>
+        ${r.txnId ? `<div style="font-size:13px;margin-top:6px">🧾 Txn ID: <b>${Oryx.esc(r.txnId)}</b>${r.senderName ? ` · 👤 ${Oryx.esc(r.senderName)}` : ''}${r.senderAcct ? ` · 📱 ${Oryx.esc(r.senderAcct)}` : ''}</div>` : ''}
+        ${(() => { const m = Oryx.matchStatus(r);
+          if (r.status !== 'pending') return '';
+          if (m.state === 'matched') return `<span class="match-tag match-ok blink">✓ CHECKED — matches bank entry ${Oryx.esc(m.entry.method)} ${Oryx.money(m.entry.amount)}${m.entry.sender ? ' · ' + Oryx.esc(m.entry.sender) : ''}</span>`;
+          if (m.state === 'duplicate') return `<span class="match-tag match-bad">⛔ DUPLICATE — this reference was already credited once</span>`;
+          if (m.state === 'mismatch') return `<span class="match-tag match-bad">✗ NOT MATCHED — no bank entry for this reference</span>`;
+          return `<span class="match-tag match-none">— No transaction reference given</span>`; })()}
         ${a ? (() => { const u = us.find(x => x.id === a.userId) || {}; return `<div style="margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.35);font-size:12.5px;line-height:1.6;opacity:.95">
           <div>🆔 User ID: <b>${Oryx.esc(clientEmail(a.userId))}</b></div>
           <div>📱 Contact: <b>${Oryx.esc(u.phone || '—')}</b> &nbsp;·&nbsp; 🌍 Country: <b>${Oryx.esc(u.country || '—')}</b></div>
         </div>`; })() : ''}
         ${r.proof ? `<div style="margin-top:10px"><img src="${r.proof}" class="proof-thumb" title="Payment proof — click to verify" onclick="viewProof('${r.id}')"><div style="font-size:11.5px;opacity:.85;margin-top:4px">🔍 Click the proof to verify it</div></div>` : '<div style="margin-top:10px;font-size:12.5px;opacity:.85">No proof attached</div>'}
-        ${r.status === 'pending' ? `<div style="display:flex;gap:9px;margin-top:14px">
+        ${r.status === 'pending' ? (Oryx.matchStatus(r).state === 'duplicate' ? `<div style="margin-top:14px;font-size:13px;font-weight:700;color:#FECACA">⛔ Cannot approve — this proof was already credited once.</div><div style="display:flex;gap:9px;margin-top:10px"><button class="btn" style="background:rgba(0,0,0,.3);color:#fff;font-weight:700" onclick="decideRq('${r.id}', false)">✖ Reject</button></div>` : `<div style="display:flex;gap:9px;margin-top:14px">
           <button class="btn" style="flex:1;background:#fff;color:#065F46;font-weight:800" onclick="decideRq('${r.id}', true)">✔ Approve &amp; Credit</button>
           <button class="btn" style="background:rgba(0,0,0,.3);color:#fff;font-weight:700" onclick="decideRq('${r.id}', false)">✖ Reject</button>
-        </div>` : `<div style="margin-top:12px;font-size:12.5px;opacity:.85">${r.status === 'approved' ? '✔ Credited to the client account' : '✖ Rejected'} · ${r.decidedAt ? new Date(r.decidedAt).toLocaleString() : ''}</div>`}
+        </div>`) : `<div style="margin-top:12px;font-size:12.5px;opacity:.85">${r.status === 'approved' ? '✔ Credited to the client account' : '✖ Rejected'} · ${r.decidedAt ? new Date(r.decidedAt).toLocaleString() : ''}</div>`}
       </div>`;
     };
     /* pending only on the Balance Requests page — decided ones live in History */
@@ -493,6 +537,16 @@
     }).join(''));
     const S = Oryx.settings();
     document.getElementById('sBrand').value = S.brand; document.getElementById('sTag').value = S.tagline;
+    const PC = Oryx.payCfg();
+    document.getElementById('pEpNum').value = PC.easypaisa.number; document.getElementById('pEpTitle').value = PC.easypaisa.title;
+    document.getElementById('pJcNum').value = PC.jazzcash.number; document.getElementById('pJcTitle').value = PC.jazzcash.title;
+    document.getElementById('pBkName').value = PC.bank.bank; document.getElementById('pBkTitle').value = PC.bank.title;
+    document.getElementById('pBkAcct').value = PC.bank.account; document.getElementById('pBkIban').value = PC.bank.iban;
+    document.getElementById('bkList').innerHTML = tbl(['Date','Method','Amount','Txn ID','Sender','Status'], Oryx.bankEntries().slice().reverse().map(e => {
+      const used = e.usedBy ? Oryx.requests().find(x => x.id === e.usedBy) : null;
+      const who = used ? (() => { const a = Oryx.accounts().find(v => v.id === used.accountId); return a ? Oryx.esc(clientName(a.userId)) : '—'; })() : '—';
+      return `<tr style="background:${e.usedBy ? 'rgba(255,255,255,.06)' : 'rgba(22,199,132,.14)'};color:#fff"><td>${new Date(e.at).toLocaleString()}</td><td>${Oryx.esc(e.method)}</td><td>${Oryx.money(e.amount)}</td><td><b>${Oryx.esc(e.txnId)}</b></td><td>${Oryx.esc(e.sender || '—')}</td><td>${e.usedBy ? '✅ Used by ' + who : '🟢 Available to match'}</td></tr>`;
+    }).join(''), 'No bank entries yet. Add each payment the moment it lands in your account.');
     document.getElementById('sStarter').value = S.starter; document.getElementById('sLev').value = S.leverage;
     document.getElementById('sWa').value = S.whatsapp; document.getElementById('sEmail').value = S.email;
     document.getElementById('sHeroT').value = S.heroTitle; document.getElementById('sHeroS').value = S.heroSub;
@@ -594,11 +648,14 @@
       mini('g2','📈','Total Live Profit', Oryx.money(profit), rows.filter(r => r.pl > 0).length + ' user(s) in profit') +
       mini('g5','📉','Total Live Loss', Oryx.money(loss), rows.filter(r => r.pl < 0).length + ' user(s) in loss');
     document.getElementById('ltCount').textContent = rows.length ? `${rows.length} user${rows.length > 1 ? 's' : ''} trading live right now` : 'No one is trading right now.';
-    document.getElementById('ltList').innerHTML = rows.length ? tbl(['Client','Account','Open Trades','Symbols','Total Lots','Live P/L'], rows.map(r => {
+    const rowHtml = r => {
       const syms = r.trades.map(t => t.symbol).filter((v, i, a) => a.indexOf(v) === i).join(', ');
       const lots = r.trades.reduce((s, t) => s + (+t.lots || 0), 0);
-      return `<tr class="${r.pl < 0 ? 'blink' : ''}" style="background:${clientGrad70(Oryx.users(), r.user.id)};color:#fff;cursor:pointer" onclick="openLedger('${r.user.id}')"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'};font-weight:800">${r.pl >= 0 ? '+' : ''}${Oryx.money(r.pl)}</td></tr>`;
-    }).join('')) : '<p style="color:#7C88A8">No open trades right now. When a client opens a position, they appear here live.</p>';
+      return `<tr class="${r.pl > 0 ? 'blink' : ''}" style="background:${clientGrad70(Oryx.users(), r.user.id)};color:#fff;cursor:pointer" onclick="openLedger('${r.user.id}')"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'};font-weight:800">${r.pl >= 0 ? '+' : ''}${Oryx.money(r.pl)}</td></tr>`;
+    };
+    const lossRows = rows.filter(r => r.pl < 0), profitRows = rows.filter(r => r.pl >= 0);
+    const sep = (lossRows.length && profitRows.length) ? `<tr class="lt-sep"><td colspan="6" style="padding:12px 0 8px;background:transparent;border:none"><div style="height:3px;background:#fff;border-radius:2px"></div></td></tr>` : '';
+    document.getElementById('ltList').innerHTML = rows.length ? tbl(['Client','Account','Open Trades','Symbols','Total Lots','Live P/L'], [...lossRows.map(rowHtml), sep, ...profitRows.map(rowHtml)].join('')) : '<p style="color:#7C88A8">No open trades right now. When a client opens a position, they appear here live.</p>';
   }
   function showKpi(kind){
     const us = Oryx.users(), ac = Oryx.accounts(), tr = Oryx.trades(), tx = Oryx.txns();
@@ -792,6 +849,25 @@
       heroTitle:document.getElementById('sHeroT').value, heroSub:document.getElementById('sHeroS').value });
     document.getElementById('sOk').textContent = '✔ Saved'; setTimeout(() => document.getElementById('sOk').textContent = '', 2500);
     Oryx.logAdmin('Settings updated', 'Brand, starter credit, leverage or contacts changed');
+  }
+  function savePay(){
+    Oryx.savePayCfg({ easypaisa:{ number:document.getElementById('pEpNum').value.trim(), title:document.getElementById('pEpTitle').value.trim() },
+      jazzcash:{ number:document.getElementById('pJcNum').value.trim(), title:document.getElementById('pJcTitle').value.trim() },
+      bank:{ bank:document.getElementById('pBkName').value.trim(), title:document.getElementById('pBkTitle').value.trim(), account:document.getElementById('pBkAcct').value.trim(), iban:document.getElementById('pBkIban').value.trim() } });
+    document.getElementById('pOk').textContent = '✔ Saved'; setTimeout(() => document.getElementById('pOk').textContent = '', 2500);
+    Oryx.logAdmin('Payment accounts updated', 'Easypaisa / JazzCash / bank receiving details changed');
+  }
+  function addBank(){
+    const amt = parseFloat(document.getElementById('bkAmt').value);
+    const txn = document.getElementById('bkTxn').value.trim();
+    const err = document.getElementById('bkErr');
+    if (!amt || amt <= 0){ err.textContent = 'Please enter the amount received.'; return; }
+    if (!txn){ err.textContent = 'Please paste the Transaction ID / reference.'; return; }
+    err.textContent = '';
+    Oryx.addBankEntry({ method:document.getElementById('bkMethod').value, amount:amt, txnId:txn, sender:document.getElementById('bkSender').value.trim() });
+    document.getElementById('bkAmt').value = ''; document.getElementById('bkTxn').value = ''; document.getElementById('bkSender').value = '';
+    Oryx.logAdmin('Bank entry added', Oryx.money(amt) + ' · ' + txn);
+    renderAll();
   }
   function savePw(){
     const v = document.getElementById('sPw').value;
