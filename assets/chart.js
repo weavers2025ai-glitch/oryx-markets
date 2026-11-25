@@ -1,6 +1,7 @@
 /* Oryx live candlestick chart — draws Oryx.candles(symbol) on a canvas.
    Self-contained: no external widgets, updates with the site's own feed.
-   Includes MA lines and a volume strip, like a pro exchange terminal. */
+   Includes MA lines and candlestick-pattern labels (Hammer, Shooting Star,
+   Doji, Engulfing), like a pro exchange terminal. */
 function drawLiveChart(cv, symbol){
   if (!cv || typeof Oryx === 'undefined') return;
   const LIGHT = document.documentElement.classList.contains('light');
@@ -16,8 +17,7 @@ function drawLiveChart(cv, symbol){
   if (!data.length) return;
   const axisW = 64, padT = 12;
   const plotW = W - axisW;
-  const volH = Math.max(Math.round(H * 0.16), 30);
-  const plotH = H - padT - volH - 22;
+  const plotH = H - padT - 22;
   let min = Infinity, max = -Infinity;
   data.forEach(k => { min = Math.min(min, k.l); max = Math.max(max, k.h); });
   const pad = (max - min) * 0.08 || max * 0.001 || 1; max += pad; min -= pad;
@@ -29,16 +29,6 @@ function drawLiveChart(cv, symbol){
     ctx.fillText(Oryx.fmtP(symbol, v), plotW + 7, y + 3);
   }
   const step = plotW / data.length, bw = Math.max(step * 0.62, 1.5);
-  /* volume strip (derived from candle ranges — steady per candle) */
-  const vols = data.map(k => (k.h - k.l) + Math.abs(k.c - k.o) * 0.7 + (Math.abs(Math.sin(k.o * 977 + k.c * 131)) * (k.h - k.l + 0.0000001)));
-  const vmax = Math.max(...vols) || 1;
-  data.forEach((k, ix) => {
-    const x = ix * step + step / 2, up = k.c >= k.o, col = up ? '#16C784' : '#EA3943';
-    ctx.globalAlpha = 0.55; ctx.fillStyle = col;
-    const vh = Math.max(vols[ix] / vmax * (volH - 6), 1);
-    ctx.fillRect(x - bw / 2, padT + plotH + (volH - vh), bw, vh);
-    ctx.globalAlpha = 1;
-  });
   /* candles */
   data.forEach((k, ix) => {
     const x = ix * step + step / 2, up = k.c >= k.o, col = up ? '#16C784' : '#EA3943';
@@ -61,6 +51,40 @@ function drawLiveChart(cv, symbol){
   }
   maLine(10, '#F5B544');
   maLine(26, '#4EA8FF');
+  /* candlestick patterns — shape-based: Hammer, Shooting Star, Doji, Engulfing */
+  function patternAt(ix){
+    const k = data[ix], range = k.h - k.l;
+    if (range <= 0) return null;
+    const body = Math.abs(k.c - k.o);
+    const upSh = k.h - Math.max(k.o, k.c), loSh = Math.min(k.o, k.c) - k.l;
+    if (body <= range * 0.1) return { name:'Doji', col:'#F5B544', above:true };
+    if (body <= range * 0.35 && loSh >= body * 2 && upSh <= body * 0.5) return { name:'Hammer', col:'#16C784', above:false };
+    if (body <= range * 0.35 && upSh >= body * 2 && loSh <= body * 0.5) return { name:'Shooting Star', col:'#EA3943', above:true };
+    if (ix > 0){
+      const p = data[ix - 1];
+      if (p.c < p.o && k.c > k.o && k.o <= p.c && k.c >= p.o) return { name:'Bull Engulfing', col:'#16C784', above:false };
+      if (p.c > p.o && k.c < k.o && k.o >= p.c && k.c <= p.o) return { name:'Bear Engulfing', col:'#EA3943', above:true };
+    }
+    return null;
+  }
+  ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
+  data.forEach((k, ix) => {
+    const pt = patternAt(ix); if (!pt) return;
+    const x = ix * step + step / 2;
+    const tw = ctx.measureText(pt.name).width;
+    const cx = Math.max(tw / 2 + 3, Math.min(x, plotW - tw / 2 - 3));
+    ctx.fillStyle = pt.col;
+    if (pt.above){
+      const y = Math.max(Y(k.h) - 8, padT + 8);
+      ctx.beginPath(); ctx.arc(cx, y - 4, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillText('▼ ' + pt.name, cx, y - 10);
+    } else {
+      const y = Math.min(Y(k.l) + 8, H - 14);
+      ctx.beginPath(); ctx.arc(cx, y + 4, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillText('▲ ' + pt.name, cx, y + 16);
+    }
+  });
+  ctx.textAlign = 'left';
   /* last price */
   const last = data[data.length - 1].c, ly = Y(last), lup = last >= data[data.length - 1].o;
   ctx.strokeStyle = lup ? '#16C784' : '#EA3943'; ctx.setLineDash([5, 4]);
