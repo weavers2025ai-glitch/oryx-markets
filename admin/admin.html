@@ -238,6 +238,8 @@
   const ugrads = ['linear-gradient(135deg,#6D28D9,#8B5CF6)','linear-gradient(135deg,#065F46,#10B981)','linear-gradient(135deg,#B45309,#F59E0B)','linear-gradient(135deg,#1D4ED8,#38BDF8)','linear-gradient(135deg,#BE185D,#F472B6)','linear-gradient(135deg,#0F766E,#2DD4BF)','linear-gradient(135deg,#3730A3,#818CF8)','linear-gradient(135deg,#9A3412,#FB923C)'];
   /* One colour per client, the same everywhere: the card, every table row, every popup. Position in the newest-first list decides it. */
   function clientGrad(us, userId){ const ix = us.slice().reverse().findIndex(x => x.id === userId); return ugrads[ix < 0 ? 0 : ix % ugrads.length]; }
+  const ugrads70 = ['linear-gradient(135deg,rgba(109,40,217,0.7),rgba(139,92,246,0.7))','linear-gradient(135deg,rgba(6,95,70,0.7),rgba(16,185,129,0.7))','linear-gradient(135deg,rgba(180,83,9,0.7),rgba(245,158,11,0.7))','linear-gradient(135deg,rgba(29,78,216,0.7),rgba(56,189,248,0.7))','linear-gradient(135deg,rgba(190,24,93,0.7),rgba(244,114,182,0.7))','linear-gradient(135deg,rgba(15,118,110,0.7),rgba(45,212,191,0.7))','linear-gradient(135deg,rgba(55,48,163,0.7),rgba(129,140,248,0.7))','linear-gradient(135deg,rgba(154,52,18,0.7),rgba(251,146,60,0.7))'];
+  function clientGrad70(us, userId){ const ix = us.slice().reverse().findIndex(x => x.id === userId); return ugrads70[ix < 0 ? 0 : ix % ugrads70.length]; }
   let ltTimer = null;
   window.addEventListener('error', function(e){ try { var d = document.getElementById('jsErr'); if (!d) { d = document.createElement('div'); d.id = 'jsErr'; d.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;background:#7F1D1D;color:#fff;padding:10px 14px;border-radius:10px;font:12px monospace;max-width:90vw;white-space:pre-wrap'; document.body.appendChild(d); } d.textContent += (d.textContent ? '\n' : '') + 'JS ERROR: ' + e.message + ' @ line ' + (e.lineno || '?'); } catch(_){} });
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
@@ -364,7 +366,7 @@
     }).join('') || '<p style="color:#7C88A8;font-size:13.5px">No transactions yet.</p>';
     document.getElementById('dLatest').innerHTML = tbl(['Name','Email','Account','Balance','Joined'], us.slice().reverse().slice(0, 6).map((x, ix) => {
       const a = ac.find(v => v.userId === x.id);
-      return `<tr style="background:${ugrads[ix % ugrads.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
+      return `<tr style="background:${ugrads70[ix % ugrads70.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
     }).join(''));
     /* ===== balance requests: badge, alert, cards ===== */
     const rqAll = Oryx.requests();
@@ -442,7 +444,7 @@
       mini('g3','⏳','Pending', apprPend.length, 'waiting approval') + mini('g5','✖','Rejected', apprRej.length, 'declined');
     document.getElementById('uhList').innerHTML = tbl(['Name','Email','Password','Phone','Country','User ID','Account','Balance','Registered','Approved At','Approved By'], apprOk.slice().reverse().map((x, ix) => {
       const a = ac.find(v => v.userId === x.id);
-      return `<tr style="background:${ugrads[ix % ugrads.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.pass)}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${Oryx.esc(x.id)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td><td>${x.approvedAt ? new Date(x.approvedAt).toLocaleString() : '—'}</td><td>${Oryx.esc(x.approvedBy || '—')}</td></tr>`;
+      return `<tr style="background:${ugrads70[ix % ugrads70.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.pass)}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${Oryx.esc(x.id)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td><td>${x.approvedAt ? new Date(x.approvedAt).toLocaleString() : '—'}</td><td>${Oryx.esc(x.approvedBy || '—')}</td></tr>`;
     }).join(''));
     document.getElementById('cKpis').innerHTML =
       mini('g1','👥','Total Clients', us.length, 'registered', "showKpi('clients')") + mini('g4','💰','Total Balances', Oryx.money(totalBal), 'all accounts', "showKpi('balances')") +
@@ -595,23 +597,23 @@
     document.getElementById('ltList').innerHTML = rows.length ? tbl(['Client','Account','Open Trades','Symbols','Total Lots','Live P/L'], rows.map(r => {
       const syms = r.trades.map(t => t.symbol).filter((v, i, a) => a.indexOf(v) === i).join(', ');
       const lots = r.trades.reduce((s, t) => s + (+t.lots || 0), 0);
-      return `<tr class="${r.pl < 0 ? 'blink' : ''}" style="background:${clientGrad(Oryx.users(), r.user.id)};color:#fff;cursor:pointer" onclick="openLedger('${r.user.id}')"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'};font-weight:800">${r.pl >= 0 ? '+' : ''}${Oryx.money(r.pl)}</td></tr>`;
+      return `<tr class="${r.pl < 0 ? 'blink' : ''}" style="background:${clientGrad70(Oryx.users(), r.user.id)};color:#fff;cursor:pointer" onclick="openLedger('${r.user.id}')"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'};font-weight:800">${r.pl >= 0 ? '+' : ''}${Oryx.money(r.pl)}</td></tr>`;
     }).join('')) : '<p style="color:#7C88A8">No open trades right now. When a client opens a position, they appear here live.</p>';
   }
   function showKpi(kind){
     const us = Oryx.users(), ac = Oryx.accounts(), tr = Oryx.trades(), tx = Oryx.txns();
     let title = '', sub = '', body = '';
     const txnRow = t => { const a = ac.find(v => v.id === t.accountId);
-      return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td style="color:${t.amount >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(t.amount)}</td></tr>`; };
+      return `<tr style="background:${a ? clientGrad70(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td style="color:${t.amount >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(t.amount)}</td></tr>`; };
     const trRow = t => { const a = ac.find(v => v.id === t.accountId);
       const p = t.status === 'open' ? Oryx.pnlOf(t) : t.pnl;
-      return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${Oryx.esc(t.symbol)}</b></td><td>${Oryx.esc(t.side)}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${t.status}</td><td style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</td><td>${new Date(t.openAt).toLocaleString()}</td></tr>`; };
+      return `<tr style="background:${a ? clientGrad70(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${Oryx.esc(t.symbol)}</b></td><td>${Oryx.esc(t.side)}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${t.status}</td><td style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</td><td>${new Date(t.openAt).toLocaleString()}</td></tr>`; };
     if (kind === 'clients'){
       title = `Total Clients — ${us.length} registered`;
       sub = 'Everyone who signed up, with their account and balance.';
       body = tbl(['Name','Email','Account','Balance','Phone','Country','Joined'], us.slice().reverse().map((x, ix) => {
         const a = ac.find(v => v.userId === x.id);
-        return `<tr style="background:${ugrads[ix % ugrads.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
+        return `<tr style="background:${ugrads70[ix % ugrads70.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
       }).join(''));
     } else if (kind === 'balances'){
       const totalBal = ac.reduce((s, a) => s + a.balance, 0);
@@ -619,7 +621,7 @@
       sub = 'Balance of every trading account, highest first.';
       body = tbl(['Client','Account','Balance','Floating'], ac.slice().sort((p, q) => q.balance - p.balance).map(a => {
         const fl = Oryx.floating(a.id);
-        return `<tr style="background:${clientGrad(us, a.userId)};color:#fff"><td><b>${Oryx.esc(clientName(a.userId))}</b></td><td>${a.login}</td><td>${Oryx.money(a.balance)}</td><td style="color:${fl >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(fl)}</td></tr>`;
+        return `<tr style="background:${clientGrad70(us, a.userId)};color:#fff"><td><b>${Oryx.esc(clientName(a.userId))}</b></td><td>${a.login}</td><td>${Oryx.money(a.balance)}</td><td style="color:${fl >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(fl)}</td></tr>`;
       }).join(''));
     } else if (kind === 'issued'){
       const pos = tx.filter(t => t.amount > 0);
@@ -628,7 +630,7 @@
       sub = 'Every credit ever issued: $10 starter credits plus admin deposits.';
       body = tbl(['Date','Client','Type','Note','Amount'], pos.slice().reverse().map(t => {
         const a = ac.find(v => v.id === t.accountId);
-        return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td>${Oryx.money(t.amount)}</td></tr>`;
+        return `<tr style="background:${a ? clientGrad70(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td>${Oryx.money(t.amount)}</td></tr>`;
       }).join(''));
     } else if (kind === 'wd'){
       const neg = tx.filter(t => t.amount < 0);
@@ -660,7 +662,7 @@
       body = tbl(['Client','Symbol','Side','Lots','Open Price','Live P/L','Opened'], open.map(t => {
         const a = ac.find(v => v.id === t.accountId);
         const p = Oryx.pnlOf(t);
-        return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${Oryx.esc(t.symbol)}</b></td><td>${Oryx.esc(t.side)}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</td><td>${new Date(t.openAt).toLocaleString()}</td></tr>`;
+        return `<tr style="background:${a ? clientGrad70(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${Oryx.esc(t.symbol)}</b></td><td>${Oryx.esc(t.side)}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</td><td>${new Date(t.openAt).toLocaleString()}</td></tr>`;
       }).join(''));
     }
     document.getElementById('kpiTitle').textContent = title;
