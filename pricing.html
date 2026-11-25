@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing &amp; Plans — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css?v=25">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+.pr-hero{text-align:center;padding:64px 0 10px}
+.pr-hero h1{color:#fff;font-size:44px;margin:12px 0 12px}
+.pr-hero p{color:#C7D2F0;font-size:17px;max-width:700px;margin:0 auto}
+.pr-trust{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:18px;color:#93A1C4;font-size:14px}
+.pr-toggle{display:flex;gap:8px;justify-content:center;margin:30px 0 8px}
+.pr-toggle button{background:#101D42;border:1px solid var(--line);color:#C7D2F0;border-radius:999px;padding:11px 26px;font-weight:800;cursor:pointer;font-size:15px}
+.pr-toggle button.on{background:#F5B544;color:#231600;border-color:#F5B544}
+.pr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:26px}
+.pr-card{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:28px;position:relative}
+.pr-card.hot{border-color:rgba(245,181,68,.7);box-shadow:0 12px 34px rgba(245,181,68,.12)}
+.pr-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#F5B544;color:#231600;font-size:11px;font-weight:900;letter-spacing:.1em;border-radius:999px;padding:5px 14px}
+.pr-card h3{color:#fff;font-size:20px;margin-bottom:6px}
+.pr-price{color:#F5B544;font-size:38px;font-weight:900}
+.pr-price span{font-size:15px;color:#93A1C4;font-weight:600}
+.pr-save{color:#16C784;font-size:13px;font-weight:700;min-height:18px}
+.pr-lim{color:#D7DEEF;font-size:14px;line-height:1.9;margin:14px 0;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:12px 0}
+.pr-feat{list-style:none;padding:0;margin:0 0 20px}
+.pr-feat li{color:#C7D2F0;font-size:14.5px;padding:6px 0 6px 26px;position:relative;line-height:1.5}
+.pr-feat li:before{content:"✓";position:absolute;left:0;color:#F5B544;font-weight:900}
+.pr-table{width:100%;border-collapse:collapse;background:linear-gradient(160deg,#101D42,#0A1128);border-radius:16px;overflow:hidden}
+.pr-table th,.pr-table td{padding:14px 16px;text-align:left;color:#D7DEEF;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.07)}
+.pr-table th{color:#F5B544;font-size:12.5px;letter-spacing:.08em}
+.pr-addons{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.pr-addon{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:18px;padding:24px;text-align:center}
+.pr-addon b{color:#F5B544;font-size:26px;display:block;margin:8px 0 4px}
+.pr-addon h3{color:#fff;font-size:17px}
+.pr-addon p{color:#93A1C4;font-size:13.5px}
+.pr-faq{max-width:820px;margin:0 auto}
+.pr-faq details{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:12px}
+.pr-faq summary{color:#fff;font-weight:800;cursor:pointer;font-size:16px}
+.pr-faq p{color:#C7D2F0;font-size:14.5px;line-height:1.65;margin-top:10px}
+@media(max-width:1000px){.pr-grid{grid-template-columns:1fr 1fr}.pr-addons{grid-template-columns:1fr}}
+@media(max-width:600px){.pr-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-root="" class="dark-page">
+<div id="site-header"></div>
+<section class="sec pr-hero">
+  <div class="wrap">
+    <div class="kicker">Pricing &amp; Plans</div>
+    <h1>Plans &amp; Pricing</h1>
+    <p>Choose the account that fits your trading. Start free with a $10 welcome credit, and upgrade your package as you grow.</p>
+    <div class="pr-trust"><span>🛡️ Verified &amp; secure accounts</span><span>💬 24/7 support</span><span>🔄 Change plan anytime</span></div>
+    <div class="pr-toggle">
+      <button id="tgMonthly" class="on" onclick="setBilling('m')">Monthly</button>
+      <button id="tgAnnual" onclick="setBilling('a')">Annual · Save 15%</button>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:10px">
+  <div class="wrap">
+    <div class="pr-grid" id="prGrid"></div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Compare Plans</div><h2 style="color:#fff">See What Each Plan Includes</h2></div>
+    <div style="overflow-x:auto">
+    <table class="pr-table">
+      <tr><th>FEATURE</th><th>STARTER</th><th>STANDARD</th><th>PRO</th><th>VIP</th></tr>
+      <tr><td>Minimum deposit</td><td>$10 credit</td><td>$50</td><td>$250</td><td>$1,000</td></tr>
+      <tr><td>Leverage up to</td><td>1:100</td><td>1:500</td><td>1:1000</td><td>1:1000</td></tr>
+      <tr><td>Live charts &amp; indicators</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Pending orders, SL / TP</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Deposit bonus eligibility</td><td>—</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Priority support</td><td>—</td><td>—</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Dedicated account manager</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+      <tr><td>IB &amp; Affiliate access</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+    </table>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Optional Add-Ons</div><h2 style="color:#fff">Boost Your Trading</h2><p>Add extra tools from the Oryx Marketplace whenever you need them.</p></div>
+    <div class="pr-addons">
+      <div class="pr-addon"><h3>VPS Hosting</h3><b>$19</b><p>per month · run your strategies 24/5</p></div>
+      <div class="pr-addon"><h3>Trading Signals Pack</h3><b>$49</b><p>per month · daily market signals</p></div>
+      <div class="pr-addon"><h3>Expert Advisor Setup</h3><b>$99</b><p>one-time · automated strategy setup</p></div>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Got Questions?</div><h2 style="color:#fff">Pricing Questions</h2></div>
+    <div class="pr-faq">
+      <details><summary>Is the Starter plan really free?</summary><p>Yes. After your account is approved you receive a $10 welcome credit to start trading. Company credits are for trading only and cannot be withdrawn.</p></details>
+      <details><summary>Can I change my plan later?</summary><p>Yes. Your plan follows your deposit level — deposit more and your account moves up automatically.</p></details>
+      <details><summary>Are there hidden fees?</summary><p>No hidden fees from us. Your deposits, trades and withdrawals are all recorded clearly in your wallet.</p></details>
+      <details><summary>How do add-ons work?</summary><p>Add-ons are optional extras from the Marketplace. Choose one and our team activates it on your account.</p></details>
+    </div>
+  </div>
+</section>
+<div id="site-footer"></div>
+<script src="data/instruments.js?v=11"></script>
+<script src="assets/store.js?v=27"></script>
+<script src="assets/chrome.js?v=16"></script>
+<script src="assets/support.js?v=11"></script>
+<script>
+const PLANS = [
+  { name:'Starter', m:0, note:'Free to start', lim:'$10 welcome credit · Leverage 1:100', feat:['Live charts & indicators','Pending orders, SL / TP','Mobile & web terminal','Standard support'] },
+  { name:'Standard', m:50, note:'Minimum deposit', lim:'From $50 · Leverage 1:500', feat:['Everything in Starter','Deposit bonus eligibility','Faster withdrawals','Standard support'] },
+  { name:'Pro', m:250, note:'Minimum deposit', lim:'From $250 · Leverage 1:1000', feat:['Everything in Standard','Priority support','Advanced chart tools','Lower trading costs'], hot:true },
+  { name:'VIP', m:1000, note:'Minimum deposit', lim:'From $1,000 · Leverage 1:1000', feat:['Everything in Pro','Dedicated account manager','Priority withdrawals','Exclusive offers'] }
+];
+let billing = 'm';
+function setBilling(b){
+  billing = b;
+  document.getElementById('tgMonthly').classList.toggle('on', b === 'm');
+  document.getElementById('tgAnnual').classList.toggle('on', b === 'a');
+  renderPlans();
+}
+function renderPlans(){
+  document.getElementById('prGrid').innerHTML = PLANS.map(p => {
+    const annual = Math.round(p.m * 12 * 0.85);
+    const price = billing === 'a' ? ('$' + annual.toLocaleString('en-US')) : ('$' + p.m.toLocaleString('en-US'));
+    const per = p.m === 0 ? 'free' : (billing === 'a' ? '/year' : ' deposit');
+    const save = (billing === 'a' && p.m > 0) ? ('Save 15% — you save $' + (p.m * 12 - annual).toLocaleString('en-US')) : '';
+    return `<div class="pr-card${p.hot ? ' hot' : ''}">${p.hot ? '<span class="pr-badge">RECOMMENDED</span>' : ''}<h3>${p.name}</h3><div class="pr-price">${price}<span>${per}</span></div><div class="pr-save">${save}</div><div class="pr-lim">${p.lim}</div><ul class="pr-feat">${p.feat.map(f => `<li>${f}</li>`).join('')}</ul><a class="btn ${p.hot ? 'btn-gold' : 'btn-ghost'}" style="width:100%;text-align:center" href="register.html">Start with ${p.name}</a></div>`;
+  }).join('');
+}
+renderPlans();
+</script>
+<script src="assets/install.js?v=3"></script>
+</body>
+</html>
