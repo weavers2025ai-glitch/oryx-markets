@@ -77,7 +77,7 @@
   #indPanel.open{display:block}
   #indPanel .ind-grid{display:flex;flex-wrap:wrap;gap:6px}
   .chart-box{position:relative}
-  .fs-chart-btn{position:absolute;top:12px;right:12px;z-index:8;background:#F5B544;color:#171106;border:2px solid #FFE1A1;border-radius:12px;padding:11px 18px;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+  .fs-chart-btn{display:none;position:absolute;top:12px;right:12px;z-index:8;background:#F5B544;color:#171106;border:2px solid #FFE1A1;border-radius:12px;padding:11px 18px;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4)}
   .fs-chart-btn:hover{background:#F5B544;color:#171106}
   #tvchart{cursor:grab;touch-action:none}
   #tvchart.dragging{cursor:grabbing}
@@ -203,10 +203,11 @@
   }
   /* fullscreen chart: chart fills the page, white glass column on the left */
   #fsWrap{position:relative}
-  #fsSide{display:none;position:absolute;left:0;top:0;bottom:0;width:284px;z-index:6;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);color:#0F172A;padding:14px;overflow-y:auto;box-shadow:10px 0 32px rgba(0,0,0,.35);border-radius:0 16px 16px 0}
+  #fsBtns{display:none;position:absolute;right:16px;bottom:64px;z-index:6;flex-direction:column;gap:8px}#fsBtns .qt-btn{padding:8px 14px;font-size:13px;min-width:150px}
   #fsWrap:fullscreen,#fsWrap.fs{position:fixed;inset:0;z-index:9999;background:#070D1D;padding:16px;display:flex;flex-direction:column}
   #fsWrap:fullscreen .chart-box,#fsWrap.fs .chart-box{flex:1;height:auto !important;min-height:0;max-height:none}
-  #fsWrap:fullscreen #fsSide,#fsWrap.fs #fsSide{display:block}
+  #fsWrap:fullscreen #fsBtns,#fsWrap.fs #fsBtns{display:flex}
+  #fsWrap:fullscreen .fs-chart-btn,#fsWrap.fs .fs-chart-btn{display:block}
   /* desktop: open positions live at the top of the left column, beside the chart */
   .pos-desk{display:none}
   @media(min-width:901px){
@@ -275,19 +276,11 @@
   <div class="col chart-col">
     <div class="sym-strip" id="symStrip"></div>
     <div id="fsWrap">
-    <div id="fsSide">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <b style="font-size:14px">Open Entries</b>
-        <button type="button" class="btn btn-line" id="fsExit" style="padding:4px 10px;color:#0F172A;border-color:rgba(15,23,42,.3)">✕ Exit</button>
-      </div>
-      <div id="fsOpen" style="margin-top:8px"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
-        <button type="button" id="fsSell" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button>
-        <button type="button" id="fsBuy" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button>
-      </div>
-      <p style="margin-top:12px;font-size:11.5px;color:#64748B">Buttons show the live price. ESC exits full screen.</p>
+    <div id="fsBtns">
+      <button type="button" id="fsSell" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button>
+      <button type="button" id="fsBuy" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button>
     </div>
-    <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas><button type="button" class="fs-chart-btn" onclick="toggleFs()" title="Full Screen Chart">⛶ FULL SCREEN</button></div>
+    <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas><button type="button" class="fs-chart-btn" onclick="toggleFs()" title="Exit Full Screen">✕</button></div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
       <span style="color:var(--mut);font-size:12px;white-space:nowrap">TF</span>
       <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap" aria-label="Chart timeframe">
@@ -470,7 +463,7 @@
   }
   document.addEventListener('fullscreenchange', () => { const w = document.getElementById('fsWrap'); if (!document.fullscreenElement) w.classList.remove('fs'); render(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape'){ const w = document.getElementById('fsWrap'); if (w.classList.contains('fs')){ w.classList.remove('fs'); render(); } } });
-  document.getElementById('fsExit').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); document.getElementById('fsWrap').classList.remove('fs'); render(); });
+  const fsExitEl = document.getElementById('fsExit'); if (fsExitEl) fsExitEl.addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); document.getElementById('fsWrap').classList.remove('fs'); render(); });
   document.getElementById('whoLine').textContent = u.name + ' · Account ' + acc.login + ' · 1:' + acc.leverage;
   document.getElementById('tpLev').value = '1:' + acc.leverage;
 
