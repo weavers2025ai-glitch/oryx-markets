@@ -131,21 +131,43 @@ const Oryx = (() => {
   function startFeed(cb, ms){ tick(); if (cb) cb(); feedTimer = setInterval(() => { tick(); if (cb) cb(); }, ms || 1000); return feedTimer; }
 
   /* ---------- auth & clients ---------- */
+  /* Approval workflow: a signup is PENDING until an Admin approves it.
+     Only on approval is the trading account created and the $10 starter
+     credit issued. Login stays blocked until then. Users registered before
+     this workflow existed have no status field and count as approved. */
   function register(name, email, pass, phone, country){
     const us = users();
     if (us.some(u => u.email.toLowerCase() === email.toLowerCase())) return { error:'An account with this email already exists. Please log in.' };
-    const user = { id:uid('u'), name, email, pass, phone:phone||'', country:country||'', created:Date.now() };
+    const user = { id:uid('u'), name, email, pass, phone:phone||'', country:country||'', created:Date.now(), status:'pending' };
     us.push(user); saveUsers(us);
+    return { user, pending:true };
+  }
+  function approveUser(userId, adminEmail){
+    const us = users();
+    const u = us.find(x => x.id === userId);
+    if (!u) return { error:'User not found.' };
+    if (u.status === 'approved') return { error:'Already approved.' };
     const st = settings();
     const accs = accounts();
-    const loginNo = 880001 + accs.length;
-    const acc = { id:uid('a'), login:loginNo, userId:user.id, type:'Standard', currency:'USD', balance:0, leverage:st.leverage, created:Date.now() };
-    accs.push(acc); saveAccounts(accs);
-    // Starter credit — the ONLY automatic balance. Everything else is issued by Admin.
-    addTxn(acc.id, 'Starter Credit', st.starter, 'Welcome credit issued on registration');
-    acc.balance = st.starter; saveAccounts(accs);
-    save(K.session, user.id);
-    return { user, account:acc };
+    let acc = accs.find(a => a.userId === u.id);
+    if (!acc) {
+      const loginNo = 880001 + accs.length;
+      acc = { id:uid('a'), login:loginNo, userId:u.id, type:'Standard', currency:'USD', balance:0, leverage:st.leverage, created:Date.now() };
+      accs.push(acc); saveAccounts(accs);
+      // Starter credit — the ONLY automatic balance. Everything else is issued by Admin.
+      addTxn(acc.id, 'Starter Credit', st.starter, 'Welcome credit issued on approval');
+      acc.balance = st.starter; saveAccounts(accs);
+    }
+    u.status = 'approved'; u.approvedAt = Date.now(); u.approvedBy = adminEmail || '';
+    saveUsers(us);
+    return { user:u, account:acc };
+  }
+  function rejectUser(userId){
+    const us = users();
+    const u = us.find(x => x.id === userId);
+    if (!u) return { error:'User not found.' };
+    u.status = 'rejected'; u.rejectedAt = Date.now(); saveUsers(us);
+    return { user:u };
   }
   function addTxn(accountId, type, amount, note){
     const t = txns(); t.push({ id:uid('t'), accountId, type, amount, note:note||'', at:Date.now() }); saveTxns(t);
@@ -153,6 +175,8 @@ const Oryx = (() => {
   function login(email, pass){
     const u = users().find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
     if (!u) return { error:'Invalid email or password.' };
+    if (u.status === 'pending') return { error:'Your account is under verification — it will be verified within 24 hours. Please try again after approval.' };
+    if (u.status === 'rejected') return { error:'Your registration was not approved. Please contact support.' };
     save(K.session, u.id); return { user:u };
   }
   function logout(){ localStorage.removeItem(K.session); }
@@ -372,7 +396,7 @@ const Oryx = (() => {
   return { K, settings, saveSettings, users, accounts, trades, txns, addTxn,
            prices, hist, candles, sparkData, dayHigh, dayLow, todayHigh, todayLow, changePct, sentiment, spark,
            inst, bid, ask, fmtP, startFeed,
-           register, login, logout, currentUser, myAccounts, accountById,
+           register, login, logout, currentUser, myAccounts, accountById, approveUser, rejectUser,
            pnlOf, floating, usedMargin, openTrade, closeTrade, closeTradeAt, orders, placeOrder, cancelOrder,
            notifyUser, markMsgsRead, checkStopOut,
            adminPw, issueBalance, requests, createRequest, decideRequest, money, esc,
