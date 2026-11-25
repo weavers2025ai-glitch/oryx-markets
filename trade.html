@@ -710,6 +710,7 @@
       wCard('Total Deposits', Oryx.money(dep), 'All time', '#B45309,#F59E0B') +
       wCard('Total Withdrawals', Oryx.money(wd), 'All time', '#BE185D,#F472B6') +
       wCard('Company Balance', Oryx.money(Oryx.companyTotal(acc.id)), 'company balance — trading only, never withdrawable', '#B45309,#F59E0B');
+    const wh = document.getElementById('wdHint'); if (wh) wh.textContent = 'Withdrawable now: ' + Oryx.money(Oryx.withdrawableOf(acc.id)) + ' (company balance ' + Oryx.money(Oryx.companyTotal(acc.id)) + ' is locked — trading only)';
     const cfg = Oryx.payCfg(); const rows = [];
     if (cfg.easypaisa.number) rows.push(`<div><b style="color:#F5B544">Easypaisa</b> — ${Oryx.esc(cfg.easypaisa.number)}${cfg.easypaisa.title ? ' (' + Oryx.esc(cfg.easypaisa.title) + ')' : ''}</div>`);
     if (cfg.jazzcash.number) rows.push(`<div><b style="color:#F5B544">JazzCash</b> — ${Oryx.esc(cfg.jazzcash.number)}${cfg.jazzcash.title ? ' (' + Oryx.esc(cfg.jazzcash.title) + ')' : ''}</div>`);
@@ -742,9 +743,9 @@
     const acct = document.getElementById('wdAcct').value.trim();
     if (!amt || amt <= 0){ err.textContent = 'Please enter the amount to withdraw.'; return; }
     const withdrawable = Oryx.withdrawableOf(acc.id);
-    if (amt > withdrawable){ err.textContent = 'Amount is more than your withdrawable balance (' + Oryx.money(withdrawable) + ' — company balance is trading only and can never be withdrawn).'; return; }
+    if (amt > withdrawable){ err.textContent = '⛔ Amount is more than your withdrawable balance (' + Oryx.money(withdrawable) + ' — company balance is trading only and can never be withdrawn).'; err.style.display = 'block'; return; }
     if (!acct){ err.textContent = 'Please enter the account where Admin should send the money.'; return; }
-    err.textContent = '';
+    err.textContent = ''; err.style.display = 'none';
     Oryx.createRequest(acc.id, { amount: amt, kind: 'withdraw', method: document.getElementById('wdMethod').value,
       note: document.getElementById('wdNote').value.trim(),
       senderAcct: acct, senderName: document.getElementById('wdName').value.trim() });
@@ -796,12 +797,12 @@
       <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
         <h3 style="color:#fff;margin:0 0 8px">⬆ Request Withdrawal</h3>
         <p style="color:#93A1C4;font-size:13px;margin:0 0 12px">The money is deducted from your account only after Admin approves.</p>
-        <div class="field"><label>Amount (USD)</label><input id="wdAmt" type="number" step="0.01" placeholder="e.g. 100"></div>
+        <div class="field"><label>Amount (USD)</label><input id="wdAmt" type="number" step="0.01" placeholder="e.g. 100"><div id="wdHint" style="color:#F5B544;font-size:12.5px;margin-top:6px"></div></div>
         <div class="field"><label>Withdraw via</label><select id="wdMethod"><option>Easypaisa</option><option>JazzCash</option><option>Online Bank Transfer</option></select></div>
         <div class="field"><label>Your account to receive the money *</label><input id="wdAcct" placeholder="e.g. 0333-xxxxxxx / bank account no."></div>
         <div class="field"><label>Your Name</label><input id="wdName" placeholder="e.g. Waheed Ahmad"></div>
         <div class="field"><label>Note (optional)</label><input id="wdNote" placeholder="e.g. Need it today"></div>
-        <div class="form-err" id="wdErr"></div>
+        <div class="form-err" id="wdErr" style="display:none;background:rgba(234,57,67,.14);border:1px solid rgba(234,57,67,.55);color:#FECACA;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:13.5px"></div>
         <button class="btn btn-gold" style="font-weight:800" onclick="submitWd()">Send Withdrawal Request</button>
       </div>
       <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
