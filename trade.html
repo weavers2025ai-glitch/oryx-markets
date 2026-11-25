@@ -348,7 +348,7 @@
 <div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=20"></script>
+<script src="assets/store.js?v=23"></script>
 <script src="assets/cloud.js?v=8"></script>
 <script src="assets/chart.js?v=14"></script>
 <script>
@@ -580,7 +580,14 @@
       txnId: txn, senderName: document.getElementById('rqSender').value.trim(), senderAcct: document.getElementById('rqSenderAcct').value.trim() });
     closeReq(); render(); renderWallet(); showWallet();
   }
-  function showWallet(){ renderWallet(); document.getElementById('walletPage').style.display = 'block'; }
+  function showWallet(){
+    if (u.bank && u.bank.account){
+      if (!document.getElementById('wdAcct').value) document.getElementById('wdAcct').value = u.bank.account;
+      if (!document.getElementById('wdName').value && u.bank.title) document.getElementById('wdName').value = u.bank.title;
+      document.getElementById('wdMethod').value = u.bank.method || 'Easypaisa';
+    }
+    renderWallet(); document.getElementById('walletPage').style.display = 'block';
+  }
   function hideWallet(){ document.getElementById('walletPage').style.display = 'none'; }
   function wCard(label, val, sub, grad, id){
     return `<div style="background:linear-gradient(135deg,${grad});border-radius:14px;padding:16px;color:#fff;flex:1;min-width:150px"><div style="font-size:12.5px;opacity:.85">${label}</div><div id="${id || ''}" style="font-size:24px;font-weight:800;margin:4px 0">${val}</div><div style="font-size:12px;opacity:.8">${sub}</div></div>`;
@@ -590,24 +597,62 @@
     const dep = tx.filter(t => /Deposit|Credit/.test(t.type)).reduce((s, t) => s + t.amount, 0);
     const wd = Math.abs(tx.filter(t => /Withdraw/.test(t.type)).reduce((s, t) => s + t.amount, 0));
     const fl = Oryx.floating(acc.id);
+    const locked = Oryx.usedMargin(acc.id);
+    const avail = acc.balance + fl - locked;
     document.getElementById('wKpis').innerHTML =
-      wCard('Balance', Oryx.money(acc.balance), 'Available to trade', '#1D4ED8,#38BDF8', 'wBal') +
+      wCard('Balance', Oryx.money(acc.balance), `Available ${Oryx.money(avail)} · Locked ${Oryx.money(locked)}`, '#1D4ED8,#38BDF8', 'wBal') +
       wCard('Equity', Oryx.money(acc.balance + fl), 'Balance + floating P/L', '#065F46,#10B981', 'wEq') +
       wCard('Total Deposits', Oryx.money(dep), 'All time', '#B45309,#F59E0B') +
-      wCard('Total Withdrawals', Oryx.money(wd), 'All time', '#BE185D,#F472B6');
+      wCard('Total Withdrawals', Oryx.money(wd), 'All time', '#BE185D,#F472B6') +
+      wCard('Trading Credits', Oryx.money(Oryx.bonusTotal(acc.id)), 'locked — trading only', '#B45309,#F59E0B');
     const cfg = Oryx.payCfg(); const rows = [];
     if (cfg.easypaisa.number) rows.push(`<div><b style="color:#F5B544">Easypaisa</b> — ${Oryx.esc(cfg.easypaisa.number)}${cfg.easypaisa.title ? ' (' + Oryx.esc(cfg.easypaisa.title) + ')' : ''}</div>`);
     if (cfg.jazzcash.number) rows.push(`<div><b style="color:#F5B544">JazzCash</b> — ${Oryx.esc(cfg.jazzcash.number)}${cfg.jazzcash.title ? ' (' + Oryx.esc(cfg.jazzcash.title) + ')' : ''}</div>`);
     if (cfg.bank.account || cfg.bank.iban) rows.push(`<div><b style="color:#F5B544">Bank${cfg.bank.bank ? ' — ' + Oryx.esc(cfg.bank.bank) : ''}</b>${cfg.bank.title ? ' · ' + Oryx.esc(cfg.bank.title) : ''}${cfg.bank.account ? ' · Acct ' + Oryx.esc(cfg.bank.account) : ''}${cfg.bank.iban ? ' · IBAN ' + Oryx.esc(cfg.bank.iban) : ''}</div>`);
     document.getElementById('wPay').innerHTML = rows.length ? rows.join('') : '<span style="color:#93A1C4">Admin has not added payment accounts yet — ask Admin on WhatsApp for the Easypaisa / JazzCash / bank details.</span>';
-    const my = Oryx.requests().filter(r => r.accountId === acc.id).slice().reverse();
+    const my = Oryx.requests().filter(r => r.accountId === acc.id && r.kind !== 'withdraw').slice().reverse();
+    const myWd = Oryx.requests().filter(r => r.accountId === acc.id && r.kind === 'withdraw').slice().reverse();
+    document.getElementById('wWdReqs').innerHTML = myWd.length ? myWd.map(r => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08)"><span style="font-size:13px;color:#D7DEEF">${Oryx.money(r.amount)} · ${Oryx.esc(r.method)}${r.senderAcct ? ' → ' + Oryx.esc(r.senderAcct) : ''}<br><span style="color:#7C88A8;font-size:11.5px">${new Date(r.at).toLocaleString()}</span></span><span class="st-pill st-${r.status}">${r.status}</span></div>`).join('') : '<p style="color:#7C88A8;font-size:13px">No withdrawal requests yet.</p>';
     document.getElementById('wReqs').innerHTML = my.length ? my.map(r => {
       const m = r.status === 'pending' ? Oryx.matchStatus(r) : null;
       const tag = m ? (m.state === 'matched' ? '<span class="st-pill" style="background:#F59E0B;color:#451A03">✓ CHECKED</span>' : m.state === 'duplicate' ? '<span class="st-pill" style="background:#7F1D1D;color:#FECACA">⛔ DUPLICATE</span>' : m.state === 'mismatch' ? '<span class="st-pill" style="background:#7F1D1D;color:#FECACA">✗ NOT MATCHED</span>' : '') : '';
       return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08)"><span style="font-size:13px;color:#D7DEEF">${Oryx.money(r.amount)} · ${Oryx.esc(r.method)}${r.txnId ? ' · ' + Oryx.esc(r.txnId) : ''}<br><span style="color:#7C88A8;font-size:11.5px">${new Date(r.at).toLocaleString()}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st-pill st-${r.status}">${r.status}</span>${tag}</span></div>`;
     }).join('') : '<p style="color:#7C88A8;font-size:13px">No requests yet — tap Add Balance to send your first deposit.</p>';
-    const recent = tx.slice().reverse().slice(0, 20);
+    const txF = (document.getElementById('wTxFilter') || {}).value || 'All';
+    const shown = txF === 'All' ? tx : tx.filter(t => (t.type + ' ' + (t.note || '')).toLowerCase().includes(txF.toLowerCase()));
+    const recent = shown.slice().reverse().slice(0, 20);
     document.getElementById('wTxns').innerHTML = recent.length ? `<table style="width:100%;border-collapse:collapse">${recent.map(t => `<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:8px 4px;color:#93A1C4">${new Date(t.at).toLocaleString()}</td><td style="padding:8px 4px">${Oryx.esc(t.type)}</td><td style="padding:8px 4px;color:${t.amount >= 0 ? '#16C784' : '#EA3943'}"><b>${t.amount >= 0 ? '+' : ''}${Oryx.money(t.amount)}</b></td><td style="padding:8px 4px;color:#93A1C4">${Oryx.esc(t.note || '')}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">No transactions yet.</p>';
+  }
+  function showWTab(tab){
+    document.getElementById('wDeposit').style.display = tab === 'dep' ? 'block' : 'none';
+    document.getElementById('wWithdraw').style.display = tab === 'wd' ? 'block' : 'none';
+    const on = 'flex:1;font-weight:800;background:linear-gradient(135deg,#F5B544,#E8A020);color:#171106;border:0';
+    const off = 'flex:1;font-weight:800;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)';
+    document.getElementById('wTabDep').style.cssText = tab === 'dep' ? on : off;
+    document.getElementById('wTabWd').style.cssText = tab === 'wd' ? on : off;
+  }
+  function submitWd(){
+    const amt = parseFloat(document.getElementById('wdAmt').value);
+    const err = document.getElementById('wdErr');
+    const acct = document.getElementById('wdAcct').value.trim();
+    if (!amt || amt <= 0){ err.textContent = 'Please enter the amount to withdraw.'; return; }
+    const withdrawable = acc.balance - Oryx.bonusTotal(acc.id);
+    if (amt > withdrawable){ err.textContent = 'Amount is more than your withdrawable balance (' + Oryx.money(withdrawable) + ' — bonus credits are locked).'; return; }
+    if (!acct){ err.textContent = 'Please enter the account where Admin should send the money.'; return; }
+    err.textContent = '';
+    Oryx.createRequest(acc.id, { amount: amt, kind: 'withdraw', method: document.getElementById('wdMethod').value,
+      note: document.getElementById('wdNote').value.trim(),
+      senderAcct: acct, senderName: document.getElementById('wdName').value.trim() });
+    document.getElementById('wdAmt').value = ''; document.getElementById('wdAcct').value = ''; document.getElementById('wdName').value = ''; document.getElementById('wdNote').value = '';
+    render(); renderWallet(); showWTab('wd');
+  }
+  function downloadStatement(){
+    const rows = [['Date','Type','Amount','Note']].concat(Oryx.txns().filter(t => t.accountId === acc.id).slice().reverse().map(t => [new Date(t.at).toLocaleString(), t.type, t.amount.toFixed(2), (t.note || '').replace(/[,\n]/g, ' ')]));
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'oryx-statement-' + acc.login + '.csv'; a.click();
+    URL.revokeObjectURL(a.href);
   }
   Oryx.startFeed(render, 1000);
 </script>
@@ -619,16 +664,39 @@
       <button class="btn btn-gold" style="margin-left:auto;font-weight:800" onclick="openReq()">➕ Add Balance</button>
     </div>
     <div id="wKpis" style="display:flex;gap:12px;flex-wrap:wrap;margin:18px 0"></div>
-    <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
-      <h3 style="color:#fff;margin:0 0 8px">💳 Send Payment To</h3>
-      <div id="wPay" style="color:#D7DEEF;font-size:13.5px;line-height:1.9"></div>
+    <div style="display:flex;gap:8px;margin:0 0 14px">
+      <button type="button" class="btn" id="wTabDep" onclick="showWTab('dep')" style="flex:1;font-weight:800;background:linear-gradient(135deg,#F5B544,#E8A020);color:#171106;border:0">💸 Deposit</button>
+      <button type="button" class="btn" id="wTabWd" onclick="showWTab('wd')" style="flex:1;font-weight:800;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)">⬆ Withdraw</button>
     </div>
-    <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
-      <h3 style="color:#fff;margin:0 0 8px">📨 My Balance Requests</h3>
-      <div id="wReqs"></div>
+    <div id="wDeposit">
+      <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
+        <h3 style="color:#fff;margin:0 0 8px">💳 Send Payment To</h3>
+        <div id="wPay" style="color:#D7DEEF;font-size:13.5px;line-height:1.9"></div>
+      </div>
+      <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
+        <h3 style="color:#fff;margin:0 0 8px">📨 My Balance Requests</h3>
+        <div id="wReqs"></div>
+      </div>
+    </div>
+    <div id="wWithdraw" style="display:none">
+      <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
+        <h3 style="color:#fff;margin:0 0 8px">⬆ Request Withdrawal</h3>
+        <p style="color:#93A1C4;font-size:13px;margin:0 0 12px">The money is deducted from your account only after Admin approves.</p>
+        <div class="field"><label>Amount (USD)</label><input id="wdAmt" type="number" step="0.01" placeholder="e.g. 100"></div>
+        <div class="field"><label>Withdraw via</label><select id="wdMethod"><option>Easypaisa</option><option>JazzCash</option><option>Online Bank Transfer</option></select></div>
+        <div class="field"><label>Your account to receive the money *</label><input id="wdAcct" placeholder="e.g. 0333-xxxxxxx / bank account no."></div>
+        <div class="field"><label>Your Name</label><input id="wdName" placeholder="e.g. Waheed Ahmad"></div>
+        <div class="field"><label>Note (optional)</label><input id="wdNote" placeholder="e.g. Need it today"></div>
+        <div class="form-err" id="wdErr"></div>
+        <button class="btn btn-gold" style="font-weight:800" onclick="submitWd()">Send Withdrawal Request</button>
+      </div>
+      <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:14px">
+        <h3 style="color:#fff;margin:0 0 8px">📨 My Withdraw Requests</h3>
+        <div id="wWdReqs"></div>
+      </div>
     </div>
     <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px">
-      <h3 style="color:#fff;margin:0 0 8px">📜 Transactions</h3>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h3 style="color:#fff;margin:0 0 8px">📜 Transactions</h3><select id="wTxFilter" onchange="renderWallet()" style="margin-left:auto;max-width:170px;padding:6px 10px;font-size:12.5px"><option>All</option><option>Easypaisa</option><option>JazzCash</option><option>Bank</option><option>Cash</option><option>Bonus</option><option>Withdrawal</option><option>Starter</option></select><button class="btn btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="downloadStatement()">⬇ Download Statement</button></div>
       <div id="wTxns" style="color:#D7DEEF;font-size:13px"></div>
     </div>
   </div>

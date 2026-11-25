@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Guide — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css?v=15">
+<style>
+  body{background:#0B1220}
+  .g-wrap{max-width:1100px;margin:0 auto;padding:24px 18px 60px}
+  .g-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .g-head h1{color:#fff;margin:0;font-size:26px}
+  .g-head p{color:#93A1C4;margin:4px 0 0;font-size:14px}
+  .g-search{width:100%;max-width:420px;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#0D1730;color:#fff;font-size:14px;margin:18px 0}
+  .g-grid{display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:start}
+  .g-nav{position:sticky;top:16px;background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px}
+  .g-nav b{color:#F5B544;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+  .g-nav a{display:block;color:#D7DEEF;text-decoration:none;font-size:13.5px;padding:7px 8px;border-radius:8px}
+  .g-nav a:hover{background:rgba(255,255,255,.07);color:#fff}
+  .g-nav a.sub{padding-left:20px;font-size:13px;color:#93A1C4}
+  .g-sec{background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px;margin-bottom:14px}
+  .g-sec h2{color:#fff;margin:0 0 6px;font-size:19px}
+  .g-sec h3{color:#F5B544;margin:16px 0 4px;font-size:15px}
+  .g-sec p,.g-sec li{color:#D7DEEF;font-size:14px;line-height:1.7}
+  .g-sec ul{margin:6px 0;padding-left:20px}
+  .g-open{display:inline-block;margin-top:10px;background:linear-gradient(135deg,#F5B544,#E8A020);color:#171106;font-weight:800;font-size:13px;padding:8px 14px;border-radius:9px;text-decoration:none}
+  .g-tag{display:inline-block;background:rgba(245,181,68,.15);color:#F5B544;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin:2px 4px 2px 0}
+  @media(max-width:760px){.g-grid{grid-template-columns:1fr}.g-nav{position:static}}
+</style>
+</head>
+<body>
+<div class="g-wrap">
+  <div class="g-head">
+    <div style="font-size:34px">📖</div>
+    <div>
+      <h1>Oryx Markets — User Guide</h1>
+      <p>Everything you need to trade, deposit, withdraw and get verified — in one place.</p>
+    </div>
+    <a href="dashboard.html" class="g-open" style="margin-left:auto">← Back to Dashboard</a>
+  </div>
+  <input class="g-search" id="gSearch" placeholder="🔍 Search the guide… (e.g. withdraw, KYC, bonus)" oninput="gFilter()">
+  <div class="g-grid">
+    <nav class="g-nav" id="gNav">
+      <b>Getting Started</b>
+      <a href="#start">Create your account</a>
+      <a href="#start" class="sub">Approval &amp; $10 starter credit</a>
+      <b style="display:block;margin-top:12px">Your Account</b>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#terminal">Trading Terminal</a>
+      <a href="#wallet">Wallet — Deposit &amp; Withdraw</a>
+      <a href="#kyc">KYC Verification</a>
+      <a href="#offers">Offers &amp; Bonuses</a>
+      <a href="#achievements">Achievements</a>
+      <b style="display:block;margin-top:12px">For Admins</b>
+      <a href="#admin">Admin Panel</a>
+      <b style="display:block;margin-top:12px">Reference</b>
+      <a href="#glossary">Glossary</a>
+      <a href="#support">Support</a>
+    </nav>
+    <div id="gBody">
+      <section class="g-sec" id="start">
+        <h2>🚀 Getting Started</h2>
+        <h3>1. Create your account</h3>
+        <p>Open the registration page and fill in your name, email, password, phone and country. Your account is created as <b>pending</b> — you cannot log in yet.</p>
+        <h3>2. Wait for approval</h3>
+        <p>An admin reviews every signup, usually within 24 hours. Once approved you receive a <b>$10 starter credit</b> in your trading account automatically, and your login starts working. Every new client gets only this $10 — anything more is issued by the admin.</p>
+        <h3>3. Log in and trade</h3>
+        <p>Log in with your email and password. Your dashboard shows your balance, equity and open positions. Open the Web Terminal to place your first trade.</p>
+        <a class="g-open" href="register.html">Open Registration →</a>
+      </section>
+
+      <section class="g-sec" id="dashboard">
+        <h2>📊 Dashboard</h2>
+        <p>Your complete trading overview in one screen:</p>
+        <ul>
+          <li><b>Balance</b> — the money in your account.</li>
+          <li><b>Equity (Live)</b> — balance plus your floating profit/loss.</li>
+          <li><b>Win Rate</b> — how many of your closed trades won.</li>
+          <li><b>Active Positions</b> — your open trades right now.</li>
+          <li><b>Equity Growth</b> — your balance journey over time.</li>
+          <li><b>Open Positions — Live</b> — every live trade with its current profit/loss, and a button to open the Web Terminal.</li>
+          <li><b>Recent Activity &amp; Trade History</b> — your latest trades and balance movements.</li>
+        </ul>
+        <a class="g-open" href="dashboard.html">Open Dashboard →</a>
+      </section>
+
+      <section class="g-sec" id="terminal">
+        <h2>📈 Trading Terminal</h2>
+        <p>Trade Forex, Gold, Oil, Crypto and Indices — 14 instruments, leverage 1:1000, with a live chart.</p>
+        <h3>The chart</h3>
+        <p>30 wide candles with a history scrollbar underneath — drag it left to see older candles, press <b>Latest</b> to jump back to live. Candlestick patterns are labelled on the chart (Hammer, Doji, Engulfing and more) and moving-average lines are drawn for you. The <b>⛶ Full Screen Chart</b> button opens a big chart with your open entries and BUY/SELL buttons on the side.</p>
+        <h3>Placing a trade</h3>
+        <ul>
+          <li><b>Market order</b> — buys or sells immediately at the live price. Use the quick <b>SELL / BUY</b> bar under the chart.</li>
+          <li><b>Pending order</b> — set a trigger price; the trade opens automatically when the market reaches it.</li>
+          <li><b>Stop Loss / Take Profit</b> — set them on any trade and it closes itself at your price.</li>
+          <li><b>Volume</b> — choose your lot size; the margin needed is shown before you trade.</li>
+        </ul>
+        <h3>Closing a trade</h3>
+        <p>Press <b>CLOSE</b> on any open position. Your profit or loss is booked immediately and shows in your balance and trade history.</p>
+        <a class="g-open" href="trade.html">Open Web Terminal →</a>
+      </section>
+
+      <section class="g-sec" id="wallet">
+        <h2>💰 Wallet — Deposit &amp; Withdraw</h2>
+        <p>Open the <b>💰 Wallet</b> tab in the terminal. It shows five cards:</p>
+        <ul>
+          <li><b>Balance</b> — with <b>Available</b> (free to use) and <b>Locked</b> (margin held by open trades).</li>
+          <li><b>Equity</b> — balance plus floating profit/loss.</li>
+          <li><b>Total Deposits / Total Withdrawals</b> — all time.</li>
+          <li><b>Trading Credits</b> — bonus money. It works as margin, but it is locked: it can never be withdrawn.</li>
+        </ul>
+        <h3>Deposit</h3>
+        <p>Tap <b>➕ Add Balance</b>. Send the money to the Easypaisa, JazzCash or bank details shown, then paste your <b>Transaction ID</b>, your name and your account number, and attach the payment screenshot. Admin checks it and credits your account. You can watch the status in <b>My Balance Requests</b> — a gold <b>✓ CHECKED</b> tag means Admin matched your payment.</p>
+        <h3>Withdraw</h3>
+        <p>Open the <b>Withdraw</b> tab in the Wallet, enter the amount, choose Easypaisa, JazzCash or Bank, and enter the account where the money should be sent. Admin approves it and the amount is deducted from your balance. Only your <b>withdrawable</b> balance can be taken out — bonus credits stay in the account.</p>
+        <h3>Statement</h3>
+        <p>Press <b>⬇ Download Statement</b> to save all your transactions as a CSV file. Use the filter to show only Easypaisa, JazzCash, Bank, Cash, Bonus or Withdrawal movements.</p>
+        <a class="g-open" href="trade.html">Open Wallet (in Terminal) →</a>
+      </section>
+
+      <section class="g-sec" id="kyc">
+        <h2>🪪 KYC Verification</h2>
+        <p><b>KYC means “Know Your Customer”</b> — it is how a broker confirms you are who you say you are. It protects your money: nobody else can withdraw from your account pretending to be you.</p>
+        <h3>The 3 steps</h3>
+        <ul>
+          <li><b>Step 1 — Identity Document:</b> upload a photo of your Passport, National ID or Driver's License.</li>
+          <li><b>Step 2 — Proof of Address:</b> upload a Utility Bill or Bank Statement from the last 3 months.</li>
+          <li><b>Step 3 — Verification Complete:</b> Admin reviews both documents. Once both are verified, your account is fully verified.</li>
+        </ul>
+        <p>Verified clients get <span class="g-tag">🔒 Security</span> <span class="g-tag">⚡ Faster Withdrawals</span> <span class="g-tag">📈 Higher Limits</span> <span class="g-tag">✅ Full Access</span></p>
+        <p>If a document is rejected, upload a clear photo again — the reason is shown on your dashboard.</p>
+        <a class="g-open" href="dashboard.html#kycPanel">Upload Documents (on Dashboard) →</a>
+      </section>
+
+      <section class="g-sec" id="offers">
+        <h2>🎁 Offers &amp; Bonuses</h2>
+        <h3>Promo codes</h3>
+        <p>Got a code? Enter it in <b>Have a promo code?</b> on your dashboard. A <b>fixed</b> code credits the bonus instantly; a <b>% code</b> (for example <b>WELCOME20</b> — 20% of your next deposit) arms itself and the bonus lands automatically when Admin approves your next deposit.</p>
+        <h3>Volume offers</h3>
+        <p>Trade a set number of lots and claim a bonus — for example trade 10 lots and get $25. Your progress is shown on the dashboard; press <b>Claim</b> when you reach the target.</p>
+        <h3>Locked credits</h3>
+        <p>Every bonus is a <b>locked trading credit</b>: it adds to your balance and works as margin for trading, but it can never be withdrawn. Your withdrawable balance is always your balance minus your bonus credits.</p>
+        <a class="g-open" href="dashboard.html#offersPanel">See Offers (on Dashboard) →</a>
+      </section>
+
+      <section class="g-sec" id="achievements">
+        <h2>🏆 Achievements</h2>
+        <p>Ten milestones to unlock as you trade:</p>
+        <ul>
+          <li><b>Deposits:</b> First Deposit · Bronze Depositor ($1,000) · Gold Depositor ($10,000)</li>
+          <li><b>Trading:</b> First Trade · First Profit · 10 Winning Trades · 50 Winning Trades · 10 Lots Traded · 100 Lots Traded</li>
+          <li><b>Verification:</b> Identity Verified (complete KYC)</li>
+        </ul>
+        <p>Each badge shows your progress — unlocked badges turn gold.</p>
+      </section>
+
+      <section class="g-sec" id="admin">
+        <h2>🛡 For Admins</h2>
+        <p>The Admin panel is where the brokerage is run:</p>
+        <ul>
+          <li><b>Dashboard</b> — every client, balance and trade at a glance. Click any coloured box to see the clients behind it.</li>
+          <li><b>Account Approvals</b> — approve new signups (they get the $10 starter credit) or reject them.</li>
+          <li><b>Balance Requests</b> — approve deposits (money is credited) or withdrawals (money is deducted). Deposits are auto-checked against <b>Bank Entries</b>: add each payment you received and a gold ✓ CHECKED tag appears when the transaction ID and amount match. A proof that was already credited once is flagged ⛔ DUPLICATE and cannot be approved again.</li>
+          <li><b>Live Traders</b> — everyone trading right now, loss first, profit blinking below a white divider. White boxes next to them show each group's total deposits. Click any box for the detail.</li>
+          <li><b>KYC Verification</b> — review each client's identity and address photos, Verify or Reject.</li>
+          <li><b>Offers &amp; Bonuses</b> — create promo codes and volume offers.</li>
+          <li><b>Super Admin</b> — manage admin accounts, see who served which client, and read the full activity log.</li>
+        </ul>
+        <a class="g-open" href="admin/admin.html">Open Admin Panel →</a>
+      </section>
+
+      <section class="g-sec" id="glossary">
+        <h2>📚 Glossary</h2>
+        <ul>
+          <li><b>Leverage (1:1000)</b> — you control a large position with a small margin. It multiplies both profit and loss.</li>
+          <li><b>Margin / Locked</b> — money held aside while a trade is open. It is freed when the trade closes.</li>
+          <li><b>Lot</b> — the size of a trade. 1 lot of gold is 100 ounces; 0.01 is the smallest size here.</li>
+          <li><b>Stop Loss (SL)</b> — the price where your trade closes itself to limit a loss.</li>
+          <li><b>Take Profit (TP)</b> — the price where your trade closes itself to lock a profit.</li>
+          <li><b>Pending Order</b> — a trade that opens by itself when the market reaches your trigger price.</li>
+          <li><b>Equity</b> — balance plus floating profit/loss of open trades.</li>
+          <li><b>Floating P/L</b> — the profit or loss of your open trades right now; it only becomes real when you close.</li>
+          <li><b>Stop-Out</b> — if your equity falls too low, open trades are closed automatically to protect the account.</li>
+          <li><b>KYC</b> — Know Your Customer: identity verification with an ID document and a proof of address.</li>
+        </ul>
+      </section>
+
+      <section class="g-sec" id="support">
+        <h2>💬 Support</h2>
+        <p>Need help? Contact us any time:</p>
+        <ul>
+          <li><b>WhatsApp:</b> +92 334 900 1195</li>
+          <li><b>Email:</b> weavers2025ai@gmail.com</li>
+        </ul>
+        <p>When you write, include your account number and a screenshot of what you see — it helps us fix things faster.</p>
+      </section>
+    </div>
+  </div>
+</div>
+<script>
+function gFilter(){
+  const q = document.getElementById('gSearch').value.trim().toLowerCase();
+  document.querySelectorAll('#gBody .g-sec').forEach(sec => {
+    sec.style.display = !q || sec.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+  document.querySelectorAll('#gNav a').forEach(a => {
+    const t = document.querySelector(a.getAttribute('href'));
+    a.style.display = !q || !t || t.style.display !== 'none' ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

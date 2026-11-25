@@ -29,7 +29,7 @@
     </div>
   </aside>
   <main class="main">
-    <h1 id="hello">My Dashboard</h1>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 id="hello" style="margin:0">My Dashboard</h1><span style="margin-left:auto;display:flex;gap:8px"><a class="btn btn-ghost" href="profile.html">👤 My Profile</a><a class="btn btn-ghost" href="guide.html">📖 User Guide</a></span></div>
     <p class="sub">Track. Plan. Grow. Your complete trading overview.</p>
     <div id="msgBox"></div>
 
@@ -92,6 +92,24 @@
       <h3>Balance Transactions</h3>
       <div id="txnBox"></div>
     </div>
+
+    <div class="panel" id="kycPanel" style="margin-top:20px">
+      <h3>🪪 KYC Verification</h3>
+      <p style="color:#93A1C4;font-size:13px;margin:4px 0 12px">Verify your identity to unlock full access — faster withdrawals, higher limits and complete security.</p>
+      <div id="kycBox"></div>
+    </div>
+
+    <div class="panel" id="offersPanel" style="margin-top:20px">
+      <h3>🎁 Exclusive Offers</h3>
+      <p style="color:#93A1C4;font-size:13px;margin:4px 0 12px">Boost your trading with bonuses, volume offers and promo codes. Bonuses are locked trading credits — usable as margin, never withdrawable.</p>
+      <div id="offersBox"></div>
+    </div>
+
+    <div class="panel" id="achPanel" style="margin-top:20px">
+      <h3>🏆 Achievements</h3>
+      <p style="color:#93A1C4;font-size:13px;margin:4px 0 12px">Your milestones on Oryx — deposits, trading and verification.</p>
+      <div id="achBox"></div>
+    </div>
   </main>
 </div>
 <script src="data/instruments.js?v=10"></script>
@@ -122,7 +140,7 @@
     </div>
   </div>
 </div>
-<script src="assets/store.js?v=20"></script>
+<script src="assets/store.js?v=23"></script>
 <script src="assets/cloud.js?v=8"></script>
 <script>
   const u = Oryx.currentUser();
@@ -140,6 +158,110 @@
     else if (m === 'JazzCash' && cfg.jazzcash.number) box.innerHTML = `<b>Send to JazzCash:</b>` + line('Number', cfg.jazzcash.number) + line('Title', cfg.jazzcash.title) + `<div style="color:#93A1C4;font-size:12px">Send the amount from your JazzCash app, then paste the Transaction ID below.</div>`;
     else if (m === 'Online Bank Transfer' && (cfg.bank.account || cfg.bank.iban)) box.innerHTML = `<b>Send to Bank:</b>` + line('Bank', cfg.bank.bank) + line('Account Title', cfg.bank.title) + line('Account No.', cfg.bank.account) + line('IBAN', cfg.bank.iban) + `<div style="color:#93A1C4;font-size:12px">Transfer from your bank app, then paste the Transaction ID below.</div>`;
     else box.innerHTML = `Send the amount using <b>${Oryx.esc(m)}</b>, then attach the screenshot and paste the Transaction ID below. (Our ${Oryx.esc(m)} receiving details are added by Admin.)`;
+  }
+  let kycImg = { id:null, address:null };
+  function readImgFile(file, cb){
+    const rd = new FileReader();
+    rd.onload = () => { const img = new Image();
+      img.onload = () => { const c = document.createElement('canvas'); const sc = Math.min(1, 900 / Math.max(img.width, img.height));
+        c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', 0.8)); };
+      img.src = rd.result; };
+    rd.readAsDataURL(file);
+  }
+  function kycUpload(kind){
+    const f = document.getElementById(kind === 'id' ? 'kycIdFile' : 'kycAdFile').files[0];
+    const err = document.getElementById('kycErr');
+    if (!f){ err.textContent = 'Please choose a photo of your document first.'; return; }
+    const type = document.getElementById(kind === 'id' ? 'kycIdType' : 'kycAdType').value;
+    err.textContent = 'Uploading…';
+    readImgFile(f, img => { Oryx.submitKyc(u.id, kind, type, img); kycImg[kind] = img; err.textContent = ''; renderKyc(); });
+  }
+  function renderKyc(){
+    const box = document.getElementById('kycBox'); if (!box) return;
+    const st = Oryx.kycStatus(u);
+    const pill = { none:['#EA3943','Action Required — No documents submitted yet'], partial:['#F59E0B','Partially Submitted'], pending:['#F59E0B','Pending Review'], verified:['#16C784','✓ Verified — Account fully verified and ready to trade'], rejected:['#EA3943','Rejected — please upload again'] }[st];
+    const doc = k => (u.kyc && u.kyc[k]) || null;
+    const step = (n, label, sub, done) => `<div style="flex:1;min-width:180px;background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px"><div style="display:flex;align-items:center;gap:8px"><span style="width:30px;height:30px;border-radius:50%;background:${done ? '#16C784' : 'rgba(255,255,255,.12)'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">${done ? '✓' : n}</span><b style="color:#fff;font-size:13.5px">${label}</b></div><div style="color:#93A1C4;font-size:12.5px;margin-top:8px">${sub}</div></div>`;
+    const upBlock = (kind, title, opts) => { const d = doc(kind);
+      if (d && d.status !== 'rejected') return `<div style="flex:1;min-width:240px;background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px"><b style="color:#fff;font-size:13.5px">${title}</b><div style="margin-top:8px;font-size:13px;color:#D7DEEF">${Oryx.esc(d.type)} · <span class="st-pill st-${d.status}">${d.status}</span></div>${d.img ? `<img src="${d.img}" style="width:100%;max-width:220px;border-radius:8px;margin-top:10px;cursor:pointer" onclick="window.open(this.src,'_blank')" title="Click to view full size">` : ''}<div style="color:#7C88A8;font-size:12px;margin-top:6px">Submitted ${new Date(d.at).toLocaleString()}</div></div>`;
+      return `<div style="flex:1;min-width:240px;background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px"><b style="color:#fff;font-size:13.5px">${title}</b><div class="field" style="margin-top:10px"><select id="${kind === 'id' ? 'kycIdType' : 'kycAdType'}">${opts.map(o => `<option>${o}</option>`).join('')}</select></div><div class="field"><input type="file" id="${kind === 'id' ? 'kycIdFile' : 'kycAdFile'}" accept="image/*"></div><button class="btn btn-gold" style="font-weight:800" onclick="kycUpload('${kind}')">⬆ Upload Document</button>${d && d.status === 'rejected' ? '<div style="color:#EA3943;font-size:12.5px;margin-top:6px">Your last document was rejected — please upload a clear photo again.</div>' : ''}</div>`; };
+    box.innerHTML =
+      `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="background:${pill[0]};color:#fff;font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:999px">${pill[1]}</span><span style="color:#93A1C4;font-size:12.5px">🔒 Security · ⚡ Faster Withdrawals · 📈 Higher Limits · ✅ Full Access</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">
+        ${step(1, 'Step 1: Identity Document', 'Passport, National ID, or Driver\'s License', !!(doc('id') && doc('id').status === 'verified'))}
+        ${step(2, 'Step 2: Proof of Address', 'Utility bill or bank statement (within 3 months)', !!(doc('address') && doc('address').status === 'verified'))}
+        ${step(3, 'Step 3: Verification Complete', 'Account fully verified and ready to trade', st === 'verified')}
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${upBlock('id', 'Identity Document', ['Passport', 'National ID', "Driver's License"])}
+        ${upBlock('address', 'Proof of Address', ['Utility Bill', 'Bank Statement'])}
+      </div>
+      <div class="form-err" id="kycErr"></div>`;
+  }
+  function renderOffers(){
+    const box = document.getElementById('offersBox'); if (!box) return;
+    const bTot = Oryx.bonusTotal(acc.id);
+    const armed = acc.armedPromo ? `<span style="color:#F5B544;font-weight:700">${Oryx.esc(acc.armedPromo)} armed — bonus lands on your next approved deposit</span>` : 'No promo armed.';
+    const lots = Oryx.tradedLots(acc.id);
+    const claimed = acc.volumeClaimed || [];
+    box.innerHTML =
+      `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#F59E0B,#F97316);border-radius:12px;padding:14px;color:#fff"><div style="font-size:13px;opacity:.9">Bonuses</div><b style="font-size:26px">${Oryx.promos().filter(p => p.active).length}</b><div style="font-size:12px;opacity:.85">active promo codes</div></div>
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#065F46,#10B981);border-radius:12px;padding:14px;color:#fff"><div style="font-size:13px;opacity:.9">My Active Bonuses</div><b style="font-size:26px">${Oryx.money(bTot)}</b><div style="font-size:12px;opacity:.85">locked trading credits</div></div>
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#1D4ED8,#38BDF8);border-radius:12px;padding:14px;color:#fff"><div style="font-size:13px;opacity:.9">Volume Traded</div><b style="font-size:26px">${lots.toFixed(2)} lots</b><div style="font-size:12px;opacity:.85">closed trades, all time</div></div>
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#6D28D9,#8B5CF6);border-radius:12px;padding:14px;color:#fff"><div style="font-size:13px;opacity:.9">Armed Promo</div><b style="font-size:15px">${acc.armedPromo ? Oryx.esc(acc.armedPromo) : '—'}</b><div style="font-size:12px;opacity:.85">${armed}</div></div>
+      </div>
+      <div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;margin-bottom:12px">
+        <b style="color:#fff">🎟 Have a promo code?</b>
+        <div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="ENTER CODE" style="flex:1;text-transform:uppercase"><button class="btn btn-gold" style="font-weight:800" onclick="redeemCode()">Redeem</button></div>
+        <div id="promoMsg" style="font-size:13px;margin-top:8px"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><b style="color:#fff">🎁 Bonuses</b>${Oryx.promos().filter(p => p.active).map(p => `<div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13px;color:#D7DEEF"><b style="color:#F5B544">${Oryx.esc(p.code)}</b> — ${p.kind === 'fixed' ? Oryx.money(p.value) + ' instant bonus' : p.value + '% bonus on your next deposit'}${p.note ? '<br><span style="color:#93A1C4;font-size:12px">' + Oryx.esc(p.note) + '</span>' : ''}</div>`).join('') || '<p style="color:#7C88A8;font-size:13px">No bonuses available right now.</p>'}</div>
+        <div><b style="color:#fff">📊 Volume Offers</b>${Oryx.volumeOffers().filter(o => o.active).map(o => { const done = claimed.includes(o.id); const pct = Math.min(100, Math.round(lots / o.lots * 100));
+          return `<div style="background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13px;color:#D7DEEF"><b>Trade ${o.lots} lots → ${Oryx.money(o.bonus)} bonus</b><div style="height:8px;background:rgba(255,255,255,.1);border-radius:99px;margin:8px 0 4px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#F5B544,#E8A020);border-radius:99px"></div></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="color:#93A1C4;font-size:12px">${lots.toFixed(2)} / ${o.lots} lots · ${pct}%</span>${done ? '<span style="color:#16C784;font-weight:700">✓ Claimed</span>' : (lots >= o.lots ? `<button class="btn btn-gold" style="padding:5px 12px;font-size:12.5px;font-weight:800" onclick="claimVol('${o.id}')">Claim ${Oryx.money(o.bonus)}</button>` : '<span style="color:#7C88A8;font-size:12px">Keep trading…</span>')}</div></div>`; }).join('') || '<p style="color:#7C88A8;font-size:13px">No offers available right now.</p>'}</div>
+      </div>`;
+  }
+  function redeemCode(){
+    const code = document.getElementById('promoCode').value.trim();
+    const msg = document.getElementById('promoMsg');
+    if (!code){ msg.textContent = 'Enter a promo code first.'; msg.style.color = '#EA3943'; return; }
+    const r = Oryx.redeemPromo(acc.id, code);
+    if (r.error){ msg.textContent = r.error; msg.style.color = '#EA3943'; return; }
+    msg.textContent = r.promo.kind === 'fixed' ? `✓ ${Oryx.money(r.promo.value)} bonus credited to your account!` : `✓ ${r.promo.code} armed — ${r.promo.value}% bonus will land on your next approved deposit.`;
+    msg.style.color = '#16C784'; render();
+  }
+  function claimVol(id){
+    const r = Oryx.claimVolume(acc.id, id);
+    if (r.error){ alert(r.error); return; }
+    render();
+  }
+  function renderAch(){
+    const box = document.getElementById('achBox'); if (!box) return;
+    const reqs = Oryx.requests().filter(r => r.accountId === acc.id && r.kind !== 'withdraw' && r.status === 'approved');
+    const depN = reqs.length, depTot = reqs.reduce((s, r) => s + r.amount, 0);
+    const trs = Oryx.trades().filter(t => t.accountId === acc.id);
+    const closed = trs.filter(t => t.status === 'closed');
+    const wins = closed.filter(t => t.pnl > 0);
+    const lots = closed.reduce((s, t) => s + (+t.lots || 0), 0);
+    const kyc = Oryx.kycStatus(u) === 'verified';
+    const badges = [
+      { ic:'💰', n:'First Deposit', d:'Make your first deposit', cur:depN, tgt:1 },
+      { ic:'🥉', n:'Bronze Depositor', d:'Deposit $1,000 in total', cur:Math.min(depTot, 1000), tgt:1000 },
+      { ic:'🥇', n:'Gold Depositor', d:'Deposit $10,000 in total', cur:Math.min(depTot, 10000), tgt:10000 },
+      { ic:'📈', n:'First Trade', d:'Open your first trade', cur:Math.min(trs.length, 1), tgt:1 },
+      { ic:'💹', n:'First Profit', d:'Close a trade in profit', cur:Math.min(wins.length, 1), tgt:1 },
+      { ic:'🎯', n:'10 Winning Trades', d:'Win 10 trades', cur:Math.min(wins.length, 10), tgt:10 },
+      { ic:'🏆', n:'50 Winning Trades', d:'Win 50 trades', cur:Math.min(wins.length, 50), tgt:50 },
+      { ic:'📊', n:'10 Lots Traded', d:'Trade 10 lots in total', cur:Math.min(lots, 10), tgt:10 },
+      { ic:'🚀', n:'100 Lots Traded', d:'Trade 100 lots in total', cur:Math.min(lots, 100), tgt:100 },
+      { ic:'🪪', n:'Identity Verified', d:'Complete KYC verification', cur:kyc ? 1 : 0, tgt:1 }
+    ];
+    const done = badges.filter(b => b.cur >= b.tgt).length;
+    box.innerHTML = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><b style="color:#fff;font-size:16px">${done} of 10 unlocked</b><div style="flex:1;height:8px;background:rgba(255,255,255,.1);border-radius:99px"><div style="height:100%;width:${done * 10}%;background:linear-gradient(90deg,#F5B544,#E8A020);border-radius:99px"></div></div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">${badges.map(b => { const ok = b.cur >= b.tgt; const pct = Math.min(100, Math.round(b.cur / b.tgt * 100));
+        return `<div style="background:${ok ? 'linear-gradient(135deg,#065F46,#10B981)' : '#0D1730'};border:1px solid ${ok ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.1)'};border-radius:12px;padding:14px;color:#fff;opacity:${ok ? 1 : .75}"><div style="font-size:26px">${b.ic}</div><b style="font-size:13.5px">${b.n}</b><div style="font-size:12px;opacity:.85;margin:4px 0 8px">${b.d}</div><div style="height:7px;background:rgba(255,255,255,.18);border-radius:99px"><div style="height:100%;width:${pct}%;background:#fff;border-radius:99px"></div></div><div style="font-size:11.5px;margin-top:5px;opacity:.9">${ok ? '✓ Unlocked' : b.cur + ' / ' + b.tgt + ' · ' + pct + '%'}</div></div>`; }).join('')}</div>`;
   }
   function openReq(){ fillPayTo(); document.getElementById('reqModal').classList.add('open'); }
   function closeReq(){ document.getElementById('reqModal').classList.remove('open'); }
@@ -227,7 +349,7 @@
       `<div class="panel" style="margin-bottom:16px"><h3>📩 My Messages</h3>${msgs.map(m => `<div style="padding:8px 0;border-bottom:1px solid #1D2942;font-size:13.5px;color:${m.read ? '#93A1C4' : '#fff'}"><span style="color:#7C88A8;font-size:12px">${new Date(m.at).toLocaleString()}</span><br>${Oryx.esc(m.text)}</div>`).join('')}</div>`;
   }
   function render(){
-    renderMsgs();
+    renderMsgs(); renderKyc(); renderOffers(); renderAch();
     const a = Oryx.accountById(acc.id);
     const fl = Oryx.floating(a.id);
     const eq = a.balance + fl;
