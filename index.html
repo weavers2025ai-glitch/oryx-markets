@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#05080F">
 <title>Oryx Markets — Trade Forex, Gold, Crypto & Indices Online</title>
-<link rel="stylesheet" href="assets/style.css?v=13">
+<link rel="stylesheet" href="assets/style.css?v=16">
 <style>
   .ad-banner{display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:center;background:linear-gradient(120deg,#12224E,#0A1128 55%,#3B2F10);border:1px solid rgba(245,181,68,.35);border-radius:22px;padding:30px;overflow:hidden}
   .ad-banner img{width:100%;height:230px;object-fit:cover;border-radius:16px;display:block}
@@ -61,6 +61,7 @@
   .tst-card p{color:#3B4763;line-height:1.6;margin:0 0 14px;font-size:14.5px}
   .tst-card .who{font-weight:800;color:#101828}
   .tst-card .who small{display:block;color:#667085;font-weight:600;margin-top:2px}
+.mp-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.mp-tabs{display:flex;gap:10px;margin:14px 0 20px}.mp-tab{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:8px 20px;font-weight:700;cursor:pointer;color:var(--ink)}.mp-tab.on{background:var(--navy);color:#fff}.mp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.mp-card{background:#fff;border:1px solid var(--line2);border-radius:16px;overflow:hidden;box-shadow:0 8px 22px rgba(10,20,50,.06)}.mp-card img{width:100%;height:150px;object-fit:cover;display:block}.mp-body{padding:14px 16px 16px}.mp-body h3{font-size:16px;margin:0 0 6px}.mp-tag{display:inline-block;background:#EEF2FB;color:#5B6B8C;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700}.mp-price{font-size:19px;font-weight:800;margin:10px 0}.mp-cart{display:block;text-align:center;background:linear-gradient(90deg,#F5B544,#F08A1D);color:#fff;font-weight:800;border-radius:10px;padding:11px}@media(max-width:900px){.mp-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:540px){.mp-grid{grid-template-columns:1fr}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -97,7 +98,7 @@
     <div class="hero-visual">
       <div class="hero-chart-frame">
         <div class="hc-head"><span class="tc-dot" style="background:#EA3943"></span><span class="tc-dot" style="background:#F5B544"></span><span class="tc-dot" style="background:#16C784"></span><span style="margin-left:8px;color:#93A1C4;font-size:12px;letter-spacing:.12em;font-weight:700">ORYX WEB TERMINAL — XAU/USD LIVE</span></div>
-        <canvas id="heroChart" style="width:100%;height:340px;display:block"></canvas>
+        <canvas id="heroChart" style="width:100%;height:430px;display:block"></canvas>
       </div>
       <div class="float-card fc1">Gold Position · 0.10 lots<br><b style="color:#16C784">+$128.40</b> <span style="color:#7C88A8">floating</span></div>
       <div class="float-card fc2">Account Equity<br><b>$12,480.22</b> <span style="color:#16C784">▲ 2.4%</span></div>
@@ -152,10 +153,14 @@
 
 <section class="sec rv" style="padding-top:0;padding-bottom:0">
   <div class="wrap">
-    <div class="wide-banner">
-      <h2>Trade Gold, Forex &amp; Crypto — One Terminal</h2>
-      <p>Live charts, indicators and drawing tools, right in your browser.</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn" style="background:#fff;color:#0B1B3A" href="register.html">Open Free Account</a><a class="btn btn-ghost" href="trade.html">Try the Terminal</a></div>
+    <div class="ad-banner">
+      <div>
+        <div class="kicker" style="color:var(--gold2);font-weight:800;letter-spacing:.22em;font-size:12.5px">🎁 WELCOME OFFER</div>
+        <h2>$10 Welcome Credit —<br>Start Trading Free</h2>
+        <p>Open your account, verify your mobile and email, and start with a $10 welcome credit once approved. No deposit needed to learn the platform.</p>
+        <a class="btn btn-gold" href="register.html">Claim My $10 Credit →</a>
+      </div>
+      <img src="images/banner-welcome.webp" alt="Live trading chart with rising gold candles">
     </div>
   </div>
 </section>
@@ -223,6 +228,13 @@
   </div>
 </section>
 
+<section class="sec rv">
+  <div class="wrap">
+    <div class="mp-head"><h2 style="font-size:30px;margin:0"><span style="color:var(--gold)">|</span> Marketplace</h2><a class="btn btn-ghost" href="guide.html">View more</a></div>
+    <div class="mp-tabs"><button class="mp-tab on" onclick="mpTab('best',this)">Bestsellers</button><button class="mp-tab" onclick="mpTab('feat',this)">Featured</button></div>
+    <div class="mp-grid"><div class="mp-card" data-feat="1"><img src="images/banner-app.webp" alt="VPS Hosting for Traders"><div class="mp-body"><h3>VPS Hosting for Traders</h3><span class="mp-tag">Service</span><div class="mp-price">$19.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div><div class="mp-card" data-feat="0"><img src="images/news-gold.webp" alt="Trading Signals Pack"><div class="mp-body"><h3>Trading Signals Pack</h3><span class="mp-tag">Service</span><div class="mp-price">$49.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div><div class="mp-card" data-feat="1"><img src="images/broker-desk.webp" alt="Expert Advisor Setup"><div class="mp-body"><h3>Expert Advisor Setup</h3><span class="mp-tag">Service</span><div class="mp-price">$99.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div><div class="mp-card" data-feat="0"><img src="images/news-risk.webp" alt="Risk Management Course"><div class="mp-body"><h3>Risk Management Course</h3><span class="mp-tag">Service</span><div class="mp-price">$79.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div><div class="mp-card" data-feat="1"><img src="images/news-education.webp" alt="Technical Analysis Course"><div class="mp-body"><h3>Technical Analysis Course</h3><span class="mp-tag">Service</span><div class="mp-price">$69.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div><div class="mp-card" data-feat="0"><img src="images/how-oryx.webp" alt="Copy Trading Setup"><div class="mp-body"><h3>Copy Trading Setup</h3><span class="mp-tag">Service</span><div class="mp-price">$129.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div><div class="mp-card" data-feat="1"><img src="images/banner-markets.webp" alt="Platform Integration"><div class="mp-body"><h3>Platform Integration</h3><span class="mp-tag">Service</span><div class="mp-price">$199.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div><div class="mp-card" data-feat="0"><img src="images/banner-welcome.webp" alt="Payment Solutions"><div class="mp-body"><h3>Payment Solutions</h3><span class="mp-tag">Service</span><div class="mp-price">$149.00</div><a class="mp-cart" href="register.html">🛒 Add to cart</a></div></div></div>
+  </div>
+</section>
 <section class="sec rv" style="padding-top:0;padding-bottom:0">
   <div class="wrap">
     <div class="split-banner">
@@ -296,15 +308,6 @@
         <div><a class="btn btn-gold" href="register.html">Open Free Account</a> <a href="markets.html" style="color:#fff;text-decoration:underline;margin-left:12px;font-weight:700">See all markets</a></div>
       </div>
     </div>
-    <div style="margin-top:56px"><div class="ad-banner">
-      <div>
-        <div class="kicker" style="color:var(--gold2);font-weight:800;letter-spacing:.22em;font-size:12.5px">🎁 WELCOME OFFER</div>
-        <h2>$10 Welcome Credit —<br>Start Trading Free</h2>
-        <p>Open your account, verify your mobile and email, and start with a $10 welcome credit once approved. No deposit needed to learn the platform.</p>
-        <a class="btn btn-gold" href="register.html">Claim My $10 Credit →</a>
-      </div>
-      <img src="images/banner-welcome.webp" alt="Live trading chart with rising gold candles">
-    </div></div>
     <div class="sec-head" style="margin-top:70px">
       <div class="kicker">Traders Say</div>
       <h2>Real Stories. Real Results.</h2>
@@ -383,6 +386,7 @@
   const osBox = document.getElementById('oryxSlider'); if (osBox){ osBox.addEventListener('mouseenter', () => { if (osTimer) clearInterval(osTimer); }); osBox.addEventListener('mouseleave', osRestart); }
 </script>
 <script src="assets/support.js?v=10"></script>
-<script src="assets/install.js?v=3"></script>
+<script src="assets/install.js?v=3">function mpTab(m,b){document.querySelectorAll('.mp-tab').forEach(function(x){x.classList.remove('on')});b.classList.add('on');document.querySelectorAll('.mp-card').forEach(function(c){c.style.display=(m==='best'||c.getAttribute('data-feat')==='1')?'':'none'});}
+</script>
 </body>
 </html>
