@@ -38,7 +38,8 @@
   .close-btn{display:inline-block;width:auto;background:linear-gradient(135deg,#EA3943,#C22530);color:#fff;border:0;border-radius:8px;padding:7px 16px;font-weight:800;font-size:12.5px;cursor:pointer;letter-spacing:.03em}
   .close-btn:hover{filter:brightness(1.12)}
   .close-btn.win{background:linear-gradient(135deg,#16C784,#0E9F6E)}
-  .sym-strip{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding:7px 16px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+  .sym-strip{display:flex;align-items:center;gap:18px;flex-wrap:nowrap;padding:7px 16px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);overflow:hidden}
+  .ss-main,.ss-it{white-space:nowrap}
   .ss-main b{color:#fff;font-size:17px;display:block}
   .ss-main span{color:#7C88A8;font-size:12px}
   .ss-it span{display:block;color:#7C88A8;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
@@ -175,7 +176,7 @@
   @media(min-width:901px){
     .trade-panel{display:flex;gap:18px;padding:10px 16px 12px;align-items:flex-start}
     .tp-left{flex:0 0 170px;padding-top:2px}
-    .tp-right{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;min-width:0}
+    .tp-right{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px;min-width:0}
     .tp-right label{margin:0 0 4px}
     .tp-vol{grid-column:1;grid-row:1}
     .tp-right #priceRow{grid-column:2;grid-row:1}
@@ -183,7 +184,7 @@
     .tp-sl-tp{grid-column:1/span 2;grid-row:2}
     .tp-right #tpMargin{grid-column:3;grid-row:2;align-self:end;margin-top:0;padding-bottom:9px}
     .tp-right #tpMsg{grid-column:1/-1;grid-row:3;margin-top:0}
-    .chart-box{height:460px}
+    .chart-box{height:calc(100vh - 490px);min-height:280px;max-height:520px}
     .trade-bar{padding:8px 16px 4px}
   }
   /* desktop: open positions live at the top of the left column, beside the chart */
@@ -272,7 +273,7 @@
         <button type="button" id="otPending" class="ot-btn" data-ot="pending" onclick="setOtype('pending')">⏳ Pending — at price</button>
       </div>
       <div id="priceRow" style="display:none">
-        <label>Trigger Price — the trade opens BY ITSELF when the market reaches it</label>
+        <label>Trigger Price — auto-opens at this price</label>
         <input id="tpPrice" type="number" step="any" placeholder="e.g. 3600.00">
       </div>
       <div class="tp-sl-tp" style="display:flex;gap:10px">
@@ -318,7 +319,7 @@
 <div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=18"></script>
+<script src="assets/store.js?v=19"></script>
 <script src="assets/cloud.js?v=8"></script>
 <script src="assets/chart.js?v=12"></script>
 <script>

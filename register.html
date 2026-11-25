@@ -17,10 +17,10 @@
     <a class="brand" href="index.html"><svg viewBox="0 0 48 48" class="logo-mark"><path d="M14 6 C16 16, 17 24, 16 34 L11 34 C13 24, 12 15, 10 6 Z" fill="#D8A94E"/><path d="M34 6 C32 16, 31 24, 32 34 L37 34 C35 24, 36 15, 38 6 Z" fill="#D8A94E"/><circle cx="24" cy="30" r="7.5" fill="none" stroke="#F3E5C0" stroke-width="3"/></svg><span>ORYX <b>MARKETS</b></span></a>
     <div>
       <h2>Your first trade is <span>60 seconds</span> away.</h2>
-      <p>Create your free account and receive a $10 welcome credit instantly. Learn the platform, practise on live charts, and grow at your own pace.</p>
+      <p>Create your free account — we verify every account within 24 hours, then your $10 welcome credit is added. Learn the platform, practise on live charts, and grow at your own pace.</p>
       <div class="auth-points">
-        <div><b>$10</b> Welcome credit on signup — automatically</div>
-        <div><b>⚡</b> No documents needed to start practising</div>
+        <div><b>$10</b> Welcome credit once your account is approved</div>
+        <div><b>⚡</b> No documents needed — approval within 24 hours</div>
         <div><b>🔒</b> Further balance issued personally by our team</div>
       </div>
     </div>
@@ -29,7 +29,7 @@
   <div class="auth-form-side">
     <div class="auth-form">
       <h1>Create your free account</h1>
-      <p class="sub">Fill in your details — your trading account opens instantly with a <b>$10 welcome credit</b>.</p>
+      <p class="sub">Fill in your details — your account is verified within 24 hours, then it opens with a <b>$10 welcome credit</b>.</p>
       <div class="form-err" id="err"></div>
       <div class="field"><label>Full Name</label><input id="rName" placeholder="e.g. Ahmed Khan"></div>
       <div class="field"><label>Email Address</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
@@ -45,7 +45,7 @@
   </div>
 </div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=18"></script>
+<script src="assets/store.js?v=19"></script>
 <script src="assets/cloud.js?v=8"></script>
 <script>
   if (Oryx.currentUser()) location.href = 'dashboard.html';
@@ -61,7 +61,13 @@
     if (pass.length < 6){ err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
     const r = Oryx.register(name, email, pass, phone, country);
     if (r.error){ err.textContent = r.error; err.style.display = 'block'; return; }
-    location.href = 'dashboard.html';
+    document.querySelector('.auth-form').innerHTML = `<div style="text-align:center;padding:18px 0 6px">
+      <div style="font-size:44px">✔</div>
+      <h1 style="margin:10px 0 6px">Registration received!</h1>
+      <p class="sub" style="font-size:15px;line-height:1.6">Thank you, ${name.split(' ')[0]}. Your account will be verified <b>within 24 hours</b>.<br>Once approved, you can log in and your <b>$10 welcome credit</b> will be added to your account.</p>
+      <a class="btn btn-gold" style="display:inline-block;margin-top:14px;padding:12px 26px;text-decoration:none" href="login.html">Go to Login →</a>
+      <p style="font-size:12.5px;color:var(--mut);margin-top:16px">We will verify your details and activate your account. No further action is needed from you.</p>
+    </div>`;
   }
 </script>
 <script src="assets/support.js?v=10"></script>
