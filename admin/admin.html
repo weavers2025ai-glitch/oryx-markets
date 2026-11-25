@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Oryx Markets</title>
-<link rel="stylesheet" href="../assets/style.css?v=13">
+<link rel="stylesheet" href="../assets/style.css?v=15">
 <style>
   .ucards{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:14px}
   .ucard{border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:16px;cursor:pointer;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.35);transition:transform .15s,box-shadow .15s}
@@ -360,7 +360,7 @@
     document.getElementById('rqHistory').innerHTML = rqDone.length ? rqDone.slice().reverse().map(rqCard).join('')
       : '<p style="color:#7C88A8">No decided requests yet. Approved and rejected requests will be recorded here permanently.</p>';
     /* ===== per-page KPI strips (same theme as dashboard) ===== */
-    const mini = (g, ic, label, val, sub) => `<div class="kpi mini ${g}"><span class="kic" style="width:30px;height:30px;font-size:14px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
+    const mini = (g, ic, label, val, sub) => `<div class="kpi mini ${g}"><span class="kic" style="width:42px;height:42px;font-size:19px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
     document.getElementById('rqHistKpis').innerHTML =
       mini('g2','✔','Approved', rqApproved.length, 'requests credited') +
       mini('g4','💰','Total Credited', Oryx.money(rqApproved.reduce((s, r) => s + r.amount, 0)), 'via requests') +
