@@ -330,17 +330,59 @@ const Oryx = (() => {
   const requests = () => load(K_REQ, []);
   function createRequest(accountId, data){
     const all = requests();
-    const r = { id:'rq' + Date.now().toString(36), accountId, amount: parseFloat(data.amount) || 0,
+    const r = { id:'rq' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), accountId, amount: parseFloat(data.amount) || 0,
                 method: data.method || 'Cash', proof: data.proof || '', note: data.note || '',
+                txnId: String(data.txnId || '').trim(), senderName: String(data.senderName || '').trim(),
+                senderAcct: String(data.senderAcct || '').trim(),
                 status:'pending', at: Date.now(), decidedAt: 0 };
     all.push(r); save(K_REQ, all); return r;
+  }
+  /* ---------- payment accounts (ours — shown to clients) + bank entries + matching ----------
+     The site cannot pull bank transactions by itself — no bank API. The admin records
+     each payment that arrives in his EasyPaisa / JazzCash / bank app as a Bank Entry;
+     the panel then auto-matches it against the client's proof. One proof and one bank
+     entry can each match only ONCE — a used reference can never be credited twice. */
+  const K_PAYCFG = 'oryx_paycfg';
+  const payCfg = () => load(K_PAYCFG, { easypaisa:{ number:'', title:'' }, jazzcash:{ number:'', title:'' }, bank:{ bank:'', title:'', account:'', iban:'' } });
+  function savePayCfg(cfg){ save(K_PAYCFG, cfg); return cfg; }
+  const K_BANK = 'oryx_bankentries';
+  const bankEntries = () => load(K_BANK, []);
+  function addBankEntry(data){
+    const all = bankEntries();
+    const e = { id:'bk' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), method: data.method || 'Bank', amount: parseFloat(data.amount) || 0,
+                txnId: String(data.txnId || '').trim(), sender: String(data.sender || '').trim(),
+                at: Date.now(), usedBy: null, usedAt: 0 };
+    all.push(e); save(K_BANK, all); return e;
+  }
+  const normTxn = t => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  function isDuplicateTxn(r){
+    const t = normTxn(r.txnId); if (!t) return false;
+    return requests().some(x => x.id !== r.id && x.status === 'approved' && normTxn(x.txnId) === t);
+  }
+  /* matchStatus(r) -> { state, entry }: matched | mismatch | duplicate | noref */
+  function matchStatus(r){
+    const t = normTxn(r.txnId);
+    if (!t) return { state:'noref', entry:null };
+    if (isDuplicateTxn(r)) return { state:'duplicate', entry:null };
+    const e = bankEntries().find(x => normTxn(x.txnId) === t && Math.abs(x.amount - r.amount) < 0.01);
+    if (!e) return { state:'mismatch', entry:null };
+    if (e.usedBy && e.usedBy !== r.id) return { state:'duplicate', entry:e };
+    return { state:'matched', entry:e };
   }
   function decideRequest(id, approve){
     const all = requests(); const r = all.find(x => x.id === id);
     if (!r || r.status !== 'pending') return false;
+    if (approve && isDuplicateTxn(r)) return false; /* same proof already credited once — never twice */
     r.status = approve ? 'approved' : 'rejected'; r.decidedAt = Date.now();
     save(K_REQ, all);
-    if (approve) issueBalance(r.accountId, r.amount, r.method + ' deposit — request approved');
+    if (approve){
+      const m = matchStatus(r);
+      if (m.state === 'matched' && m.entry){ /* consume the bank entry — it can never match another proof */
+        const es = bankEntries(); const e = es.find(x => x.id === m.entry.id);
+        if (e){ e.usedBy = r.id; e.usedAt = Date.now(); save(K_BANK, es); }
+      }
+      issueBalance(r.accountId, r.amount, r.method + ' deposit — request approved');
+    }
     return true;
   }
 
@@ -399,7 +441,8 @@ const Oryx = (() => {
            register, login, logout, currentUser, myAccounts, accountById, approveUser, rejectUser,
            pnlOf, floating, usedMargin, openTrade, closeTrade, closeTradeAt, orders, placeOrder, cancelOrder,
            notifyUser, markMsgsRead, checkStopOut,
-           adminPw, issueBalance, requests, createRequest, decideRequest, money, esc,
+           adminPw, issueBalance, requests, createRequest, decideRequest,
+           payCfg, savePayCfg, bankEntries, addBankEntry, matchStatus, money, esc,
            admins, saveAdmins, adminLogin, currentAdmin, adminLogout, logAdmin, adminLog, superPw, setSuperPw,
            setAdminPw: v => save(K.adminpw, v) };
 })();
