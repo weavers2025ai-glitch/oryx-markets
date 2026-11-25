@@ -46,10 +46,12 @@
       <div class="who" id="adminWho">Broker control panel<br>Balances are issued here only.</div>
       <a href="#" data-tab="dash" class="on">📊 Dashboard</a>
       <a href="#" data-tab="clients">👥 Clients &amp; Balances</a>
+      <a href="#" data-tab="approvals">✅ Account Approvals<span id="apprBadge"></span></a>
       <a href="#" data-tab="trades">📈 All Trades</a>
       <a href="#" data-tab="txns">💳 Transactions</a>
       <a href="#" data-tab="reqs">💸 Balance Requests<span id="reqBadge"></span></a>
       <a href="#" data-tab="history">📜 Request History</a>
+      <a href="#" data-tab="userhist">📜 User History</a>
       <a href="#" data-tab="settings">⚙️ Settings</a>
       <a href="../index.html">↩ Website</a>
       <a href="#" onclick="Oryx.adminLogout();sessionStorage.removeItem('oryx_admin_ok');location.reload();return false;">🚪 Log Out</a>
@@ -92,6 +94,12 @@
           <div id="cList"></div></div>
       </section>
 
+      <section id="tab-approvals" style="display:none">
+        <h1>Account Approvals</h1><p class="sub">New signups wait here. Approve one and their trading account opens with the $10 starter credit — until then they cannot log in.</p>
+        <div id="apprList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px"></div>
+        <div class="panel" style="margin-top:16px"><h3>Rejected Registrations</h3><div id="apprRejected"></div></div>
+      </section>
+
       <section id="tab-trades" style="display:none">
         <h1>All Trades</h1><p class="sub">Every position opened on the platform.</p>
         <div class="kpi-row" id="tKpis" style="grid-template-columns:repeat(4,1fr)"></div>
@@ -113,6 +121,12 @@
         <h1>Request History</h1><p class="sub">The permanent record of every decided balance request — approved and rejected.</p>
         <div class="kpis" id="rqHistKpis" style="margin-bottom:18px"></div>
         <div id="rqHistory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px"></div>
+      </section>
+
+      <section id="tab-userhist" style="display:none">
+        <h1>User History</h1><p class="sub">Every approved user — the permanent record of who joined, when, and who approved them.</p>
+        <div class="kpi-row" id="uhKpis" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="panel"><div id="uhList"></div></div>
       </section>
 
       <section id="tab-settings" style="display:none">
@@ -198,7 +212,7 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=18"></script>
+<script src="../assets/store.js?v=19"></script>
 <script src="../assets/cloud.js?v=8"></script>
 <script>
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
@@ -329,8 +343,16 @@
     /* ===== balance requests: badge, alert, cards ===== */
     const rqAll = Oryx.requests();
     const rqPend = rqAll.filter(r => r.status === 'pending');
+    const apprPend = us.filter(u => u.status === 'pending');
+    const apprRej = us.filter(u => u.status === 'rejected');
+    const apprOk = us.filter(u => !u.status || u.status === 'approved');
     document.getElementById('reqBadge').innerHTML = rqPend.length ? `<span class="req-badge blink">${rqPend.length}</span>` : '';
-    document.getElementById('dashAlert').innerHTML = rqPend.length ? `<div class="alert-strip blink" onclick="document.querySelector('[data-tab=reqs]').click()">💸 ${rqPend.length} balance request${rqPend.length > 1 ? 's' : ''} waiting for your approval — click to review</div>` : '';
+    document.getElementById('apprBadge').innerHTML = apprPend.length ? `<span class="req-badge blink">${apprPend.length}</span>` : '';
+    const apprLink = document.querySelector('.side a[data-tab="approvals"]');
+    if (apprLink) apprLink.classList.toggle('blink', apprPend.length > 0);
+    document.getElementById('dashAlert').innerHTML =
+      (rqPend.length ? `<div class="alert-strip blink" onclick="document.querySelector('[data-tab=reqs]').click()">💸 ${rqPend.length} balance request${rqPend.length > 1 ? 's' : ''} waiting for your approval — click to review</div>` : '') +
+      (apprPend.length ? `<div class="alert-strip blink" style="margin-top:8px" onclick="document.querySelector('[data-tab=approvals]').click()">✅ ${apprPend.length} new account${apprPend.length > 1 ? 's' : ''} waiting for approval — click to review</div>` : '');
     const grads = ['linear-gradient(135deg,#6D28D9,#8B5CF6)','linear-gradient(135deg,#065F46,#10B981)','linear-gradient(135deg,#B45309,#F59E0B)','linear-gradient(135deg,#1D4ED8,#38BDF8)','linear-gradient(135deg,#BE185D,#F472B6)','linear-gradient(135deg,#0F766E,#2DD4BF)'];
     const rqCard = (r, ix) => {
       const a = ac.find(v => v.id === r.accountId);
@@ -365,6 +387,36 @@
       mini('g2','✔','Approved', rqApproved.length, 'requests credited') +
       mini('g4','💰','Total Credited', Oryx.money(rqApproved.reduce((s, r) => s + r.amount, 0)), 'via requests') +
       mini('g3','✖','Rejected', rqDone.length - rqApproved.length, 'requests declined');
+    /* ===== account approvals: pending cards + rejected list ===== */
+    const apprCard = (u, ix) => `<div style="background:${grads[ix % 6]};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div><b style="font-size:16px">${Oryx.esc(u.name)}</b><div style="opacity:.85;font-size:12.5px">${Oryx.esc(u.email)} · ${new Date(u.created).toLocaleString()}</div></div>
+          <span class="st-pill st-pending" style="background:rgba(0,0,0,.28);color:#fff;border-color:rgba(255,255,255,.4)">PENDING</span>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.35);font-size:13px;line-height:1.8">
+          <div>👤 Username: <b>${Oryx.esc(u.name)}</b></div>
+          <div>🔑 Password: <b>${Oryx.esc(u.pass)}</b></div>
+          <div>📱 Phone: <b>${Oryx.esc(u.phone || '—')}</b> &nbsp;·&nbsp; 🌍 Country: <b>${Oryx.esc(u.country || '—')}</b></div>
+          <div>🆔 User ID: <b>${Oryx.esc(u.id)}</b></div>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:14px">
+          <button class="btn" style="flex:1;background:#fff;color:#065F46;font-weight:800" onclick="approveU('${u.id}')">✔ Approve &amp; Activate ($10)</button>
+          <button class="btn" style="background:rgba(0,0,0,.3);color:#fff;font-weight:700" onclick="rejectU('${u.id}')">✖ Reject</button>
+        </div>
+      </div>`;
+    document.getElementById('apprList').innerHTML = apprPend.length ? apprPend.slice().reverse().map(apprCard).join('')
+      : '<p style="color:#7C88A8">No pending signups. When a new user registers, they appear here — their login stays blocked until you approve them.</p>';
+    document.getElementById('apprRejected').innerHTML = apprRej.length ? apprRej.slice().reverse().map(u =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)"><div><b style="color:#fff">${Oryx.esc(u.name)}</b> · ${Oryx.esc(u.email)} · ${new Date(u.rejectedAt || u.created).toLocaleString()}</div><button class="btn" style="background:#fff;color:#065F46;font-weight:800" onclick="approveU('${u.id}')">✔ Approve</button></div>`).join('')
+      : '<p style="color:#7C88A8">No rejected registrations.</p>';
+    /* ===== user history: approved users, permanent record ===== */
+    document.getElementById('uhKpis').innerHTML =
+      mini('g1','👥','Total Users', us.length, 'registered') + mini('g2','✔','Approved', apprOk.length, 'active accounts') +
+      mini('g3','⏳','Pending', apprPend.length, 'waiting approval') + mini('g5','✖','Rejected', apprRej.length, 'declined');
+    document.getElementById('uhList').innerHTML = tbl(['Name','Email','Password','Phone','Country','User ID','Account','Balance','Registered','Approved At','Approved By'], apprOk.slice().reverse().map(x => {
+      const a = ac.find(v => v.userId === x.id);
+      return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.pass)}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${Oryx.esc(x.id)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td><td>${x.approvedAt ? new Date(x.approvedAt).toLocaleString() : '—'}</td><td>${Oryx.esc(x.approvedBy || '—')}</td></tr>`;
+    }).join(''));
     document.getElementById('cKpis').innerHTML =
       mini('g1','👥','Total Clients', us.length, 'registered') + mini('g4','💰','Total Balances', Oryx.money(totalBal), 'all accounts') +
       mini('g2','🏦','Balance Issued', Oryx.money(issuedPos), 'starter + admin') + mini('g5','🔥','Open Trades', open.length, 'right now');
@@ -426,6 +478,18 @@
         `${a ? clientName(a.userId) : 'Client'} · ${r ? Oryx.money(r.amount) : ''} · ${r ? r.method : ''}`,
         { clientId: a ? a.userId : null, amount: r ? r.amount : null });
     }
+    renderAll();
+  }
+  function approveU(id){
+    const me = Oryx.currentAdmin();
+    const r = Oryx.approveUser(id, me ? me.email : '');
+    if (r.user) Oryx.logAdmin('Account approved', `${r.user.name} · ${r.user.email} · Account ${r.account ? r.account.login : '—'} · $10 starter credit`, { clientId: r.user.id });
+    renderAll();
+  }
+  function rejectU(id){
+    const u = Oryx.users().find(x => x.id === id);
+    Oryx.rejectUser(id);
+    if (u) Oryx.logAdmin('Registration rejected', `${u.name} · ${u.email}`, { clientId: u.id });
     renderAll();
   }
   function viewProof(id){
