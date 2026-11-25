@@ -31,7 +31,7 @@
       <div>
         <a class="brand light" href="${root}index.html">${logoSvg}<span>${Oryx.esc(S.brand.split(' ')[0])} <b>${Oryx.esc(S.brand.split(' ').slice(1).join(' ') || '')}</b></span></a>
         <p class="foot-blurb">${Oryx.esc(S.tagline)}. Trade Forex, Metals, Energies, Crypto and Indices from one account — on web, with fast execution and transparent pricing.</p>
-        <p class="foot-contact">✉ ${Oryx.esc(S.email)}<br>☎ WhatsApp: +${Oryx.esc(S.whatsapp)}</p>
+        <p class="foot-contact">✉ info@oryx.com<br>✉ sales@oryx.com<br>☎ WhatsApp: +971 58 214 5708</p>
         <div class="foot-social"><a href="#" aria-label="X">𝕏</a><a href="#" aria-label="LinkedIn">in</a><a href="#" aria-label="Instagram">◎</a><a href="#" aria-label="Facebook">f</a></div>
       </div>
       <div>

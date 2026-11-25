@@ -2,7 +2,7 @@
    Answers common questions immediately; anything else is routed to WhatsApp/email. */
 (function(){
   if (document.getElementById('supBtn')) return;
-  const S = (window.Oryx && Oryx.settings) ? Oryx.settings() : { whatsapp:'923349001195', email:'weavers2025ai@gmail.com', brand:'Oryx Markets' };
+  const S = (window.Oryx && Oryx.settings) ? Oryx.settings() : { whatsapp:'971582145708', email:'info@oryx.com', brand:'Oryx Markets' };
   const css = `
   #supBtn{position:fixed;right:18px;bottom:18px;z-index:400;width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;
     background:linear-gradient(135deg,#22C55E,#0E9F6E);color:#fff;font-size:26px;box-shadow:0 12px 30px rgba(14,159,110,.45);

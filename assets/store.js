@@ -10,10 +10,10 @@ const Oryx = (() => {
   const DEFAULT_SETTINGS = {
     brand:'Oryx Markets', tagline:'Trade Global Markets with Confidence',
     starter:10, leverage:1000,
-    whatsapp:'923349001195', email:'weavers2025ai@gmail.com',
+    whatsapp:'971582145708', email:'info@oryx.com',
     heroTitle:'Trade the World Markets', heroSub:'Forex, Gold, Oil, Crypto and Global Indices — one account, one powerful platform, spreads from 0.1 pips.'
   };
-  const settings = () => Object.assign({}, DEFAULT_SETTINGS, load(K.settings, {}));
+  const settings = () => { const s = Object.assign({}, DEFAULT_SETTINGS, load(K.settings, {})); if (s.whatsapp === '923349001195') s.whatsapp = '971582145708'; if (s.email === 'weavers2025ai@gmail.com') s.email = 'info@oryx.com'; return s; };
   const saveSettings = s => save(K.settings, Object.assign(settings(), s));
 
   const users    = () => load(K.users, []);
