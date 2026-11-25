@@ -4,35 +4,101 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About Us — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=19">
+<link rel="stylesheet" href="assets/style.css?v=25">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+.ab-hero{background:linear-gradient(180deg,#F7F9FF,#FFFFFF);padding:64px 0 20px}
+.ab-hero h1{color:#0B1B3A;font-size:44px;line-height:1.15;margin:12px 0 14px}
+.ab-hero p{color:#3B4767;font-size:17.5px;line-height:1.7;max-width:780px}
+.ab-kick{color:#B9830B;font-weight:800;letter-spacing:.16em;font-size:12px}
+.ab-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:34px 0 10px}
+.ab-stats div{background:#fff;border:1px solid #E3E9F7;border-radius:16px;padding:22px;text-align:center;box-shadow:0 6px 22px rgba(11,27,58,.06)}
+.ab-stats b{color:#0B1B3A;font-size:28px;display:block}.ab-stats span{color:#66708C;font-size:13px}
+.ab-sec{background:#fff;padding:56px 0}
+.ab-sec.alt{background:#F7F9FF}
+.ab-head{text-align:center;max-width:720px;margin:0 auto 34px}
+.ab-head h2{color:#0B1B3A;font-size:32px;margin:10px 0 10px}
+.ab-head p{color:#3B4767;font-size:16px;line-height:1.65}
+.ab-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.ab-card{background:#fff;border:1px solid #E3E9F7;border-radius:18px;padding:28px;box-shadow:0 8px 26px rgba(11,27,58,.06)}
+.ab-card .ic{width:54px;height:54px;border-radius:14px;background:#FFF3D6;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
+.ab-card h3{color:#0B1B3A;font-size:19px;margin-bottom:8px}
+.ab-card p{color:#3B4767;font-size:15px;line-height:1.65}
+.ab-split{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center}
+.ab-split img{width:100%;height:340px;object-fit:cover;border-radius:20px;border:1px solid #E3E9F7}
+.ab-split h2{color:#0B1B3A;font-size:30px;margin:10px 0 12px}
+.ab-split p{color:#3B4767;font-size:16px;line-height:1.7;margin-bottom:12px}
+.ab-check{list-style:none;padding:0;margin:14px 0}
+.ab-check li{color:#0B1B3A;font-size:15.5px;padding:7px 0 7px 30px;position:relative}
+.ab-check li:before{content:"✓";position:absolute;left:0;color:#B9830B;font-weight:900}
+.ab-cta{background:linear-gradient(120deg,#12224E,#0A1128);border-radius:22px;padding:40px;text-align:center}
+.ab-cta h2{color:#fff;font-size:30px;margin-bottom:10px}
+.ab-cta p{color:#C7D2F0;font-size:16px;margin-bottom:20px}
+@media(max-width:900px){.ab-stats,.ab-cards,.ab-split{grid-template-columns:1fr}.ab-hero h1{font-size:34px}}
+</style>
 </head>
-<body data-root="" class="dark-page">
+<body data-root="">
 <div id="site-header"></div>
-<section class="sec">
+<section class="ab-hero">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">About Us</div>
-      <h2>A Broker Built on Trust &amp; Technology</h2>
-      <p>Oryx Markets was founded with one simple idea: give everyday traders the same quality of platform, pricing and support that professionals enjoy.</p>
+    <div class="ab-kick">ABOUT US</div>
+    <h1>A Broker Built on Trust &amp; Technology</h1>
+    <p>Oryx Markets was founded with one simple idea: give everyday traders the same quality of platform, pricing and support that professionals enjoy — honest, fast and easy to use on any device.</p>
+    <div class="ab-stats">
+      <div><b>14</b><span>trading instruments</span></div>
+      <div><b>1:1000</b><span>maximum leverage</span></div>
+      <div><b>$10</b><span>welcome credit</span></div>
+      <div><b>24/7</b><span>client support</span></div>
     </div>
-    <div class="grid3">
-      <div class="card"><div class="ic">🎯</div><h3>Our Mission</h3><p>To make global markets accessible to everyone — with honest pricing, fast technology and support that speaks your language.</p></div>
-      <div class="card"><div class="ic">🤝</div><h3>Our Promise</h3><p>No hidden charges. No confusing terms. Your balance, your trades and your history are always visible in your dashboard.</p></div>
-      <div class="card"><div class="ic">🚀</div><h3>Our Platform</h3><p>A professional web terminal with live TradingView charts and one-click trading — no downloads, works on any device.</p></div>
+  </div>
+</section>
+<section class="ab-sec">
+  <div class="wrap">
+    <div class="ab-head"><div class="ab-kick">WHO WE ARE</div><h2>Simple Values, Serious Platform</h2><p>Three things guide everything we build at Oryx Markets.</p></div>
+    <div class="ab-cards">
+      <div class="ab-card"><div class="ic">🎯</div><h3>Our Mission</h3><p>To make global markets accessible to everyone — with honest pricing, fast technology and support that speaks your language.</p></div>
+      <div class="ab-card"><div class="ic">🤝</div><h3>Our Promise</h3><p>No hidden charges. No confusing terms. Your balance, your trades and your history are always visible in your dashboard.</p></div>
+      <div class="ab-card"><div class="ic">🚀</div><h3>Our Platform</h3><p>A professional web terminal with live charts and one-click trading — no downloads, works on any device, anywhere.</p></div>
     </div>
-    <div class="stat-grid" style="margin-top:44px">
-      <div class="stat"><span>Instruments</span><b>140+</b></div>
-      <div class="stat"><span>Countries Served</span><b>40+</b></div>
-      <div class="stat"><span>Support</span><b>24/5</b></div>
-      <div class="stat"><span>Spreads From</span><b>0.1 pips</b></div>
+  </div>
+</section>
+<section class="ab-sec alt">
+  <div class="wrap ab-split">
+    <div>
+      <div class="ab-kick">WHY ORYX</div>
+      <h2>Built Around the Trader</h2>
+      <p>From your first $10 welcome credit to advanced chart tools, every part of Oryx is designed so you can focus on the market — not on fighting the platform.</p>
+      <ul class="ab-check">
+        <li>Live charts with timeframes, indicators and drawing tools</li>
+        <li>Pending orders, stop loss and take profit on every trade</li>
+        <li>Verified accounts with mobile &amp; email OTP and KYC</li>
+        <li>Clear records for every deposit, trade and withdrawal</li>
+        <li>Partners &amp; IB programmes with fast payouts</li>
+      </ul>
+      <a class="btn btn-gold" href="register.html">Open Free Account</a>
     </div>
-    <div class="panel" style="margin-top:10px">
-      <h3>How Balances Work at Oryx</h3>
-      <p style="color:var(--mut);font-size:15px">Every new client receives a $10 welcome credit the moment their account is created, so they can explore the platform immediately. All further balance is issued personally by our admin team after a quick conversation on WhatsApp — a deliberate choice that keeps every client's funds reviewed, recorded and protected, with a complete transaction history in the client dashboard.</p>
+    <img src="images/banner-team-real.webp" alt="Oryx Markets team at work">
+  </div>
+</section>
+<section class="ab-sec">
+  <div class="wrap">
+    <div class="ab-head"><div class="ab-kick">OUR COMMITMENT</div><h2>Your Money, Accounted For</h2><p>Every client payment comes with a clear record — your money, accounted for at every step.</p></div>
+    <div class="ab-cards">
+      <div class="ab-card"><div class="ic">⚡</div><h3>Fast Withdrawals</h3><p>Approved withdrawals are processed quickly back to your own payment method, with a full record in your wallet.</p></div>
+      <div class="ab-card"><div class="ic">🛡️</div><h3>Verified &amp; Secure</h3><p>OTP-verified signups and KYC checks keep accounts genuine and protect every client's balance.</p></div>
+      <div class="ab-card"><div class="ic">🧾</div><h3>Full Transparency</h3><p>Deposits, company credits, trades and withdrawals are separated clearly, so you always know where you stand.</p></div>
+    </div>
+  </div>
+</section>
+<section class="ab-sec alt">
+  <div class="wrap">
+    <div class="ab-cta">
+      <h2>Start Trading With Oryx</h2>
+      <p>Open your free account today and receive your $10 welcome credit after approval.</p>
+      <a class="btn btn-gold" href="register.html">Open Free Account</a>
     </div>
   </div>
 </section>
