@@ -3,6 +3,7 @@
    Includes MA lines and a volume strip, like a pro exchange terminal. */
 function drawLiveChart(cv, symbol){
   if (!cv || typeof Oryx === 'undefined') return;
+  const LIGHT = document.documentElement.classList.contains('light');
   const dpr = window.devicePixelRatio || 1;
   const W = cv.clientWidth, H = cv.clientHeight;
   if (!W || !H) return;
@@ -21,7 +22,7 @@ function drawLiveChart(cv, symbol){
   data.forEach(k => { min = Math.min(min, k.l); max = Math.max(max, k.h); });
   const pad = (max - min) * 0.08 || max * 0.001 || 1; max += pad; min -= pad;
   const Y = v => padT + (max - v) / (max - min) * plotH;
-  ctx.strokeStyle = 'rgba(255,255,255,.055)'; ctx.fillStyle = '#66738F'; ctx.font = '10.5px Segoe UI'; ctx.lineWidth = 1;
+  ctx.strokeStyle = LIGHT ? 'rgba(15,35,80,0.09)' : 'rgba(255,255,255,.055)'; ctx.fillStyle = LIGHT ? '#64748B' : '#66738F'; ctx.font = '10.5px Segoe UI'; ctx.lineWidth = 1;
   for (let g = 0; g <= 4; g++){
     const v = min + (max - min) * g / 4, y = Y(v);
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(plotW, y); ctx.stroke();
@@ -71,7 +72,7 @@ function drawLiveChart(cv, symbol){
   ctx.fillText(label, plotW + 7, ly + 3.5);
   /* legend */
   const chg = Oryx.changePct(symbol);
-  ctx.fillStyle = '#93A1C4'; ctx.font = 'bold 11px Segoe UI';
+  ctx.fillStyle = LIGHT ? '#5B6B8C' : '#93A1C4'; ctx.font = 'bold 11px Segoe UI';
   ctx.fillText(symbol + '  ·  LIVE  ·  5s candles', 10, H - 6);
   ctx.fillStyle = chg >= 0 ? '#16C784' : '#EA3943';
   ctx.fillText((chg >= 0 ? '▲ +' : '▼ ') + chg.toFixed(2) + '%', 196, H - 6);

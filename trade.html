@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A1128">
 <title>Web Terminal — Oryx Markets</title>
-<link rel="stylesheet" href="assets/style.css?v=13">
+<link rel="stylesheet" href="assets/style.css?v=14">
 <style>
   /* terminal-critical styles (self-contained so a stale shared stylesheet can never break the terminal) */
   .term .rail{max-height:none;overflow:visible}
@@ -71,14 +71,15 @@
   .ot-btn{flex:1;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:#0E1626;color:#93A1C4;font-weight:700;font-size:12.5px;cursor:pointer}
   .ot-btn.on{background:#F5B544;color:#171106;border-color:transparent}
   /* compact trade ROWS (one row per trade) + instrument dropdown */
-  .trow{background:#12224E;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:4px 8px;margin:0 12px 5px}
-  .tr-main{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;line-height:1.15}
+  .trow{background:#12224E;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:3px 8px;margin:0 12px 4px;display:flex;flex-direction:column;gap:2px}
+  .tr-main{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;line-height:1.15;height:20px;overflow:hidden}
   .tr-main b{color:#fff;font-size:14px;white-space:nowrap}
   .tr-main .pill{padding:2px 7px;font-size:10px;white-space:nowrap;flex:none}
   .tr-pl{margin-left:6px;font-weight:800;font-size:17px;white-space:nowrap}
-  .tr-sub{color:#C2CDE6;font-size:11.5px;font-weight:600;margin-top:1px;line-height:1.25;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
-  .tr-foot{display:flex;align-items:center;gap:7px;margin-top:3px}
-  .tr-close2{margin-left:auto;width:76px;height:21px;border:0;border-radius:6px;background:linear-gradient(135deg,#EA3943,#C22530);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.05em;cursor:pointer;flex:none}
+  .tr-sub{color:#C2CDE6;font-size:11.5px;font-weight:600;margin-top:0;line-height:1.25;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;height:15px}
+  .tr-foot{display:flex;align-items:center;gap:7px;margin-top:1px;height:20px;overflow:hidden}
+  .tr-foot .pill{padding:1px 7px;font-size:9.5px;line-height:1.25}
+  .tr-close2{margin-left:auto;width:76px;height:19px;border:0;border-radius:6px;background:linear-gradient(135deg,#EA3943,#C22530);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.05em;cursor:pointer;flex:none}
   .tr-close2.win{background:linear-gradient(135deg,#16C784,#0E9F6E)}
   .tr-close2.pend{background:rgba(245,181,68,.16);color:#F5B544;border:1px solid rgba(245,181,68,.4)}
   #posBox{max-height:600px;overflow-y:auto;padding-right:2px;scrollbar-width:thin}
@@ -90,12 +91,59 @@
   .dd-list{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:80;max-height:330px;overflow:auto;background:#0D1730;border:1px solid rgba(255,255,255,.15);border-radius:12px;box-shadow:0 18px 44px rgba(0,0,0,.55);padding:5px}
   .dd.open .dd-list{display:block}
   .dd-list .inst-row{border-radius:8px}
+  /* dark / light theme toggle */
+  .theme-toggle{display:flex;gap:4px;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:3px;align-self:center}
+  .theme-toggle button{border:0;background:transparent;color:#93A1C4;font-weight:700;font-size:11.5px;padding:5px 11px;border-radius:999px;cursor:pointer}
+  .theme-toggle button.on{background:#F5B544;color:#171106}
+  html.light body{background:#EDF0F6 !important}
+  html.light .term-top a{color:#2563EB}
+  html.light .term-top span{color:#33456B !important}
+  html.light .theme-toggle{background:#fff;border-color:#D8DEE9}
+  html.light .theme-toggle button{color:#5B6B8C}
+  html.light .theme-toggle button.on{background:#12224E;color:#fff}
+  html.light .term .col{background:#FFFFFF;border-color:#D9E0EC;box-shadow:0 10px 26px rgba(18,34,78,.07)}
+  html.light .term h5{color:#64748B}
+  html.light .sym-strip{background:#F7F9FC;border-color:#E3E9F2}
+  html.light .ss-main b, html.light .ss-it b{color:#12224E}
+  html.light .ss-main span, html.light .ss-it span{color:#64748B}
+  html.light .trow{background:#F2F5FB;border-color:#DCE3EF}
+  html.light .tr-main b{color:#12224E}
+  html.light .tr-sub{color:#5B6B8C}
+  html.light .dd-btn{background:#F2F5FB;color:#12224E;border-color:#D3DBEA}
+  html.light .dd-btn .arw{color:#64748B}
+  html.light .dd-list{background:#FFFFFF;border-color:#D9E0EC}
+  html.light .inst-row{color:#33456B;border-color:#EDF1F7}
+  html.light .inst-row b{color:#12224E}
+  html.light .inst-row small{color:#64748B}
+  html.light .trade-panel{color:#33456B}
+  html.light .trade-panel .sym{color:#12224E}
+  html.light .trade-panel .big{color:#12224E}
+  html.light .trade-panel label{color:#64748B}
+  html.light .trade-panel input, html.light .trade-panel select{background:#F2F5FB;color:#12224E;border-color:#D3DBEA}
+  html.light .lot-chips button{background:#EDF1F8;color:#33456B;border-color:#D3DBEA}
+  html.light .ot-btn{background:#EDF1F8;color:#5B6B8C;border-color:#D3DBEA}
+  html.light .ot-btn.on{background:#F5B544;color:#171106}
+  html.light .ob-head{color:#64748B}
+  html.light .ob-a{color:#33456B}
+  html.light .ob-spread{color:#64748B;border-color:#E3E9F2}
+  html.light .kv-row{color:#64748B}
+  html.light .kv-row b{color:#12224E}
+  html.light .hist-wrap table{color:#5B6B8C}
+  html.light .hist-wrap td{border-color:#E3E9F2}
+  html.light .hist-wrap td b{color:#12224E !important}
+  html.light .eq-bar .kpi{border-color:rgba(18,34,78,.10)}
+  html.light .eq-bar .kpi.g4{background:rgba(37,99,235,.85)}
+  html.light .eq-bar .kpi.g2{background:rgba(124,58,237,.85)}
+  html.light .eq-bar .kpi.g3{background:rgba(217,119,6,.85)}
+  html.light .eq-bar .kpi.g6{background:rgba(8,145,178,.85)}
+  html.light .eq-bar .kpi.g5{background:rgba(219,39,119,.85)}
   /* user polish: narrower translucent KPI boxes, gap, HL pair = right-column width */
-  .top-strip{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px;max-width:100%}
+  .top-strip{display:grid;grid-template-columns:minmax(0,1fr) auto 250px;gap:18px;max-width:100%}
   .top-strip .eq-bar{width:min(850px,100%);justify-self:start;min-width:0}
   .eq-bar .kpi{min-width:0}
   .hlbar{width:250px;margin:0}
-  .hl-box{overflow:hidden}
+  .hl-box{overflow:hidden;min-width:0}
+  .hlbar{min-width:0}
   body{overflow-x:hidden}
   .eq-bar .kpi{border:1px solid rgba(255,255,255,.16);box-shadow:none}
   .eq-bar .kpi.g4{background:rgba(56,120,246,.60)}
@@ -104,11 +152,28 @@
   .eq-bar .kpi.g6{background:rgba(14,165,183,.60)}
   .eq-bar .kpi.g5{background:rgba(236,72,153,.60)}
   @media(max-width:900px){ .top-strip .eq-bar{width:auto} .hlbar{width:auto;margin-left:0} }
+  /* ===== mobile friendly terminal ===== */
+  @media(max-width:900px){
+    .top-strip{grid-template-columns:1fr;gap:10px;margin:10px 10px 0}
+    .top-strip .eq-bar{width:auto}
+    .eq-bar{grid-template-columns:repeat(3,1fr)}
+    .theme-toggle{justify-self:start}
+    .hlbar{width:auto}
+    .hl-box{padding:8px 12px}
+    .term{display:flex;flex-direction:column;gap:12px;padding:10px}
+    .term>*{min-width:0}
+    .term .chart-col{order:1}
+    .term .rail{order:2}
+    .term>.col:not(.rail):not(.chart-col){order:3}
+    .chart-box{min-height:300px}
+    .term-top{flex-wrap:wrap;row-gap:6px}
+  }
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>try{if(localStorage.getItem('oryx_theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
 </head>
 <body style="background:#060B1D">
 <div class="term-top">
@@ -116,7 +181,7 @@
   <span style="color:#D8A94E;font-weight:800;letter-spacing:.1em">ORYX WEB TERMINAL</span>
   <span id="whoLine" style="color:#7C88A8;font-size:13px;margin-left:auto"></span>
 </div>
-<div class="top-strip"><div class="eq-bar" id="eqBar"></div><div id="hlBar" class="hlbar"></div></div>
+<div class="top-strip"><div class="eq-bar" id="eqBar"></div><div class="theme-toggle"><button type="button" id="thDark" onclick="setTheme('dark')">🌙 Dark</button><button type="button" id="thLight" onclick="setTheme('light')">☀️ Light</button></div><div id="hlBar" class="hlbar"></div></div>
 <div class="term">
   <div class="col">
     <h5>⚡ OPEN POSITIONS — LIVE</h5>
@@ -129,7 +194,7 @@
       <div class="dd-list" id="ddList"></div>
     </div>
   </div>
-  <div class="col">
+  <div class="col chart-col">
     <div class="sym-strip" id="symStrip"></div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas></div>
     <div class="hist-wrap">
@@ -189,7 +254,7 @@
 <script src="data/instruments.js?v=10"></script>
 <script src="assets/store.js?v=18"></script>
 <script src="assets/cloud.js?v=8"></script>
-<script src="assets/chart.js?v=11"></script>
+<script src="assets/chart.js?v=12"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
@@ -199,6 +264,13 @@
   document.getElementById('tpLev').value = '1:' + acc.leverage;
 
   function pick(s){ cur = s; const dd = document.getElementById('instDD'); if (dd) dd.classList.remove('open'); render(); }
+  function setTheme(t){
+    document.documentElement.classList.toggle('light', t === 'light');
+    try { localStorage.setItem('oryx_theme', t); } catch(e){}
+    document.getElementById('thDark').classList.toggle('on', t !== 'light');
+    document.getElementById('thLight').classList.toggle('on', t === 'light');
+    render();
+  }
   function toggleDD(e){ e.stopPropagation(); document.getElementById('instDD').classList.toggle('open'); }
   document.addEventListener('click', e => { const dd = document.getElementById('instDD'); if (dd && !dd.contains(e.target)) dd.classList.remove('open'); });
   function setLot(v){ document.getElementById('tpLots').value = v; render(); }
@@ -312,6 +384,7 @@
     const closed = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'closed').slice().reverse().slice(0, 6);
     document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}${t.closeReason ? ' · ' + t.closeReason : ''}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
   }
+  (function(){ const lt = document.documentElement.classList.contains('light'); document.getElementById('thDark').classList.toggle('on', !lt); document.getElementById('thLight').classList.toggle('on', lt); })();
   Oryx.startFeed(render, 1000);
 </script>
 <script src="assets/support.js?v=10"></script>

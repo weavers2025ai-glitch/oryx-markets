@@ -441,3 +441,11 @@ body.dark-page .tag{background:rgba(216,169,78,.16);color:#F5B544}
 .proof-ov.open{display:flex}
 .proof-box{background:#0D1633;border:1px solid rgba(255,255,255,.14);border-radius:18px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:22px;color:#E7EBF5}
 .proof-box img{width:100%;border-radius:12px;background:#fff}
+
+/* ===== mobile friendly dashboard (grids are inline-styled, so !important) ===== */
+@media(max-width:760px){
+  #statRow{grid-template-columns:1fr 1fr !important;gap:10px !important;margin-bottom:14px !important}
+  #midGrid{grid-template-columns:1fr !important;gap:12px !important;margin-bottom:14px !important}
+  .d-stat{padding:14px !important}
+  .d-stat b{font-size:22px !important}
+}
