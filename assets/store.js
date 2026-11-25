@@ -331,19 +331,27 @@ const Oryx = (() => {
 
   /* ---------- stop-out: if the losses eat the whole balance, his entries
      close automatically and he is told his balance is finished ---------- */
+  function stopOutAccount(acc){
+    const open = trades().filter(t => t.accountId === acc.id && t.status === 'open');
+    if (!open.length) return false;
+    if (acc.balance + floating(acc.id) > 0) return false;
+    open.forEach(t => closeTrade(t.id));
+    const accs = accounts(); const a2 = accs.find(a => a.id === acc.id);
+    if (a2 && a2.balance < 0){ const adj = -a2.balance; a2.balance = 0; saveAccounts(accs); addTxn(acc.id, 'Stop-Out Adjustment', adj, 'Loss beyond the balance was covered at stop-out'); }
+    notifyUser(acc.userId, '⚠️ Stop-Out: your open trades were closed automatically because the losses used up your account balance. Your balance is now $0.00. Please add balance to start trading again.');
+    return true;
+  }
   function checkStopOut(){
     const sess = load(K.session, null); if (!sess) return false;
     let fired = false;
-    accounts().filter(a => a.userId === sess).forEach(acc => {
-      const open = trades().filter(t => t.accountId === acc.id && t.status === 'open');
-      if (!open.length) return;
-      if (acc.balance + floating(acc.id) > 0) return;
-      open.forEach(t => closeTrade(t.id));
-      const accs = accounts(); const a2 = accs.find(a => a.id === acc.id);
-      if (a2 && a2.balance < 0){ const adj = -a2.balance; a2.balance = 0; saveAccounts(accs); addTxn(acc.id, 'Stop-Out Adjustment', adj, 'Loss beyond the balance was covered at stop-out'); }
-      notifyUser(sess, '⚠️ Stop-Out: your open trades were closed automatically because the losses used up your account balance. Your balance is now $0.00. Please request a new deposit from the Admin to continue trading.');
-      fired = true;
-    });
+    accounts().filter(a => a.userId === sess).forEach(acc => { if (stopOutAccount(acc)) fired = true; });
+    return fired;
+  }
+  /* Admin-side sweep: wash out ANY account whose losses ate its balance,
+     even if that client is offline (the admin panel runs this live). */
+  function checkStopOutAll(){
+    let fired = false;
+    accounts().forEach(acc => { if (stopOutAccount(acc)) fired = true; });
     return fired;
   }
 
@@ -480,7 +488,7 @@ const Oryx = (() => {
     if (approve && isDuplicateTxn(r)) return false; /* same proof already credited once — never twice */
     if (approve && r.kind === 'withdraw'){
       const a = accounts().find(v => v.id === r.accountId);
-      if (!a || a.balance - bonusTotal(r.accountId) < r.amount) return false; /* bonus credits are locked — never withdrawable */
+      if (!a || a.balance - companyTotal(r.accountId) < r.amount) return false; /* company balance (starter + bonus) is locked — trading only, never withdrawable */
     }
     r.status = approve ? 'approved' : 'rejected'; r.decidedAt = Date.now();
     save(K_REQ, all);
@@ -546,6 +554,18 @@ const Oryx = (() => {
   }
   function bonusTotal(accountId){
     return txns().filter(t => t.accountId === accountId && t.type === 'Bonus').reduce((s, t) => s + t.amount, 0);
+  }
+  /* Company-given free balance: starter credit + bonuses. Trading only — never withdrawable. */
+  function companyTotal(accountId){
+    return txns().filter(t => t.accountId === accountId && (t.type === 'Starter Credit' || t.type === 'Bonus')).reduce((s, t) => s + t.amount, 0);
+  }
+  /* Money the client actually put in (approved deposits + admin-issued deposits). */
+  function depositTotal(accountId){
+    return txns().filter(t => t.accountId === accountId && t.type === 'Admin Deposit' && t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  }
+  function withdrawableOf(accountId){
+    const a = accountById(accountId); if (!a) return 0;
+    return Math.max(0, +(a.balance - companyTotal(accountId)).toFixed(2));
   }
   function promos(){
     let list = load(K_PROMOS, null);
@@ -667,7 +687,7 @@ const Oryx = (() => {
            adminPw, issueBalance, requests, createRequest, decideRequest,
            payCfg, savePayCfg, bankEntries, addBankEntry, matchStatus, money, esc,
            submitKyc, decideKyc, kycStatus, updateProfile, saveBank, changePassword,
-           creditBonus, bonusTotal, promos, savePromos, addPromo, redeemPromo,
+           creditBonus, bonusTotal, companyTotal, depositTotal, withdrawableOf, checkStopOutAll, promos, savePromos, addPromo, redeemPromo,
            volumeOffers, saveVOffers, addVolumeOffer, tradedLots, claimVolume,
            admins, saveAdmins, adminLogin, currentAdmin, adminLogout, logAdmin, adminLog, superPw, setSuperPw,
            setAdminPw: v => save(K.adminpw, v) };
