@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#05080F">
 <title>Oryx Markets — Trade Forex, Gold, Crypto & Indices Online</title>
-<link rel="stylesheet" href="assets/style.css?v=20">
+<link rel="stylesheet" href="assets/style.css?v=21">
 <style>
   .ad-banner{display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:center;background:linear-gradient(120deg,#12224E,#0A1128 55%,#3B2F10);border:1px solid rgba(245,181,68,.35);border-radius:22px;padding:30px;overflow:hidden}
   .ad-banner img{width:100%;height:230px;object-fit:cover;border-radius:16px;display:block}
@@ -117,18 +117,16 @@
 
 <section class="sec rv" style="padding-bottom:0">
   <div class="wrap">
-    <div class="fx-hero">
-      <div class="fx-side">
-        <a class="fx-box" href="guide.html" style="background-image:linear-gradient(90deg,rgba(7,13,29,.94) 45%,rgba(7,13,29,.25)),url('images/broker-desk.webp')"><span>MARKETPLACE</span><b>Explore trading services</b></a>
-        <a class="fx-box" href="register.html" style="background-image:linear-gradient(90deg,rgba(7,13,29,.94) 45%,rgba(7,13,29,.25)),url('images/banner-app.webp')"><span>PARTNERS</span><b>List your services today</b></a>
-        <a class="fx-box" href="login.html" style="background-image:linear-gradient(90deg,rgba(7,13,29,.94) 45%,rgba(7,13,29,.25)),url('images/news-education.webp')"><span>ACCOUNT</span><b>Sign in to Oryx</b></a>
+    <div class="oryx-slider" id="oryxSlider">
+      <div class="os-track" id="osTrack">
+        <div class="os-slide" style="background-image:url('images/banner-markets.webp')"><div class="os-cap"><div class="kicker" style="color:var(--gold2);font-weight:800;letter-spacing:.22em;font-size:12.5px">GOLD · XAU/USD · <span id="osGoldPx" data-goldpx>LIVE</span></div><h2>Trade Gold With Live Charts</h2><p>Gold and silver with real-time prices, indicators and one-tap Buy/Sell.</p><a class="btn btn-gold" href="trade.html">Trade Gold →</a></div></div>
+        <div class="os-slide" style="background-image:url('images/banner-welcome.webp')"><div class="os-cap"><div class="kicker" style="color:var(--gold2);font-weight:800;letter-spacing:.22em;font-size:12.5px">FOREX MAJORS</div><h2>EUR/USD, GBP/USD &amp; More</h2><p>Major and minor currency pairs with leverage up to 1:1000 and fast execution.</p><a class="btn btn-green" href="markets.html">See Markets →</a></div></div>
+        <div class="os-slide" style="background-image:url('images/banner-app.webp')"><div class="os-cap"><div class="kicker" style="color:var(--gold2);font-weight:800;letter-spacing:.22em;font-size:12.5px">TRADE ANYWHERE</div><h2>Your Terminal, in Your Pocket</h2><p>Install Oryx Markets as an app and follow every position from your phone.</p><a class="btn btn-gold" href="trade.html">Open Terminal →</a></div></div>
+        <div class="os-slide" style="background-image:url('images/broker-desk.webp')"><div class="os-cap"><div class="kicker" style="color:var(--gold2);font-weight:800;letter-spacing:.22em;font-size:12.5px">PRO TOOLS</div><h2>Indicators, Fibonacci &amp; Full Screen</h2><p>Timeframes, RSI, MACD, Stochastic, drawing tools and a full-screen chart.</p><a class="btn btn-green" href="trade.html">Explore Tools →</a></div></div>
       </div>
-      <div class="fx-main" id="fxMain">
-        <div class="fx-slide on" style="background-image:linear-gradient(90deg,rgba(7,13,29,.9) 30%,rgba(7,13,29,.35)),url('images/banner-journey-team.webp')"><div class="fx-cap"><span class="fx-pill">ORYX MARKETPLACE</span><h2>Buy and sell trading services in one place</h2><p>Trading tools, expert setups and courses from Oryx providers.</p><a class="btn btn-gold" href="guide.html">Browse marketplace</a></div></div>
-        <div class="fx-slide" style="background-image:linear-gradient(90deg,rgba(7,13,29,.9) 30%,rgba(7,13,29,.35)),url('images/banner-markets.webp')"><div class="fx-cap"><span class="fx-pill">GOLD · XAU/USD · <span id="osGoldPx">LIVE</span></span><h2>Trade Gold With Live Charts</h2><p>Gold and silver with real-time prices, indicators and one-tap Buy/Sell.</p><a class="btn btn-green" href="trade.html">Trade Gold →</a></div></div>
-        <div class="fx-slide" style="background-image:linear-gradient(90deg,rgba(7,13,29,.9) 30%,rgba(7,13,29,.35)),url('images/how-oryx.webp')"><div class="fx-cap"><span class="fx-pill">PRO TOOLS</span><h2>Indicators, Fibonacci &amp; Full Screen</h2><p>Timeframes, RSI, MACD, Stochastic, drawing tools and a full-screen chart.</p><a class="btn btn-gold" href="trade.html">Explore Tools →</a></div></div>
-        <div class="fx-dots" id="fxDots"><button type="button" class="on" onclick="fxGo(0)" aria-label="Slide 1"></button><button type="button" onclick="fxGo(1)" aria-label="Slide 2"></button><button type="button" onclick="fxGo(2)" aria-label="Slide 3"></button></div>
-      </div>
+      <button type="button" class="os-arrow os-prev" onclick="osMove(-1)" aria-label="Previous slide">‹</button>
+      <button type="button" class="os-arrow os-next" onclick="osMove(1)" aria-label="Next slide">›</button>
+      <div class="os-dots" id="osDots"><button type="button" class="on" onclick="osGo(0)" aria-label="Slide 1"></button><button type="button" onclick="osGo(1)" aria-label="Slide 2"></button><button type="button" onclick="osGo(2)" aria-label="Slide 3"></button><button type="button" onclick="osGo(3)" aria-label="Slide 4"></button></div>
     </div>
   </div>
 </section>
@@ -220,6 +218,24 @@
       <p style="color:var(--mut)">Pick a package and start trading. Hover to pause and read.</p>
     </div>
     <div class="pkg-wrap"><div class="pkg-track"><div class="pkg-card"><img src="images/banner-welcome.webp" alt="Starter Package package"><div class="pkg-body"><h3>Starter Package</h3><div class="pkg-price">$10.00</div><p>Free $10 welcome credit on approval. Learn the terminal with live prices.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/news-gold.webp" alt="Bronze Package package"><div class="pkg-body"><h3>Bronze Package</h3><div class="pkg-price">$50.00</div><p>Start with gold and forex majors, leverage up to 1:1000.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-markets.webp" alt="Silver Package package"><div class="pkg-body"><h3>Silver Package</h3><div class="pkg-price">$100.00</div><p>Gold, forex, crypto and indices from one account.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/broker-desk.webp" alt="Gold Package package"><div class="pkg-body"><h3>Gold Package</h3><div class="pkg-price">$250.00</div><p>Full indicators, Fibonacci and drawing tools with priority support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/how-oryx.webp" alt="Platinum Package package"><div class="pkg-body"><h3>Platinum Package</h3><div class="pkg-price">$500.00</div><p>Advanced chart tools, full-screen trading and faster approvals.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-app.webp" alt="VIP Package package"><div class="pkg-body"><h3>VIP Package</h3><div class="pkg-price">$1,000.00</div><p>Trade anywhere with the app terminal and dedicated support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-welcome.webp" alt="Starter Package package"><div class="pkg-body"><h3>Starter Package</h3><div class="pkg-price">$10.00</div><p>Free $10 welcome credit on approval. Learn the terminal with live prices.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/news-gold.webp" alt="Bronze Package package"><div class="pkg-body"><h3>Bronze Package</h3><div class="pkg-price">$50.00</div><p>Start with gold and forex majors, leverage up to 1:1000.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-markets.webp" alt="Silver Package package"><div class="pkg-body"><h3>Silver Package</h3><div class="pkg-price">$100.00</div><p>Gold, forex, crypto and indices from one account.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/broker-desk.webp" alt="Gold Package package"><div class="pkg-body"><h3>Gold Package</h3><div class="pkg-price">$250.00</div><p>Full indicators, Fibonacci and drawing tools with priority support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/how-oryx.webp" alt="Platinum Package package"><div class="pkg-body"><h3>Platinum Package</h3><div class="pkg-price">$500.00</div><p>Advanced chart tools, full-screen trading and faster approvals.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-app.webp" alt="VIP Package package"><div class="pkg-body"><h3>VIP Package</h3><div class="pkg-price">$1,000.00</div><p>Trade anywhere with the app terminal and dedicated support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div></div></div>
+  </div>
+</section>
+
+<section class="sec rv">
+  <div class="wrap">
+    <div class="fx-hero">
+      <div class="fx-side">
+        <a class="fx-box" href="guide.html" style="background-image:linear-gradient(90deg,rgba(7,13,29,.94) 45%,rgba(7,13,29,.25)),url('images/broker-desk.webp')"><span>MARKETPLACE</span><b>Explore trading services</b></a>
+        <a class="fx-box" href="register.html" style="background-image:linear-gradient(90deg,rgba(7,13,29,.94) 45%,rgba(7,13,29,.25)),url('images/banner-app.webp')"><span>PARTNERS</span><b>List your services today</b></a>
+        <a class="fx-box" href="login.html" style="background-image:linear-gradient(90deg,rgba(7,13,29,.94) 45%,rgba(7,13,29,.25)),url('images/news-education.webp')"><span>ACCOUNT</span><b>Sign in to Oryx</b></a>
+      </div>
+      <div class="fx-main" id="fxMain">
+        <div class="fx-slide on" style="background-image:linear-gradient(90deg,rgba(7,13,29,.9) 30%,rgba(7,13,29,.35)),url('images/banner-journey-team.webp')"><div class="fx-cap"><span class="fx-pill">ORYX MARKETPLACE</span><h2>Buy and sell trading services in one place</h2><p>Trading tools, expert setups and courses from Oryx providers.</p><a class="btn btn-gold" href="guide.html">Browse marketplace</a></div></div>
+        <div class="fx-slide" style="background-image:linear-gradient(90deg,rgba(7,13,29,.9) 30%,rgba(7,13,29,.35)),url('images/banner-markets.webp')"><div class="fx-cap"><span class="fx-pill">GOLD · XAU/USD · <span data-goldpx>LIVE</span></span><h2>Trade Gold With Live Charts</h2><p>Gold and silver with real-time prices, indicators and one-tap Buy/Sell.</p><a class="btn btn-green" href="trade.html">Trade Gold →</a></div></div>
+        <div class="fx-slide" style="background-image:linear-gradient(90deg,rgba(7,13,29,.9) 30%,rgba(7,13,29,.35)),url('images/how-oryx.webp')"><div class="fx-cap"><span class="fx-pill">PRO TOOLS</span><h2>Indicators, Fibonacci &amp; Full Screen</h2><p>Timeframes, RSI, MACD, Stochastic, drawing tools and a full-screen chart.</p><a class="btn btn-gold" href="trade.html">Explore Tools →</a></div></div>
+        <div class="fx-dots" id="fxDots"><button type="button" class="on" onclick="fxGo(0)" aria-label="Slide 1"></button><button type="button" onclick="fxGo(1)" aria-label="Slide 2"></button><button type="button" onclick="fxGo(2)" aria-label="Slide 3"></button></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -407,10 +423,14 @@
 <script>const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.12});document.querySelectorAll(".rv").forEach(el=>io.observe(el));</script>
 <script>
   let osI = 0, osTimer = null;
-  function fxGo(n){ osI = (n + 3) % 3; document.querySelectorAll('.fx-slide').forEach((sl, i) => sl.classList.toggle('on', i === osI)); document.querySelectorAll('#fxDots button').forEach((b, i) => b.classList.toggle('on', i === osI)); fxRestart(); }
-  function fxRestart(){ if (osTimer) clearInterval(osTimer); osTimer = setInterval(() => fxGo(osI + 1), 4500); }
-  function osPx(){ try { const g = document.getElementById('osGoldPx'); if (g) g.textContent = Oryx.fmtP('XAUUSD', Oryx.bid('XAUUSD')); } catch(e){} }
-  fxRestart(); osPx(); setInterval(osPx, 1000);
+  function osGo(n){ osI = (n + 4) % 4; const t = document.getElementById('osTrack'); if (t) t.style.transform = 'translateX(-' + (osI * 100) + '%)'; document.querySelectorAll('#osDots button').forEach((b, i) => b.classList.toggle('on', i === osI)); }
+  function osMove(d){ osGo(osI + d); osRestart(); }
+  function osRestart(){ if (osTimer) clearInterval(osTimer); osTimer = setInterval(() => osGo(osI + 1), 4500); }
+  let fxI = 0, fxTimer = null;
+  function fxGo(n){ fxI = (n + 3) % 3; document.querySelectorAll('.fx-slide').forEach((sl, i) => sl.classList.toggle('on', i === fxI)); document.querySelectorAll('#fxDots button').forEach((b, i) => b.classList.toggle('on', i === fxI)); fxRestart(); }
+  function fxRestart(){ if (fxTimer) clearInterval(fxTimer); fxTimer = setInterval(() => fxGo(fxI + 1), 4500); }
+  function osPx(){ try { document.querySelectorAll('[data-goldpx]').forEach(g => { g.textContent = Oryx.fmtP('XAUUSD', Oryx.bid('XAUUSD')); }); } catch(e){} }
+  osRestart(); fxRestart(); osPx(); setInterval(osPx, 1000);
   const osBox = document.getElementById('oryxSlider'); if (osBox){ osBox.addEventListener('mouseenter', () => { if (osTimer) clearInterval(osTimer); }); osBox.addEventListener('mouseleave', osRestart); }
 </script>
 <script src="assets/support.js?v=11"></script>
