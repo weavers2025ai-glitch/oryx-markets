@@ -393,7 +393,7 @@
       return `<div class="trow">
         <div class="tr-main"><span style="color:#7C88A8;font-size:11px">${ix + 1}</span><b>${t.symbol}</b><span class="tr-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
         <div class="tr-sub">${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, now)}${t.sl ? ' · SL <b style="color:#EA3943">' + Oryx.fmtP(t.symbol, t.sl) + '</b>' : ''}${t.tp ? ' · TP <b style="color:#16C784">' + Oryx.fmtP(t.symbol, t.tp) + '</b>' : ''} · ${new Date(t.openAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-        <div class="tr-foot"><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots}</span><button class="tr-close2 ${p>=0?'win':''}" onclick="closeT('${t.id}')">✕ CLOSE</button></div>
+        <div class="tr-foot"><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots}</span><button class="tr-close2 ${p>=0?'win':''}" data-tid="${t.id}">✕ CLOSE</button></div>
       </div>`;
     }).join('') : '<p style="color:#7C88A8;font-size:13px;padding:2px 12px 12px">No open positions yet. Place a BUY or SELL order — it will appear here as one compact row.</p>';
     document.getElementById('posBox').innerHTML = posHtml;
@@ -403,7 +403,7 @@
       <div class="trow">
         <div class="tr-main"><span style="color:#7C88A8;font-size:11px">${ix + 1}</span><b>${o.symbol}</b><span class="tr-pl" style="color:#F5B544">⏳ ${Oryx.fmtP(o.symbol, o.price)}</span></div>
         <div class="tr-sub">Now ${Oryx.fmtP(o.symbol, Oryx.prices[o.symbol])}${o.sl ? ' · SL <b style="color:#EA3943">' + Oryx.fmtP(o.symbol, o.sl) + '</b>' : ''}${o.tp ? ' · TP <b style="color:#16C784">' + Oryx.fmtP(o.symbol, o.tp) + '</b>' : ''} · opens by itself at the trigger</div>
-        <div class="tr-foot"><span class="pill ${o.side==='BUY'?'g':'r'}">${o.side} · ${o.lots}</span><button class="tr-close2 pend" onclick="cancelOrd('${o.id}')">✕ CANCEL</button></div>
+        <div class="tr-foot"><span class="pill ${o.side==='BUY'?'g':'r'}">${o.side} · ${o.lots}</span><button class="tr-close2 pend" data-oid="${o.id}">✕ CANCEL</button></div>
       </div>`).join('') : '<p style="color:#7C88A8;font-size:13px;padding:2px 12px 12px">No pending orders. Switch Order Type to ⏳ Pending and set a price — the trade opens by itself there.</p>';
     const ins = Oryx.inst(cur); const cp = Oryx.changePct(cur);
     document.getElementById('symStrip').innerHTML = `
@@ -431,6 +431,18 @@
     document.getElementById('histBox').innerHTML = closed.length ? `<table>${closed.map(t => `<tr><td><b style="color:#D7DEEF">${t.symbol}</b></td><td>${t.side}</td><td>${t.lots} lots</td><td>${Oryx.fmtP(t.symbol, t.open)} → ${Oryx.fmtP(t.symbol, t.close)}</td><td style="color:${t.pnl>=0?'#16C784':'#EA3943'}"><b>${Oryx.money(t.pnl)}</b></td><td>${new Date(t.closeAt).toLocaleTimeString()}${t.closeReason ? ' · ' + t.closeReason : ''}</td></tr>`).join('')}</table>` : '<p style="color:#7C88A8;font-size:13px">Nothing closed yet.</p>';
   }
   (function(){ const lt = document.documentElement.classList.contains('light'); document.getElementById('thDark').classList.toggle('on', !lt); document.getElementById('thLight').classList.toggle('on', lt); })();
+  /* CLOSE / CANCEL clicks are delegated on the (persistent) containers, so a
+     re-render on the 1-second price tick can never swallow a click. */
+  ['posBox', 'posBoxDesk', 'ordBox'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click', e => {
+      const cb = e.target.closest('[data-tid]');
+      if (cb) { closeT(cb.dataset.tid); return; }
+      const ob = e.target.closest('[data-oid]');
+      if (ob) cancelOrd(ob.dataset.oid);
+    });
+  });
   Oryx.startFeed(render, 1000);
 </script>
 <script src="assets/support.js?v=10"></script>
