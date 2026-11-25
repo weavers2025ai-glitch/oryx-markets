@@ -171,18 +171,66 @@ const Oryx = (() => {
      Only on approval is the trading account created and the $10 starter
      credit issued. Login stays blocked until then. Users registered before
      this workflow existed have no status field and count as approved. */
-  function register(name, email, pass, phone, country){
+  const OTP_TTL = 5 * 60 * 1000, OTP_COOLDOWN = 30 * 1000, OTP_MAX_ATTEMPTS = 5;
+  function makeOtp(){ return String(Math.floor(100000 + Math.random() * 900000)); }
+  function normPhone(p){ return String(p || '').replace(/[\s()-]/g, ''); }
+  function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(e || '')); }
+  function validPhone(p){ return /^\+[1-9]\d{6,14}$/.test(normPhone(p)); }
+  function maskEmail(e){ const parts = String(e || '').split('@'); if (parts.length < 2) return String(e || ''); const a = parts[0]; return (a.length <= 2 ? a.slice(0, 1) + '•••' : a.slice(0, 2) + '•••') + '@' + parts[1]; }
+  function maskPhone(p){ const n = normPhone(p); return n.length > 4 ? n.slice(0, 3) + '•••' + n.slice(-3) : n; }
+  function newOtpState(){ const now = Date.now(); return { code:makeOtp(), expiresAt:now + OTP_TTL, attempts:0, lastSentAt:now }; }
+  function startSignup(data){
+    const name = String((data && data.name) || '').trim(), email = String((data && data.email) || '').trim(), pass = String((data && data.pass) || ''), phone = normPhone(data && data.phone), country = String((data && data.country) || '').trim();
+    if (name.length < 3) return { error:'Please enter your full name.' };
+    if (!validEmail(email)) return { error:'Please enter a valid email address.' };
+    if (!validPhone(phone)) return { error:'Please enter a real mobile number with country code (e.g. +92 3xx xxxxxxx).' };
+    if (!country) return { error:'Please select your country.' };
+    if (pass.length < 8 || !/[A-Za-z]/.test(pass) || !/\d/.test(pass)) return { error:'Password must be at least 8 characters and include letters and numbers.' };
     const us = users();
     if (us.some(u => u.email.toLowerCase() === email.toLowerCase())) return { error:'An account with this email already exists. Please log in.' };
-    const user = { id:uid('u'), name, email, pass, phone:phone||'', country:country||'', created:Date.now(), status:'pending' };
+    if (us.some(u => normPhone(u.phone) === phone && u.status !== 'rejected')) return { error:'This mobile number is already registered. Please log in or use another number.' };
+    const user = { id:uid('u'), name, email, pass, phone, country, created:Date.now(), status:'unverified', phoneVerified:false, emailVerified:false, otp:{ mobile:newOtpState(), email:newOtpState() }, termsAcceptedAt:Date.now() };
     us.push(user); saveUsers(us);
-    return { user, pending:true };
+    return { userId:user.id, maskedPhone:maskPhone(phone), maskedEmail:maskEmail(email), demoOtps:{ mobile:user.otp.mobile.code, email:user.otp.email.code }, expiresIn:300 };
+  }
+  function signupStatus(userId){
+    const u = users().find(x => x.id === userId); if (!u) return null;
+    return { status:u.status || 'approved', phoneVerified:!!u.phoneVerified, emailVerified:!!u.emailVerified, maskedPhone:maskPhone(u.phone), maskedEmail:maskEmail(u.email) };
+  }
+  function resendSignupOtp(userId, channel){
+    const us = users(); const u = us.find(x => x.id === userId);
+    if (!u || u.status !== 'unverified') return { error:'Verification session not found. Please sign up again.' };
+    const key = channel === 'email' ? 'email' : 'mobile'; const st = u.otp && u.otp[key]; const now = Date.now();
+    if (st && now - st.lastSentAt < OTP_COOLDOWN) return { error:'Please wait ' + Math.ceil((OTP_COOLDOWN - (now - st.lastSentAt)) / 1000) + ' seconds before resending.' };
+    u.otp = u.otp || {}; u.otp[key] = newOtpState(); saveUsers(us);
+    return { demoCode:u.otp[key].code, expiresIn:300 };
+  }
+  function verifySignupOtp(userId, channel, code){
+    const us = users(); const u = us.find(x => x.id === userId);
+    if (!u) return { error:'Verification session not found. Please sign up again.' };
+    if (u.status !== 'unverified') return { status:u.status, phoneVerified:!!u.phoneVerified, emailVerified:!!u.emailVerified };
+    const key = channel === 'email' ? 'email' : 'mobile'; const st = u.otp && u.otp[key];
+    if (!st || !st.code) return { error:'Please resend the OTP first.' };
+    if (Date.now() > st.expiresAt) return { error:'This OTP has expired. Please resend a new code.' };
+    if (st.attempts >= OTP_MAX_ATTEMPTS) return { error:'Too many wrong attempts. Please resend a new code.' };
+    if (String(code || '').trim() !== st.code){ st.attempts++; saveUsers(us); return { error:'Incorrect OTP. ' + (OTP_MAX_ATTEMPTS - st.attempts) + ' attempt(s) left.' }; }
+    if (key === 'mobile') u.phoneVerified = true; else u.emailVerified = true;
+    st.verifiedAt = Date.now(); st.code = '';
+    if (u.phoneVerified && u.emailVerified){ u.status = 'pending'; u.verifiedAt = Date.now(); }
+    saveUsers(us);
+    return { status:u.status, phoneVerified:!!u.phoneVerified, emailVerified:!!u.emailVerified };
+  }
+  function register(name, email, pass, phone, country){
+    const r = startSignup({ name, email, pass, phone, country });
+    if (r.error) return r;
+    return { user:users().find(u => u.id === r.userId), needsOtp:true, userId:r.userId, maskedPhone:r.maskedPhone, maskedEmail:r.maskedEmail, demoOtps:r.demoOtps };
   }
   function approveUser(userId, adminEmail){
     const us = users();
     const u = us.find(x => x.id === userId);
     if (!u) return { error:'User not found.' };
     if (u.status === 'approved') return { error:'Already approved.' };
+    if (u.status === 'unverified') return { error:'User has not completed mobile/email OTP verification yet.' };
     const st = settings();
     const accs = accounts();
     let acc = accs.find(a => a.userId === u.id);
@@ -211,6 +259,7 @@ const Oryx = (() => {
   function login(email, pass){
     const us = users(); const u = us.find(x => x.email.toLowerCase() === email.toLowerCase() && x.pass === pass);
     if (!u) return { error:'Invalid email or password.' };
+    if (u.status === 'unverified') return { error:'Please verify your mobile and email OTP to complete signup.', needsOtp:u.id };
     if (u.status === 'pending') return { error:'Your account is under verification — it will be verified within 24 hours. Please try again after approval.' };
     if (u.status === 'rejected') return { error:'Your registration was not approved. Please contact support.' };
     u.lastLoginAt = Date.now(); saveUsers(us);
@@ -612,7 +661,7 @@ const Oryx = (() => {
   return { K, settings, saveSettings, users, accounts, trades, txns, addTxn,
            prices, hist, candles, candlesTF, sparkData, dayHigh, dayLow, todayHigh, todayLow, changePct, sentiment, spark,
            inst, bid, ask, fmtP, startFeed,
-           register, login, logout, currentUser, myAccounts, accountById, approveUser, rejectUser,
+           register, startSignup, signupStatus, resendSignupOtp, verifySignupOtp, login, logout, currentUser, myAccounts, accountById, approveUser, rejectUser,
            pnlOf, floating, usedMargin, openTrade, closeTrade, closeTradeAt, orders, placeOrder, cancelOrder,
            notifyUser, markMsgsRead, checkStopOut,
            adminPw, issueBalance, requests, createRequest, decideRequest,

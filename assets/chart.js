@@ -3,9 +3,9 @@
    User-selectable timeframe + multi indicators: MA, EMA, Bollinger Bands,
    RSI, MACD and candlestick-pattern labels (Hammer, Shooting Star, Doji,
    Engulfing), like a pro exchange terminal. */
-function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
+function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt, drawings){
   if (!cv || typeof Oryx === 'undefined') return;
-  const ind = Object.assign({ ma:true, ema:false, bb:false, rsi:false, macd:false, pat:true }, indOpt || {});
+  const ind = Object.assign({ ma:true, ema:false, bb:false, rsi:false, macd:false, stoch:false, pat:true }, indOpt || {});
   const tf = Math.max(1, parseInt(tfSec, 10) || 5);
   const tfText = tf < 60 ? tf + 's' : tf < 3600 ? (tf / 60) + 'm' : tf < 86400 ? (tf / 3600) + 'h' : '1D';
   const LIGHT = document.documentElement.classList.contains('light');
@@ -51,6 +51,16 @@ function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
     }
     return out;
   }
+  function stochSeries(candles, period){
+    const k = Array(candles.length).fill(null), d = Array(candles.length).fill(null);
+    for (let i = period - 1; i < candles.length; i++){
+      let lo = Infinity, hi = -Infinity;
+      for (let j = i - period + 1; j <= i; j++){ lo = Math.min(lo, candles[j].l); hi = Math.max(hi, candles[j].h); }
+      k[i] = hi === lo ? 50 : (candles[i].c - lo) / (hi - lo) * 100;
+    }
+    for (let i = period + 1; i < candles.length; i++){ if (k[i] != null && k[i - 1] != null && k[i - 2] != null) d[i] = (k[i] + k[i - 1] + k[i - 2]) / 3; }
+    return { k, d };
+  }
   function bollinger(vals, period, mult){
     const mid = smaSeries(vals, period), up = Array(vals.length).fill(null), lo = Array(vals.length).fill(null);
     for (let i = period - 1; i < vals.length; i++){
@@ -78,10 +88,11 @@ function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
   const bb = ind.bb ? bollinger(closes, 20, 2) : null;
   const rsi = ind.rsi ? rsiSeries(closes, 14) : null;
   const macd = ind.macd ? macdSeries(closes) : null;
+  const stoch = ind.stoch ? stochSeries(all, 14) : null;
 
   const axisW = 64, padT = 12;
   const plotW = W - axisW;
-  const oscCount = (ind.rsi ? 1 : 0) + (ind.macd ? 1 : 0);
+  const oscCount = (ind.rsi ? 1 : 0) + (ind.macd ? 1 : 0) + (ind.stoch ? 1 : 0);
   const oscH = oscCount ? Math.max(58, Math.min(112, H * 0.26)) : 0;
   const plotH = H - padT - 22 - oscH;
   const mainBottom = padT + plotH;
@@ -95,6 +106,7 @@ function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
   const Y = v => padT + (max - v) / (max - min) * plotH;
   const step = plotW / data.length, bw = Math.max(step * 0.62, 1.5);
   const X = ix => ix * step + step / 2;
+  cv._oryxScale = { min, max, padT, plotH, plotW, mainBottom, start, step };
   ctx.strokeStyle = LIGHT ? 'rgba(15,35,80,0.09)' : 'rgba(255,255,255,.055)'; ctx.fillStyle = LIGHT ? '#64748B' : '#66738F'; ctx.font = '10.5px Segoe UI'; ctx.lineWidth = 1;
   for (let g = 0; g <= 4; g++){
     const v = min + (max - min) * g / 4, y = Y(v);
@@ -132,6 +144,41 @@ function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
   if (ind.ma){ drawSeries(sma10, '#F5B544', 1.4); drawSeries(sma26, '#4EA8FF', 1.4); }
   if (ind.ema){ drawSeries(ema12, '#C084FC', 1.4); drawSeries(ema26, '#FB7185', 1.4); }
   if (bb){ drawSeries(bb.up, 'rgba(56,189,248,.85)', 1.2); drawSeries(bb.lo, 'rgba(56,189,248,.85)', 1.2); drawSeries(bb.mid, 'rgba(56,189,248,.45)', 1.1, true); }
+  /* user drawings: trend lines + marks anchored to candle index + price */
+  if (Array.isArray(drawings) && drawings.length){
+    ctx.save(); ctx.beginPath(); ctx.rect(0, padT, plotW, plotH); ctx.clip();
+    drawings.forEach(d => {
+      if (!d) return;
+      if (d.type === 'line'){
+        ctx.strokeStyle = d.color || '#F5B544'; ctx.lineWidth = 2; ctx.beginPath();
+        ctx.moveTo(X(d.x1 - start), Y(d.y1)); ctx.lineTo(X(d.x2 - start), Y(d.y2)); ctx.stroke();
+        ctx.fillStyle = d.color || '#F5B544';
+        [[d.x1, d.y1], [d.x2, d.y2]].forEach(p => { ctx.beginPath(); ctx.arc(X(p[0] - start), Y(p[1]), 3, 0, Math.PI * 2); ctx.fill(); });
+      } else if (d.type === 'fib'){
+        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+        levels.forEach(L => {
+          const price = d.y1 + (d.y2 - d.y1) * L, y = Y(price);
+          ctx.strokeStyle = L === 0 || L === 1 ? 'rgba(245,181,68,.9)' : 'rgba(245,181,68,.55)';
+          ctx.lineWidth = 1; ctx.setLineDash(L === 0.5 ? [] : [4, 4]);
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(plotW, y); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = '#F5B544'; ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'left';
+          ctx.fillText((L * 100).toFixed(1) + '%', 6, y - 4);
+        });
+        ctx.textAlign = 'left';
+      } else if (d.type === 'hline'){
+        const y = Y(d.y);
+        ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.4; ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(plotW, y); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'left';
+        ctx.fillText(Oryx.fmtP(symbol, d.y), 6, y - 4);
+      } else if (d.type === 'mark'){
+        const x = X(d.x - start), y = Y(d.y);
+        ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#F5B544'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+    ctx.restore(); ctx.lineWidth = 1;
+  }
   /* candlestick patterns — shape-based: Hammer, Shooting Star, Doji, Engulfing */
   if (ind.pat){
     function patternAt(ix){
@@ -196,6 +243,17 @@ function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
     const lastR = rsi[start + data.length - 1];
     if (lastR != null){ ctx.fillStyle = '#F5B544'; ctx.font = 'bold 10px Segoe UI'; ctx.fillText(lastR.toFixed(1), plotW - 34, y0 + 12); }
   }
+  function drawStoch(y0, h){
+    oscFrame(y0, h, 'Stochastic 14,3,3');
+    const y = v => y0 + (100 - v) / 100 * h;
+    ctx.strokeStyle = LIGHT ? 'rgba(15,35,80,0.16)' : 'rgba(255,255,255,.12)'; ctx.setLineDash([4, 4]);
+    [80, 20].forEach(v => { ctx.beginPath(); ctx.moveTo(0, y(v)); ctx.lineTo(plotW, y(v)); ctx.stroke(); });
+    ctx.setLineDash([]);
+    drawOscLine(stoch.k, y0, h, 0, 100, '#F5B544', 1.5);
+    drawOscLine(stoch.d, y0, h, 0, 100, '#4EA8FF', 1.4);
+    const lastK = stoch.k[start + data.length - 1];
+    if (lastK != null){ ctx.fillStyle = '#F5B544'; ctx.font = 'bold 10px Segoe UI'; ctx.fillText(lastK.toFixed(1), plotW - 34, y0 + 12); }
+  }
   function drawMACD(y0, h){
     oscFrame(y0, h, 'MACD');
     let mn = Infinity, mx = -Infinity;
@@ -223,6 +281,7 @@ function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
     const eachH = (oscH - 6) / oscCount;
     if (ind.rsi){ drawRSI(oy, eachH - 4); oy += eachH; }
     if (ind.macd){ drawMACD(oy, eachH - 4); oy += eachH; }
+    if (ind.stoch){ drawStoch(oy, eachH - 4); oy += eachH; }
   }
   /* last price */
   const last = data[data.length - 1].c, ly = Y(last), lup = last >= data[data.length - 1].o;
@@ -253,4 +312,5 @@ function drawLiveChart(cv, symbol, startIdx, visible, tfSec, indOpt){
   if (ind.bb) legendItem('— BB', '#38BDF8');
   if (ind.rsi) legendItem('RSI', '#F5B544');
   if (ind.macd) legendItem('MACD', '#4EA8FF');
+  if (ind.stoch) legendItem('STOCH', '#38BDF8');
 }
