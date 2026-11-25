@@ -16,6 +16,7 @@
       <a href="${root}index.html">Home</a>
       <a href="${root}markets.html">Markets</a>
       <a href="${root}accounts.html">Account Types</a>
+      <a href="${root}ib.html">IB Programme</a>
       <a href="${root}about.html">About Us</a>
       <a href="${root}contact.html">Contact</a>
     </nav>
