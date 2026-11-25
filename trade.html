@@ -171,6 +171,21 @@
   .qt-buy{background:linear-gradient(135deg,#16C784,#0E9F6E)}
   .qt-lots{color:#93A1C4;font-size:12px;font-weight:700;white-space:nowrap}
   html.light .qt-lots{color:#5B6B8C}
+  /* desktop: limit boxes sit right of the symbol; chart taller, all on one screen */
+  @media(min-width:901px){
+    .trade-panel{display:flex;gap:18px;padding:10px 16px 12px;align-items:flex-start}
+    .tp-left{flex:0 0 170px;padding-top:2px}
+    .tp-right{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;min-width:0}
+    .tp-right label{margin:0 0 4px}
+    .tp-vol{grid-column:1;grid-row:1}
+    .tp-right #priceRow{grid-column:2;grid-row:1}
+    .tp-lev{grid-column:3;grid-row:1}
+    .tp-sl-tp{grid-column:1/span 2;grid-row:2}
+    .tp-right #tpMargin{grid-column:3;grid-row:2;align-self:end;margin-top:0;padding-bottom:9px}
+    .tp-right #tpMsg{grid-column:1/-1;grid-row:3;margin-top:0}
+    .chart-box{height:460px}
+    .trade-bar{padding:8px 16px 4px}
+  }
   /* desktop: open positions live at the top of the left column, beside the chart */
   .pos-desk{display:none}
   @media(min-width:901px){
@@ -246,8 +261,11 @@
       <div class="quick-trade"><button type="button" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button><span class="qt-lots" id="qtLots">0.01 lots</span><button type="button" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button></div>
     </div>
     <div class="trade-panel">
-      <div class="sym" id="tpSym">XAUUSD</div>
-      <div style="color:#7C88A8;font-size:12.5px" id="tpName">Gold vs US Dollar</div>
+      <div class="tp-left">
+        <div class="sym" id="tpSym">XAUUSD</div>
+        <div style="color:#7C88A8;font-size:12.5px" id="tpName">Gold vs US Dollar</div>
+      </div>
+      <div class="tp-right">
       <label class="ot-label">Order Type</label>
       <div class="ot-row">
         <button type="button" id="otMarket" class="ot-btn on" data-ot="market" onclick="setOtype('market')">⚡ Market — now</button>
@@ -257,19 +275,24 @@
         <label>Trigger Price — the trade opens BY ITSELF when the market reaches it</label>
         <input id="tpPrice" type="number" step="any" placeholder="e.g. 3600.00">
       </div>
-      <div style="display:flex;gap:10px">
+      <div class="tp-sl-tp" style="display:flex;gap:10px">
         <div style="flex:1"><label>Stop Loss (optional)</label><input id="tpSL" type="number" step="any" placeholder="Auto-close price"></div>
         <div style="flex:1"><label>Take Profit (optional)</label><input id="tpTP" type="number" step="any" placeholder="Auto-close price"></div>
       </div>
-      <label>Volume (lots)</label>
-      <input id="tpLots" type="number" step="0.01" min="0.01" value="0.01">
-      <div class="lot-chips">
-        <button onclick="setLot(0.01)">0.01</button><button onclick="setLot(0.05)">0.05</button><button onclick="setLot(0.10)">0.10</button><button onclick="setLot(0.50)">0.50</button><button onclick="setLot(1)">1.00</button>
+      <div class="tp-vol">
+        <label>Volume (lots)</label>
+        <input id="tpLots" type="number" step="0.01" min="0.01" value="0.01">
+        <div class="lot-chips">
+          <button onclick="setLot(0.01)">0.01</button><button onclick="setLot(0.05)">0.05</button><button onclick="setLot(0.10)">0.10</button><button onclick="setLot(0.50)">0.50</button><button onclick="setLot(1)">1.00</button>
+        </div>
       </div>
-      <label>Leverage</label>
-      <input id="tpLev" disabled>
+      <div class="tp-lev">
+        <label>Leverage</label>
+        <input id="tpLev" disabled>
+      </div>
       <div style="font-size:12.5px;color:#93A1C4;margin-top:10px" id="tpMargin"></div>
       <div id="tpMsg" style="margin-top:12px;font-size:13.5px"></div>
+      </div>
     </div>
     <div class="pos-wrap">
       <h5>⚡ OPEN POSITIONS — LIVE</h5>
