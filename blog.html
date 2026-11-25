@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css?v=24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+.bl-hero{background:linear-gradient(rgba(7,13,29,.9),rgba(7,13,29,.95)),url('images/news-gold.webp') center/cover;border-bottom:1px solid var(--line)}
+.bl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.bl-card{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-decoration:none;display:block;transition:transform .25s ease,box-shadow .25s ease}
+.bl-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.bl-card img{width:100%;height:170px;object-fit:cover;display:block}
+.bl-card .bd{padding:20px}
+.bl-card .cat{color:#F5B544;font-size:11.5px;font-weight:800;letter-spacing:.14em}
+.bl-card h3{color:#fff;font-size:18px;line-height:1.35;margin:8px 0}
+.bl-card p{color:#C7D2F0;font-size:14px;line-height:1.6}
+.bl-card .more{color:#F5B544;font-weight:800;font-size:14px;margin-top:12px;display:inline-block}
+.bl-post{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:30px;margin-bottom:24px;scroll-margin-top:110px}
+.bl-post img{width:100%;height:260px;object-fit:cover;border-radius:14px;margin-bottom:20px}
+.bl-post .cat{color:#F5B544;font-size:11.5px;font-weight:800;letter-spacing:.14em}
+.bl-post h2{color:#fff;font-size:27px;line-height:1.3;margin:8px 0 14px}
+.bl-post p{color:#D7DEEF;font-size:15.5px;line-height:1.75;margin-bottom:12px}
+.bl-post h4{color:#fff;font-size:17px;margin:18px 0 8px}
+@media(max-width:900px){.bl-grid{grid-template-columns:1fr}.bl-post{padding:22px}}
+</style>
+</head>
+<body data-root="" class="dark-page">
+<div id="site-header"></div>
+<section class="sec bl-hero">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Oryx Blog</div>
+      <h2 style="color:#fff">Trading Insights &amp; Market Guides</h2>
+      <p>Practical articles on gold, forex, risk management and trading tools — written for traders at every level.</p>
+    </div>
+  </div>
+</section>
+<section class="sec">
+  <div class="wrap">
+    <div class="bl-grid" id="blGrid"></div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap" id="blPosts"></div>
+</section>
+<div id="site-footer"></div>
+<script src="data/instruments.js?v=11"></script>
+<script src="assets/store.js?v=27"></script>
+<script src="assets/chrome.js?v=14"></script>
+<script src="assets/support.js?v=11"></script>
+<script>
+const POSTS = [
+ {id:1, cat:'GOLD', img:'images/news-gold.webp', title:'Why Gold Moves: The Forces Behind XAU/USD', ex:'Gold reacts to interest rates, the US dollar and global uncertainty. Here is how to read those signals before you trade XAU/USD.', body:['Gold is traded around the clock, but its biggest moves usually come from three forces: US interest-rate expectations, the strength of the US dollar, and demand for safety during uncertain times. When rate-cut expectations rise, gold often climbs; when the dollar strengthens sharply, gold usually feels pressure.','For traders, the practical lesson is to watch the calendar. US inflation data, Federal Reserve decisions and employment reports regularly move gold by several dollars within minutes. Trading into those releases without a plan turns a strategy into a gamble.','A calmer approach: note the day\'s high and low, wait for price to show direction after the news, and size positions so a sudden spike cannot damage the account. Gold rewards patience more than speed.']},
+ {id:2, cat:'RISK MANAGEMENT', img:'images/news-risk.webp', title:'5 Risk Rules Every Trader Should Follow', ex:'Most accounts are lost through oversized positions, not bad analysis. These five rules keep small losses small.', body:['Rule one: risk a fixed small percentage per trade — many experienced traders stay near 1–2% of the account. Rule two: always know your exit before you enter; a stop loss decided in advance is calmer than one invented mid-trade.','Rule three: never add to a losing position just to "average in" without a written plan. Rule four: stop trading for the day after a set loss limit; tired and frustrated decisions are expensive. Rule five: keep a simple journal — pair, reason, result — and review it weekly.','None of these rules require special talent. They simply make sure that a normal run of losses cannot end your trading. Survival first, growth second.']},
+ {id:3, cat:'EDUCATION', img:'images/news-education.webp', title:'Reading a Candlestick Chart in 10 Minutes', ex:'Candles tell the story of buyers and sellers in every period. Learn the body, the wicks and the patterns that matter.', body:['Each candle shows four prices: open, high, low and close. A long body means one side dominated the period; long wicks mean price travelled far but was rejected. A candle closing near its high after a fall often signals buyers stepping in.','Patterns such as Hammer, Doji and Engulfing describe shifts in momentum, but they work best at meaningful levels — near yesterday\'s high or low, or after a clear trend. A pattern in the middle of nowhere means little.','Start simple: mark the day\'s high and low, watch how candles behave there, and only then add indicators. Ten minutes of this routine daily builds chart-reading skill faster than any shortcut.']},
+ {id:4, cat:'FOREX BASICS', img:'images/banner-markets.webp', title:'EUR/USD Explained: Trading the World\'s Biggest Pair', ex:'EUR/USD is the most traded pair on earth. Understand what drives it and when it moves best.', body:['EUR/USD reflects the balance between the eurozone and US economies. Interest-rate decisions from the European Central Bank and the Federal Reserve, plus inflation and jobs data on both sides, set its direction for weeks at a time.','The pair is most active when London and New York sessions overlap, roughly 13:00–17:00 GMT, when spreads are tightest and moves are cleanest. Asian-session trading in EUR/USD is often slow and range-bound.','Beginners do well to master this one pair first: learn its average daily range, its reaction to US data, and its typical turning points before spreading attention across ten pairs.']},
+ {id:5, cat:'STRATEGY', img:'images/how-oryx.webp', title:'Trend Trading: Riding Moves Instead of Fighting Them', ex:'Trading with the trend keeps you on the side of the larger flow. Here is a simple framework to identify and follow trends.', body:['A trend is simply a sequence of higher highs and higher lows (uptrend) or lower highs and lower lows (downtrend). Moving averages make this visible: price above a rising average suggests buyers control the market.','The framework is straightforward: identify the trend on a higher timeframe, wait for a pullback toward the average or a previous level, then enter in the trend\'s direction with a stop beyond the pullback. Targets can trail as the trend extends.','Most trend trades fail not because the idea is wrong, but because traders enter late after extended moves. Patience for the pullback is the strategy.']},
+ {id:6, cat:'INDICATORS', img:'images/broker-desk.webp', title:'RSI, MACD and Stochastic: Using Oscillators Without Noise', ex:'Oscillators measure momentum, not magic. Learn what each one actually tells you and how to combine them sensibly.', body:['RSI compares recent gains to losses and flags stretched conditions above 70 or below 30. MACD tracks the relationship between two moving averages and highlights momentum shifts. Stochastic shows where price sits within its recent range.','The common mistake is stacking all three and waiting for perfect agreement — by then the move is over. A cleaner method: use one oscillator for timing entries within a trend identified by price structure or moving averages.','In strong trends, RSI can stay overbought for days. Treat oscillator extremes as warnings to tighten risk, not automatic reversal signals.']},
+ {id:7, cat:'MONEY MANAGEMENT', img:'images/banner-welcome.webp', title:'Position Sizing: The Math That Protects Your Account', ex:'Lot size decides how much a normal market move helps or hurts you. Size positions from your stop distance, not your confidence.', body:['Position sizing starts with two numbers: how much of the account you are willing to risk on one idea, and how far your stop loss sits from entry. Divide the risk amount by the stop distance in money terms and the lot size follows automatically.','Example: on a $1,000 account risking 1% ($10) with a stop 50 points away on gold, the position must be small enough that 50 points equals $10. Confidence does not enter the formula — that is the point.','Traders who size this way can survive ten losses in a row and still be in the game. Traders who size by feeling usually cannot.']},
+ {id:8, cat:'MARKETS', img:'images/banner-app.webp', title:'Trading Sessions: When Each Market Wakes Up', ex:'Tokyo, London and New York each bring different behaviour. Match your trading hours to the pairs you trade.', body:['The trading day rolls through three main sessions. Tokyo is calmer and favours yen pairs and gold ranges. London brings the first real volume and often sets the day\'s direction. New York adds US data and the day\'s largest moves.','The London–New York overlap is the most liquid window: spreads narrow and breakouts carry further. Trading EUR/USD at 3 a.m. GMT, by contrast, usually means paying spread for very little movement.','Build your routine around one or two sessions you can attend consistently. Consistency of hours builds pattern recognition that random trading never will.']},
+ {id:9, cat:'PSYCHOLOGY', img:'images/banner-team-real.webp', title:'The Psychology of Losses: Staying Calm After a Red Day', ex:'Losses are a cost of doing business. How you respond to them decides whether they stay small.', body:['Every professional trader loses regularly; what separates them is behaviour after the loss. Revenge trading — doubling size to win it back — converts a normal loss into an account-threatening one.','A practical reset: after two consecutive losses, step away for at least an hour. Review whether the trades followed your plan. If they did, the losses are statistics; if they did not, the fix is discipline, not a new indicator.','Judge yourself weekly on plan adherence, not daily profit. Calm, repeatable execution compounds; emotional trading does not.']},
+ {id:10, cat:'TOOLS', img:'images/banner-journey-team.webp', title:'Pending Orders, Stop Loss and Take Profit: Your Trading Toolkit', ex:'Market orders are only the beginning. Pending orders and protective exits let you plan trades in advance and manage them calmly.', body:['A pending order waits for your price: buy limit below the market, sell limit above it, or stop orders that trigger when momentum confirms. Planning entries in advance removes the pressure of watching every tick.','Stop loss caps the damage when an idea fails; take profit banks gains at a planned level. Setting both at entry turns each trade into a defined risk with a defined reward — the foundation of consistent results.','Review your closed trades monthly: are stops too tight, targets too greedy? Small adjustments to these two settings often improve results more than any new entry signal.']}
+];
+document.getElementById('blGrid').innerHTML = POSTS.map(p => `<a class="bl-card" href="#post-${p.id}"><img src="${p.img}" alt="${p.title}"><div class="bd"><span class="cat">${p.cat}</span><h3>${p.title}</h3><p>${p.ex}</p><span class="more">Read article →</span></div></a>`).join('');
+document.getElementById('blPosts').innerHTML = POSTS.map(p => `<article class="bl-post" id="post-${p.id}"><img src="${p.img}" alt="${p.title}"><span class="cat">${p.cat}</span><h2>${p.title}</h2>${p.body.map(t => `<p>${t}</p>`).join('')}<a class="btn btn-gold btn-sm" href="trade.html">Open the Terminal →</a></article>`).join('');
+</script>
+<script src="assets/install.js?v=3"></script>
+</body>
+</html>

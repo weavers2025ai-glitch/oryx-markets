@@ -78,6 +78,17 @@
 .ib-band-stats b{color:#F5B544;font-size:24px;display:block}
 .ib-band-stats span{color:#93A1C4;font-size:12.5px}
 @media(max-width:900px){.pay3,.ib-band{grid-template-columns:1fr}}
+.bl4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.bl4-card{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-decoration:none;display:block;transition:transform .25s ease,box-shadow .25s ease}
+.bl4-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.bl4-card img{width:100%;height:150px;object-fit:cover;display:block}
+.bl4-card .bd{padding:18px}
+.bl4-card .cat{color:#F5B544;font-size:11px;font-weight:800;letter-spacing:.14em}
+.bl4-card h3{color:#fff;font-size:16.5px;line-height:1.35;margin:7px 0}
+.bl4-card p{color:#C7D2F0;font-size:13.5px;line-height:1.6}
+.bl4-card .more{color:#F5B544;font-weight:800;font-size:13.5px;margin-top:10px;display:inline-block}
+@media(max-width:900px){.bl4{grid-template-columns:1fr}}
+
 
 </style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -397,12 +408,12 @@
     </div>
   </div>
 </section>
-<section class="sec" style="padding-top:0">
+<section class="sec" style="background:#070D1D">
   <div class="wrap">
     <div class="sec-head">
       <div class="kicker">Payout Speed Above All</div>
       <h2 style="color:#fff">Built Around Getting You Paid</h2>
-      <p>Three promises that shape every part of Oryx Markets — from the account you open to the moment you withdraw.</p>
+      <p style="color:#C7D2F0">Three promises that shape every part of Oryx Markets — from the account you open to the moment you withdraw.</p>
     </div>
     <div class="pay3">
       <div class="pay3-card"><div class="ic">⚡</div><h3>Instant Withdrawal</h3><p>Payout speed is our first priority. Request a withdrawal from your client area and it goes straight into processing — back to the method you deposited with.</p><a href="guide.html">How withdrawals work →</a></div>
@@ -428,6 +439,22 @@
     </a>
   </div>
 </section>
+<section class="sec" style="background:#070D1D">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Oryx Blog</div>
+      <h2 style="color:#fff">Latest From the Blog</h2>
+      <p style="color:#C7D2F0">Guides and insights for smarter trading — read the full articles on our blog.</p>
+    </div>
+    <div class="bl4">
+      <a class="bl4-card" href="blog.html#post-1"><img src="images/news-gold.webp" alt="Why Gold Moves"><div class="bd"><span class="cat">GOLD</span><h3>Why Gold Moves: The Forces Behind XAU/USD</h3><p>Gold reacts to interest rates, the US dollar and global uncertainty. Here is how to read those signals before you trade.</p><span class="more">Read article →</span></div></a>
+      <a class="bl4-card" href="blog.html#post-2"><img src="images/news-risk.webp" alt="5 Risk Rules"><div class="bd"><span class="cat">RISK MANAGEMENT</span><h3>5 Risk Rules Every Trader Should Follow</h3><p>Most accounts are lost through oversized positions, not bad analysis. These five rules keep small losses small.</p><span class="more">Read article →</span></div></a>
+      <a class="bl4-card" href="blog.html#post-3"><img src="images/news-education.webp" alt="Reading a Candlestick Chart"><div class="bd"><span class="cat">EDUCATION</span><h3>Reading a Candlestick Chart in 10 Minutes</h3><p>Candles tell the story of buyers and sellers in every period. Learn the body, the wicks and the patterns that matter.</p><span class="more">Read article →</span></div></a>
+      <a class="bl4-card" href="blog.html#post-5"><img src="images/how-oryx.webp" alt="Trend Trading"><div class="bd"><span class="cat">STRATEGY</span><h3>Trend Trading: Riding Moves Instead of Fighting Them</h3><p>Trading with the trend keeps you on the side of the larger flow. A simple framework to identify and follow trends.</p><span class="more">Read article →</span></div></a>
+    </div>
+    <div style="text-align:center;margin-top:24px"><a class="btn btn-gold" href="blog.html">View All Blogs →</a></div>
+  </div>
+</section>
 <section class="sec" style="padding-top:0">
   <div class="wrap">
     <div class="cta-band" style="margin-top:50px;background-image:linear-gradient(rgba(6,11,29,.38),rgba(6,11,29,.62)),url('images/banner-journey-team.webp');background-size:cover;background-position:center">
@@ -441,7 +468,7 @@
 <div id="site-footer"></div>
 <script src="data/instruments.js?v=10"></script>
 <script src="assets/store.js?v=27"></script>
-<script src="assets/chrome.js?v=13"></script>
+<script src="assets/chrome.js?v=14"></script>
 <script src="assets/chart.js?v=12"></script>
 <script>
   const S = Oryx.settings();

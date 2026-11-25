@@ -38,7 +38,7 @@
 .ib-tier p{color:#C7D2F0;font-size:14.5px;line-height:1.65}
 .ib-calc{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:28px;max-width:820px;margin:0 auto}
 .ib-calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.ib-out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.ib-out{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
 .ib-out div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:16px;text-align:center}
 .ib-out b{color:#F5B544;font-size:24px;display:block}.ib-out span{color:#93A1C4;font-size:12.5px}
 .ib-faq{max-width:820px;margin:0 auto}
@@ -48,6 +48,22 @@
 .ib-apply{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:28px;max-width:760px;margin:0 auto}
 .ib-apply-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:900px){.ib-grid,.ib-steps,.ib-tiers,.ib-calc-grid,.ib-apply-grid{grid-template-columns:1fr}.ib-stats,.ib-out{grid-template-columns:1fr}}
+.ib-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+.ib-strip div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:20px;text-align:center}
+.ib-strip b{color:#F5B544;font-size:28px;display:block}.ib-strip span{color:#C7D2F0;font-size:13px}
+.ib-streams{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.ib-stream{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:28px}
+.ib-stream .tag{color:#F5B544;font-size:11.5px;font-weight:800;letter-spacing:.14em}
+.ib-stream h3{color:#fff;font-size:22px;margin:8px 0 10px}
+.ib-stream p{color:#C7D2F0;font-size:15px;line-height:1.65}
+.ib-stream ul{margin:14px 0 16px 18px;color:#D7DEEF;font-size:14.5px;line-height:1.7}
+.ib-stream code{background:rgba(245,181,68,.12);color:#F5B544;padding:8px 12px;border-radius:10px;font-size:13.5px;display:inline-block}
+.ib-who{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.ib-feats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.ib-feat{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:18px;padding:24px}
+.ib-feat h3{color:#fff;font-size:17.5px;margin-bottom:8px}.ib-feat p{color:#C7D2F0;font-size:14.5px;line-height:1.65}
+@media(max-width:900px){.ib-strip,.ib-streams,.ib-who,.ib-feats{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body data-root="" class="dark-page">
@@ -83,6 +99,12 @@
       <p style="color:#93A1C4;font-size:12.5px;margin-top:14px">Example rates. Your rebate and commission share are set in your IB agreement.</p>
     </div>
   </div>
+<div class="ib-strip">
+        <div><b>2</b><span>income streams on one trade</span></div>
+        <div><b>24h</b><span>maximum payout time</span></div>
+        <div><b>$0</b><span>payout fee from us</span></div>
+        <div><b>All</b><span>account types pay rebate</span></div>
+      </div>
 </section>
 <section class="sec">
   <div class="wrap">
@@ -92,6 +114,15 @@
       <div class="ib-step"><div class="n">2</div><h3>Get Your Tracking Link</h3><p>You receive your personal referral link and IB dashboard access to follow every client and trade in real time.</p></div>
       <div class="ib-step"><div class="n">3</div><h3>Clients Trade</h3><p>Every lot your clients trade earns you a volume rebate, plus a commission share on ECN accounts.</p></div>
       <div class="ib-step"><div class="n">4</div><h3>Get Paid Fast</h3><p>Request your IB payout any time — paid within 24 hours to your chosen method, same rails as client withdrawals.</p></div>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">How You Earn</div><h2 style="color:#fff">Two Income Streams, One Trade</h2><p>The rebate pays on all your clients' volume; the commission share adds to it on ECN trades.</p></div>
+    <div class="ib-streams">
+      <div class="ib-stream"><span class="tag">STREAM 01</span><h3>Volume Rebate</h3><p>A fixed amount paid back to you for every standard lot your referred clients trade.</p><ul><li>Paid on every account type</li><li>Counted per closed lot — win or lose, the rebate is the same</li><li>Your rate is agreed in your IB agreement</li></ul><code>lots traded × rebate per lot</code></div>
+      <div class="ib-stream"><span class="tag">STREAM 02</span><h3>Commission Share</h3><p>A percentage of the trading commission your clients pay on ECN accounts — on top of the rebate.</p><ul><li>ECN commission is $7 per lot, round turn</li><li>Your share applies to every commissionable lot</li><li>Stacks with the volume rebate on the same trade</li></ul><code>ECN lots × $7 × your share %</code></div>
     </div>
   </div>
 </section>
@@ -119,8 +150,27 @@
         <div><b id="ibRebate">$3,000</b><span>volume rebate / month</span></div>
         <div><b id="ibComm">$1,260</b><span>commission share / month</span></div>
         <div><b id="ibTotal">$4,260</b><span>total estimated / month</span></div>
+        <div><b id="ibYear">$51,120</b><span>per year at this pace</span></div>
       </div>
       <p style="color:#93A1C4;font-size:12.5px;margin-top:14px;text-align:center">Estimate only — based on $7 ECN commission per lot. Your actual rates are set in your IB agreement.</p>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Who It's For</div><h2 style="color:#fff">One Programme, Three Ways to Partner</h2></div>
+    <div class="ib-who">
+      <div class="ib-feat"><h3>🤝 Introducing Broker</h3><p>You bring traders directly — from your office, community or personal network — and earn on their volume.</p></div>
+      <div class="ib-feat"><h3>👑 Master IB</h3><p>You recruit and manage sub-IBs, earning on your own clients plus an override on your whole network.</p></div>
+      <div class="ib-feat"><h3>🎓 Educators &amp; Signal Providers</h3><p>You teach or publish analysis. Your students trade with Oryx and you earn from the volume they trade.</p></div>
+    </div>
+    <div class="ib-feats" style="margin-top:20px">
+      <div class="ib-feat"><h3>📊 Real-Time IB Dashboard</h3><p>Clients, deposits, lots and earnings per account — filter by day, week or month.</p></div>
+      <div class="ib-feat"><h3>🔗 Tracking Links &amp; IB Code</h3><p>Create links per campaign or channel to see which source brings clients who actually trade.</p></div>
+      <div class="ib-feat"><h3>🌐 Multi-Level Sub-IBs</h3><p>Build your own network of sub-IBs and earn an override on the volume they bring in.</p></div>
+      <div class="ib-feat"><h3>⚡ Fast Payouts</h3><p>Payout speed above all — IB withdrawals use the same fast rails as client withdrawals.</p></div>
+      <div class="ib-feat"><h3>🎨 Marketing Materials</h3><p>Banners, landing pages and copy ready for your site, channel or social pages.</p></div>
+      <div class="ib-feat"><h3>🧑‍💼 Dedicated Partner Manager</h3><p>One named contact for onboarding, rate reviews, client issues and payout questions.</p></div>
     </div>
   </div>
 </section>
@@ -156,7 +206,7 @@
 <div id="site-footer"></div>
 <script src="data/instruments.js?v=11"></script>
 <script src="assets/store.js?v=27"></script>
-<script src="assets/chrome.js?v=13"></script>
+<script src="assets/chrome.js?v=14"></script>
 <script src="assets/support.js?v=11"></script>
 <script>
 function ibCalc(){
@@ -171,6 +221,7 @@ function ibCalc(){
   document.getElementById('ibRebate').textContent = fmt(rebate);
   document.getElementById('ibComm').textContent = fmt(comm);
   document.getElementById('ibTotal').textContent = fmt(rebate + comm);
+  document.getElementById('ibYear').textContent = fmt((rebate + comm) * 12);
 }
 function applyIB(){
   const name = document.getElementById('aName').value.trim();
