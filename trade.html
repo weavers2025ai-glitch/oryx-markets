@@ -71,6 +71,11 @@
   .ot-row{display:flex;gap:8px;margin:2px 0 4px}
   .ot-btn{flex:1;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:#0E1626;color:#93A1C4;font-weight:700;font-size:12.5px;cursor:pointer}
   .ot-btn.on{background:#F5B544;color:#171106;border-color:transparent}
+  .tf-btn,.ind-btn{padding:5px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.16);background:#0E1626;color:#93A1C4;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+  .tf-btn.on,.ind-btn.on{background:#F5B544;color:#171106;border-color:transparent}
+  #indPanel{position:absolute;right:0;bottom:44px;z-index:30;display:none;background:#0E1626;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);width:min(310px,92vw)}
+  #indPanel.open{display:block}
+  #indPanel .ind-grid{display:flex;flex-wrap:wrap;gap:6px}
   /* compact trade ROWS (one row per trade) + instrument dropdown */
   .trow{background:#12224E;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:3px 8px;margin:0 12px 4px;display:flex;flex-direction:column;gap:2px}
   .tr-main{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;line-height:1.15;height:20px;overflow:hidden}
@@ -124,6 +129,9 @@
   html.light .lot-chips button{background:#EDF1F8;color:#33456B;border-color:#D3DBEA}
   html.light .ot-btn{background:#EDF1F8;color:#5B6B8C;border-color:#D3DBEA}
   html.light .ot-btn.on{background:#F5B544;color:#171106}
+  html.light .tf-btn,html.light .ind-btn{background:#EDF1F8;color:#5B6B8C;border-color:#D3DBEA}
+  html.light .tf-btn.on,html.light .ind-btn.on{background:#F5B544;color:#171106}
+  html.light #indPanel{background:#fff;border-color:#D3DBEA}
   html.light .ob-head{color:#64748B}
   html.light .ob-a{color:#33456B}
   html.light .ob-spread{color:#64748B;border-color:#E3E9F2}
@@ -274,11 +282,37 @@
       <p style="margin-top:12px;font-size:11.5px;color:#64748B">Buttons show the live price. ESC exits full screen.</p>
     </div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <span style="color:var(--mut);font-size:12px;white-space:nowrap">TF</span>
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap" aria-label="Chart timeframe">
+        <button type="button" class="tf-btn" data-tf="5" onclick="setTF(5)">5s</button>
+        <button type="button" class="tf-btn" data-tf="15" onclick="setTF(15)">15s</button>
+        <button type="button" class="tf-btn" data-tf="30" onclick="setTF(30)">30s</button>
+        <button type="button" class="tf-btn" data-tf="60" onclick="setTF(60)">1m</button>
+        <button type="button" class="tf-btn" data-tf="300" onclick="setTF(300)">5m</button>
+        <button type="button" class="tf-btn" data-tf="900" onclick="setTF(900)">15m</button>
+        <button type="button" class="tf-btn" data-tf="1800" onclick="setTF(1800)">30m</button>
+        <button type="button" class="tf-btn" data-tf="3600" onclick="setTF(3600)">1h</button>
+        <button type="button" class="tf-btn" data-tf="14400" onclick="setTF(14400)">4h</button>
+        <button type="button" class="tf-btn" data-tf="86400" onclick="setTF(86400)">1D</button>
+      </div>
+      <button type="button" class="tf-btn" id="indBtn" onclick="toggleIndPanel(event)">Indicators ▾</button>
       <span style="color:var(--mut);font-size:12px;white-space:nowrap">◀ History</span>
-      <input type="range" id="chartScroll" min="0" max="60" value="60" step="1" style="flex:1;accent-color:#F5B544;cursor:pointer" aria-label="Scroll chart history">
+      <input type="range" id="chartScroll" min="0" max="60" value="60" step="1" style="flex:1;min-width:120px;accent-color:#F5B544;cursor:pointer" aria-label="Scroll chart history">
       <span style="color:var(--mut);font-size:12px;white-space:nowrap">Latest ▶</span>
       <button type="button" class="btn btn-line" id="chartLatest" style="padding:5px 12px;white-space:nowrap">⟲ Latest</button>
+    </div>
+    <div id="indPanel" aria-label="Chart indicators">
+      <div style="font-weight:800;color:var(--txt,#fff);font-size:13px;margin-bottom:8px">Indicators</div>
+      <div class="ind-grid">
+        <button type="button" class="ind-btn" data-ind="ma" onclick="setInd('ma')">MA</button>
+        <button type="button" class="ind-btn" data-ind="ema" onclick="setInd('ema')">EMA</button>
+        <button type="button" class="ind-btn" data-ind="bb" onclick="setInd('bb')">Bollinger</button>
+        <button type="button" class="ind-btn" data-ind="rsi" onclick="setInd('rsi')">RSI</button>
+        <button type="button" class="ind-btn" data-ind="macd" onclick="setInd('macd')">MACD</button>
+        <button type="button" class="ind-btn" data-ind="pat" onclick="setInd('pat')">Patterns</button>
+      </div>
+      <p style="color:var(--mut);font-size:12px;margin:8px 0 0">Choose any combination. MA + Patterns are on by default.</p>
     </div>
     </div>
     <div class="trade-bar">
@@ -348,9 +382,9 @@
 <div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=23"></script>
+<script src="assets/store.js?v=24"></script>
 <script src="assets/cloud.js?v=8"></script>
-<script src="assets/chart.js?v=14"></script>
+<script src="assets/chart.js?v=15"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
@@ -358,8 +392,17 @@
   let cur = 'XAUUSD';
   const CHART_N = 30; /* candles on screen at once — big and clear */
   let chartOff = 0; /* 0 = live latest; more = further back in history */
+  const TF_LIST = [5, 15, 30, 60, 300, 900, 1800, 3600, 14400, 86400];
+  let chartTF = 5;
+  try { const savedTF = parseInt(localStorage.getItem('oryx_tf'), 10); if (TF_LIST.includes(savedTF)) chartTF = savedTF; } catch(e){}
+  let chartInd = { ma:true, ema:false, bb:false, rsi:false, macd:false, pat:true };
+  try { const savedInd = JSON.parse(localStorage.getItem('oryx_ind') || 'null'); if (savedInd) chartInd = Object.assign(chartInd, savedInd); } catch(e){}
+  function chartData(){ return Oryx.candlesTF ? Oryx.candlesTF(cur, chartTF) : Oryx.candles(cur); }
+  function setTF(sec){ chartTF = sec; chartOff = 0; try { localStorage.setItem('oryx_tf', String(sec)); } catch(e){} render(); }
+  function setInd(key){ chartInd[key] = !chartInd[key]; try { localStorage.setItem('oryx_ind', JSON.stringify(chartInd)); } catch(e){} render(); }
+  function toggleIndPanel(e){ if (e) e.stopPropagation(); document.getElementById('indPanel').classList.toggle('open'); }
   document.getElementById('chartScroll').addEventListener('input', e => {
-    const total = Oryx.candles(cur).length, maxStart = Math.max(0, total - CHART_N);
+    const total = chartData().length, maxStart = Math.max(0, total - CHART_N);
     chartOff = maxStart - (+e.target.value); render();
   });
   document.getElementById('chartLatest').addEventListener('click', () => { chartOff = 0; render(); });
@@ -387,6 +430,7 @@
   function quickTrade(side){ setOtype('market'); place(side); }
   function toggleDD(e){ e.stopPropagation(); document.getElementById('instDD').classList.toggle('open'); }
   document.addEventListener('click', e => { const dd = document.getElementById('instDD'); if (dd && !dd.contains(e.target)) dd.classList.remove('open'); });
+  document.addEventListener('click', e => { const p = document.getElementById('indPanel'); const b = document.getElementById('indBtn'); if (p && p.classList.contains('open') && !p.contains(e.target) && e.target !== b) p.classList.remove('open'); });
   function setLot(v){ document.getElementById('tpLots').value = v; render(); }
   function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3400); }
   let otype = 'market';
@@ -456,11 +500,13 @@
     document.getElementById('hlBar').innerHTML =
       `<div class="hl-box hi"><span>Today High · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayHigh(cur))}</b></div>` +
       `<div class="hl-box lo"><span>Today Low · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>`;
-    const totalC = Oryx.candles(cur).length, maxStart = Math.max(0, totalC - CHART_N);
+    const totalC = chartData().length, maxStart = Math.max(0, totalC - CHART_N);
     if (chartOff > maxStart) chartOff = maxStart;
     const sc = document.getElementById('chartScroll');
     if (sc){ sc.max = maxStart; sc.value = maxStart - chartOff; }
-    try { drawLiveChart(document.getElementById('tvchart'), cur, Math.max(0, totalC - CHART_N - chartOff), CHART_N); } catch(e){}
+    document.querySelectorAll('.tf-btn[data-tf]').forEach(b => b.classList.toggle('on', +b.dataset.tf === chartTF));
+    document.querySelectorAll('.ind-btn[data-ind]').forEach(b => b.classList.toggle('on', !!chartInd[b.dataset.ind]));
+    try { drawLiveChart(document.getElementById('tvchart'), cur, Math.max(0, totalC - CHART_N - chartOff), CHART_N, chartTF, chartInd); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
     const fsOpen = document.getElementById('fsOpen');
     if (fsOpen) fsOpen.innerHTML = open.length ? open.map(t => { const p = Oryx.pnlOf(t);
