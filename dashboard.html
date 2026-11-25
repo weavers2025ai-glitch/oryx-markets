@@ -101,11 +101,15 @@
     <p style="color:#93A1C4;font-size:13px;margin:6px 0 14px">Tell Admin how much you deposited and how you paid. Attach your payment proof — once Admin approves, the amount is added to your account automatically.</p>
     <div class="field"><label>Amount (USD)</label><input id="rqAmt" type="number" step="0.01" placeholder="e.g. 500"></div>
     <div class="field"><label>How did you pay?</label>
-      <select id="rqMethod">
-        <option>Cash</option><option>Online Bank Transfer</option><option>Debit / Credit Card</option>
-        <option>Binance</option><option>Easypaisa</option><option>JazzCash</option><option>Other</option>
+      <select id="rqMethod" onchange="fillPayTo()">
+        <option>Easypaisa</option><option>JazzCash</option><option>Online Bank Transfer</option>
+        <option>Cash</option><option>Debit / Credit Card</option><option>Binance</option><option>Other</option>
       </select>
     </div>
+    <div class="field"><div id="payToBox" style="background:rgba(245,181,68,.1);border:1px solid rgba(245,181,68,.4);border-radius:10px;padding:12px;font-size:13px;line-height:1.7;color:#E7ECF7"></div></div>
+    <div class="field"><label>Transaction ID / Reference *</label><input id="rqTxn" placeholder="e.g. TID from your Easypaisa / bank receipt"></div>
+    <div class="field"><label>Your Name (on the sending account)</label><input id="rqSender" placeholder="e.g. Waheed Ahmad"></div>
+    <div class="field"><label>Your Easypaisa / JazzCash / Bank Account No. (you sent from)</label><input id="rqSenderAcct" placeholder="e.g. 0333-xxxxxxx"></div>
     <div class="field"><label>Payment Proof (screenshot / receipt photo)</label>
       <input id="rqProof" type="file" accept="image/*">
       <img id="rqPrev" style="display:none;width:100%;border-radius:10px;margin-top:8px">
@@ -118,7 +122,7 @@
     </div>
   </div>
 </div>
-<script src="assets/store.js?v=19"></script>
+<script src="assets/store.js?v=20"></script>
 <script src="assets/cloud.js?v=8"></script>
 <script>
   const u = Oryx.currentUser();
@@ -129,7 +133,15 @@
   document.getElementById('hello').textContent = 'Hello, ' + u.name.split(' ')[0] + ' 👋';
   /* ---------- balance request modal ---------- */
   let rqProofData = '';
-  function openReq(){ document.getElementById('reqModal').classList.add('open'); }
+  function fillPayTo(){
+    const m = document.getElementById('rqMethod').value, cfg = Oryx.payCfg(), box = document.getElementById('payToBox');
+    const line = (k, v) => v ? `<div>${k}: <b style="color:#F5B544">${Oryx.esc(v)}</b></div>` : '';
+    if (m === 'Easypaisa' && cfg.easypaisa.number) box.innerHTML = `<b>Send to Easypaisa:</b>` + line('Number', cfg.easypaisa.number) + line('Title', cfg.easypaisa.title) + `<div style="color:#93A1C4;font-size:12px">Send the amount from your Easypaisa app, then paste the Transaction ID below.</div>`;
+    else if (m === 'JazzCash' && cfg.jazzcash.number) box.innerHTML = `<b>Send to JazzCash:</b>` + line('Number', cfg.jazzcash.number) + line('Title', cfg.jazzcash.title) + `<div style="color:#93A1C4;font-size:12px">Send the amount from your JazzCash app, then paste the Transaction ID below.</div>`;
+    else if (m === 'Online Bank Transfer' && (cfg.bank.account || cfg.bank.iban)) box.innerHTML = `<b>Send to Bank:</b>` + line('Bank', cfg.bank.bank) + line('Account Title', cfg.bank.title) + line('Account No.', cfg.bank.account) + line('IBAN', cfg.bank.iban) + `<div style="color:#93A1C4;font-size:12px">Transfer from your bank app, then paste the Transaction ID below.</div>`;
+    else box.innerHTML = `Send the amount using <b>${Oryx.esc(m)}</b>, then attach the screenshot and paste the Transaction ID below. (Our ${Oryx.esc(m)} receiving details are added by Admin.)`;
+  }
+  function openReq(){ fillPayTo(); document.getElementById('reqModal').classList.add('open'); }
   function closeReq(){ document.getElementById('reqModal').classList.remove('open'); }
   document.getElementById('rqProof').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
@@ -150,10 +162,14 @@
   function submitReq(){
     const amt = parseFloat(document.getElementById('rqAmt').value);
     const err = document.getElementById('rqErr');
+    const method = document.getElementById('rqMethod').value;
+    const txn = document.getElementById('rqTxn').value.trim();
     if (!amt || amt <= 0){ err.textContent = 'Please enter the amount you deposited.'; return; }
+    if ((method === 'Easypaisa' || method === 'JazzCash' || method === 'Online Bank Transfer') && !txn){ err.textContent = 'Please paste the Transaction ID / reference from your payment receipt — Admin matches it with the bank entry.'; return; }
     err.textContent = '';
-    Oryx.createRequest(acc.id, { amount: amt, method: document.getElementById('rqMethod').value,
-      proof: rqProofData, note: document.getElementById('rqNote').value.trim() });
+    Oryx.createRequest(acc.id, { amount: amt, method,
+      proof: rqProofData, note: document.getElementById('rqNote').value.trim(),
+      txnId: txn, senderName: document.getElementById('rqSender').value.trim(), senderAcct: document.getElementById('rqSenderAcct').value.trim() });
     closeReq(); render();
     document.getElementById('myReqs').scrollIntoView({ behavior:'smooth', block:'center' });
   }
