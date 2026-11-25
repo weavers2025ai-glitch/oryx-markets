@@ -173,11 +173,30 @@ const Oryx = (() => {
     const t = txns(); t.push({ id:uid('t'), accountId, type, amount, note:note||'', at:Date.now() }); saveTxns(t);
   }
   function login(email, pass){
-    const u = users().find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
+    const us = users(); const u = us.find(x => x.email.toLowerCase() === email.toLowerCase() && x.pass === pass);
     if (!u) return { error:'Invalid email or password.' };
     if (u.status === 'pending') return { error:'Your account is under verification — it will be verified within 24 hours. Please try again after approval.' };
     if (u.status === 'rejected') return { error:'Your registration was not approved. Please contact support.' };
+    u.lastLoginAt = Date.now(); saveUsers(us);
     save(K.session, u.id); return { user:u };
+  }
+  function updateProfile(userId, patch){
+    const us = users(); const u = us.find(x => x.id === userId); if (!u) return false;
+    if (patch.name) u.name = String(patch.name).trim();
+    if (patch.phone !== undefined) u.phone = String(patch.phone).trim();
+    if (patch.country !== undefined) u.country = String(patch.country).trim();
+    saveUsers(us); return true;
+  }
+  function saveBank(userId, bank){
+    const us = users(); const u = us.find(x => x.id === userId); if (!u) return false;
+    u.bank = { method: bank.method || 'Easypaisa', account: String(bank.account || '').trim(), title: String(bank.title || '').trim() };
+    saveUsers(us); return true;
+  }
+  function changePassword(userId, oldPass, newPass){
+    const us = users(); const u = us.find(x => x.id === userId); if (!u) return { error:'User not found.' };
+    if (u.pass !== oldPass) return { error:'Current password is wrong.' };
+    if (!newPass || newPass.length < 6) return { error:'New password must be at least 6 characters.' };
+    u.pass = newPass; saveUsers(us); return { ok:true };
   }
   function logout(){ localStorage.removeItem(K.session); }
   function currentUser(){ const id = load(K.session, null); return users().find(u => u.id === id) || null; }
@@ -331,6 +350,7 @@ const Oryx = (() => {
   function createRequest(accountId, data){
     const all = requests();
     const r = { id:'rq' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), accountId, amount: parseFloat(data.amount) || 0,
+                kind: data.kind || 'deposit',
                 method: data.method || 'Cash', proof: data.proof || '', note: data.note || '',
                 txnId: String(data.txnId || '').trim(), senderName: String(data.senderName || '').trim(),
                 senderAcct: String(data.senderAcct || '').trim(),
@@ -373,17 +393,135 @@ const Oryx = (() => {
     const all = requests(); const r = all.find(x => x.id === id);
     if (!r || r.status !== 'pending') return false;
     if (approve && isDuplicateTxn(r)) return false; /* same proof already credited once — never twice */
+    if (approve && r.kind === 'withdraw'){
+      const a = accounts().find(v => v.id === r.accountId);
+      if (!a || a.balance - bonusTotal(r.accountId) < r.amount) return false; /* bonus credits are locked — never withdrawable */
+    }
     r.status = approve ? 'approved' : 'rejected'; r.decidedAt = Date.now();
     save(K_REQ, all);
     if (approve){
+      if (r.kind === 'withdraw'){
+        issueBalance(r.accountId, -r.amount, r.method + ' withdrawal — request approved');
+        return true;
+      }
       const m = matchStatus(r);
       if (m.state === 'matched' && m.entry){ /* consume the bank entry — it can never match another proof */
         const es = bankEntries(); const e = es.find(x => x.id === m.entry.id);
         if (e){ e.usedBy = r.id; e.usedAt = Date.now(); save(K_BANK, es); }
       }
       issueBalance(r.accountId, r.amount, r.method + ' deposit — request approved');
+      const accs2 = accounts(); const a2 = accs2.find(v => v.id === r.accountId);
+      if (a2 && a2.armedPromo){
+        const code = a2.armedPromo; a2.armedPromo = null; saveAccounts(accs2);
+        const pm = promos().find(x => x.code === code && x.active);
+        if (pm && pm.kind === 'pct'){
+          const b = +(r.amount * pm.value / 100).toFixed(2);
+          if (b > 0) creditBonus(r.accountId, b, 'Bonus — promo ' + pm.code + ' (' + pm.value + '% of deposit)');
+        }
+      }
     }
     return true;
+  }
+
+  /* ---------- KYC verification ----------
+     Client uploads an identity document + a proof of address; Admin reviews
+     each document and approves or rejects it. Both verified = client verified. */
+  function submitKyc(userId, kind, docType, img){
+    const us = users(); const u = us.find(x => x.id === userId); if (!u) return false;
+    if (!u.kyc) u.kyc = {};
+    u.kyc[kind] = { type: docType, img: img || '', status: 'pending', at: Date.now() };
+    saveUsers(us); return true;
+  }
+  function decideKyc(userId, kind, approve){
+    const us = users(); const u = us.find(x => x.id === userId);
+    if (!u || !u.kyc || !u.kyc[kind]) return false;
+    u.kyc[kind].status = approve ? 'verified' : 'rejected';
+    saveUsers(us); return true;
+  }
+  function kycStatus(u){
+    if (!u || !u.kyc) return 'none';
+    const id = u.kyc.id, ad = u.kyc.address;
+    if (id && ad && id.status === 'verified' && ad.status === 'verified') return 'verified';
+    if ((id && id.status === 'pending') || (ad && ad.status === 'pending')) return 'pending';
+    if ((id && id.status === 'rejected') || (ad && ad.status === 'rejected')) return 'rejected';
+    return 'partial';
+  }
+
+  /* ---------- offers: promo codes, volume bonuses, locked trading credits ----------
+     A bonus is a locked trading credit: it adds to the balance (usable as margin)
+     but it can never be withdrawn. Withdrawable = balance minus total bonus received. */
+  const K_PROMOS = 'oryx_promos', K_VOFFERS = 'oryx_voffers';
+  function creditBonus(accountId, amount, note){
+    amount = parseFloat(amount); if (!amount || amount <= 0) return { error:'Enter an amount.' };
+    const accs = accounts(); const acc = accs.find(a => a.id === accountId);
+    if (!acc) return { error:'Account not found.' };
+    acc.balance = +(acc.balance + amount).toFixed(2); saveAccounts(accs);
+    addTxn(accountId, 'Bonus', amount, note || 'Bonus credit');
+    return { account: acc };
+  }
+  function bonusTotal(accountId){
+    return txns().filter(t => t.accountId === accountId && t.type === 'Bonus').reduce((s, t) => s + t.amount, 0);
+  }
+  function promos(){
+    let list = load(K_PROMOS, null);
+    if (!list){
+      list = [{ id:'pm-welcome20', code:'WELCOME20', kind:'pct', value:20, maxUses:0, used:0, active:true, created:Date.now(), note:'20% bonus on your next deposit' }];
+      save(K_PROMOS, list);
+    }
+    return list;
+  }
+  const savePromos = v => save(K_PROMOS, v);
+  function addPromo(p){
+    const list = promos();
+    const code = String(p.code || '').trim().toUpperCase();
+    if (!code || list.some(x => x.code === code)) return false;
+    list.push({ id: uid('pm'), code, kind: p.kind === 'fixed' ? 'fixed' : 'pct', value: Math.max(0, +p.value || 0), maxUses: Math.max(0, +p.maxUses || 0), used: 0, active: true, created: Date.now(), note: p.note || '' });
+    savePromos(list); return true;
+  }
+  function redeemPromo(accountId, code){
+    const list = promos();
+    const pm = list.find(x => x.code === String(code || '').trim().toUpperCase() && x.active);
+    if (!pm) return { error:'Invalid or expired promo code.' };
+    if (pm.maxUses && pm.used >= pm.maxUses) return { error:'This promo code has been fully used.' };
+    const accs = accounts(); const a = accs.find(v => v.id === accountId);
+    if (!a) return { error:'Account not found.' };
+    if (!a.promosUsed) a.promosUsed = [];
+    if (a.promosUsed.includes(pm.code)) return { error:'You already used this promo code.' };
+    a.promosUsed.push(pm.code);
+    if (pm.kind === 'fixed'){ saveAccounts(accs); creditBonus(accountId, pm.value, 'Bonus — promo code ' + pm.code); }
+    else { a.armedPromo = pm.code; saveAccounts(accs); } /* % bonus lands on the next approved deposit */
+    pm.used += 1; savePromos(list);
+    return { promo: pm };
+  }
+  function volumeOffers(){
+    let list = load(K_VOFFERS, null);
+    if (!list){
+      list = [{ id:'vo-10', lots:10, bonus:25, active:true, created:Date.now(), note:'Trade 10 lots, get $25 bonus' }];
+      save(K_VOFFERS, list);
+    }
+    return list;
+  }
+  const saveVOffers = v => save(K_VOFFERS, v);
+  function addVolumeOffer(lots, bonus){
+    const list = volumeOffers();
+    list.push({ id: uid('vo'), lots: Math.max(0, +lots || 0), bonus: Math.max(0, +bonus || 0), active: true, created: Date.now(), note: '' });
+    saveVOffers(list); return true;
+  }
+  function tradedLots(accountId){
+    return trades().filter(t => t.accountId === accountId && t.status === 'closed').reduce((s, t) => s + (+t.lots || 0), 0);
+  }
+  function claimVolume(accountId, offerId){
+    const list = volumeOffers();
+    const o = list.find(x => x.id === offerId && x.active);
+    if (!o) return { error:'Offer not found.' };
+    const accs = accounts(); const a = accs.find(v => v.id === accountId);
+    if (!a) return { error:'Account not found.' };
+    if (!a.volumeClaimed) a.volumeClaimed = [];
+    if (a.volumeClaimed.includes(o.id)) return { error:'You already claimed this offer.' };
+    if (tradedLots(accountId) < o.lots) return { error:'Not enough volume traded yet.' };
+    a.volumeClaimed.push(o.id); saveAccounts(accs);
+    creditBonus(accountId, o.bonus, 'Bonus — volume offer (' + o.lots + ' lots traded)');
+    return { offer: o };
   }
 
   /* ---------- admins, super admin & activity log ----------
@@ -443,6 +581,9 @@ const Oryx = (() => {
            notifyUser, markMsgsRead, checkStopOut,
            adminPw, issueBalance, requests, createRequest, decideRequest,
            payCfg, savePayCfg, bankEntries, addBankEntry, matchStatus, money, esc,
+           submitKyc, decideKyc, kycStatus, updateProfile, saveBank, changePassword,
+           creditBonus, bonusTotal, promos, savePromos, addPromo, redeemPromo,
+           volumeOffers, saveVOffers, addVolumeOffer, tradedLots, claimVolume,
            admins, saveAdmins, adminLogin, currentAdmin, adminLogout, logAdmin, adminLog, superPw, setSuperPw,
            setAdminPw: v => save(K.adminpw, v) };
 })();
