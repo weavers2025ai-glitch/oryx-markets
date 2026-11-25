@@ -93,6 +93,42 @@ const Oryx = (() => {
     if (now - bucketStart >= BUCKET) bucketStart = now;
   }
   const candles = s => CANDLES[s] || [];
+  /* User-selectable timeframe candles, aggregated deterministically from the
+     same time-based feed. The live price stays identical; only the candle
+     bucket changes (5s, 15s, 1m, 5m, 1h, 1D ...). */
+  function candlesTF(s, tfSec, count){
+    const ins = inst(s); if (!ins) return [];
+    const tf = Math.max(1, parseInt(tfSec, 10) || 5);
+    const bucket = tf * 1000;
+    const total = Math.max(30, Math.min(240, parseInt(count, 10) || 90));
+    const now = Date.now();
+    const curStart = Math.floor(now / bucket) * bucket;
+    const out = [];
+    let prevC = null;
+    function build(t0, t1, live){
+      const o = prevC === null ? priceAt(s, t0) : prevC;
+      const c = live ? prices[s] : priceAt(s, t1);
+      let h = Math.max(o, c), l = Math.min(o, c);
+      const span = Math.max(1, t1 - t0);
+      const n = Math.max(3, Math.min(16, Math.ceil(span / 5000)));
+      for (let q = 1; q < n; q++){
+        const px = priceAt(s, t0 + span * q / n);
+        if (px > h) h = px; if (px < l) l = px;
+      }
+      const wick = ins.base * (tf <= 5 ? 0.00020 : tf <= 60 ? 0.00035 : 0.00055);
+      h += hashN(s + 'H' + tf + '@' + t0) * wick;
+      l -= hashN(s + 'L' + tf + '@' + t0) * wick;
+      const cd = { t:t0, o, h, l, c };
+      prevC = c;
+      return cd;
+    }
+    for (let n = total - 1; n >= 1; n--){
+      const t0 = curStart - n * bucket;
+      out.push(build(t0, t0 + bucket, false));
+    }
+    out.push(build(curStart, now, true));
+    return out;
+  }
   function sparkData(arr, w, h, color){
     if (!arr || arr.length < 2) arr = [0, 0];
     const min = Math.min(...arr), max = Math.max(...arr), rng = (max - min) || 1;
@@ -574,7 +610,7 @@ const Oryx = (() => {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   return { K, settings, saveSettings, users, accounts, trades, txns, addTxn,
-           prices, hist, candles, sparkData, dayHigh, dayLow, todayHigh, todayLow, changePct, sentiment, spark,
+           prices, hist, candles, candlesTF, sparkData, dayHigh, dayLow, todayHigh, todayLow, changePct, sentiment, spark,
            inst, bid, ask, fmtP, startFeed,
            register, login, logout, currentUser, myAccounts, accountById, approveUser, rejectUser,
            pnlOf, floating, usedMargin, openTrade, closeTrade, closeTradeAt, orders, placeOrder, cancelOrder,
