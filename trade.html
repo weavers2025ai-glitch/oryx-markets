@@ -369,6 +369,7 @@
     else { w.classList.add('fs'); render(); }
   }
   document.addEventListener('fullscreenchange', () => { const w = document.getElementById('fsWrap'); if (!document.fullscreenElement) w.classList.remove('fs'); render(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ const w = document.getElementById('fsWrap'); if (w.classList.contains('fs')){ w.classList.remove('fs'); render(); } } });
   document.getElementById('fsExit').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); document.getElementById('fsWrap').classList.remove('fs'); render(); });
   document.getElementById('whoLine').textContent = u.name + ' · Account ' + acc.login + ' · 1:' + acc.leverage;
   document.getElementById('tpLev').value = '1:' + acc.leverage;
