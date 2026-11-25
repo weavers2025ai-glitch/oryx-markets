@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#05080F">
 <title>Oryx Markets — Trade Forex, Gold, Crypto & Indices Online</title>
-<link rel="stylesheet" href="assets/style.css?v=18">
+<link rel="stylesheet" href="assets/style.css?v=19">
 <style>
   .ad-banner{display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:center;background:linear-gradient(120deg,#12224E,#0A1128 55%,#3B2F10);border:1px solid rgba(245,181,68,.35);border-radius:22px;padding:30px;overflow:hidden}
   .ad-banner img{width:100%;height:230px;object-fit:cover;border-radius:16px;display:block}
@@ -74,12 +74,11 @@
 
 <section class="hero">
   <div class="hero-inner">
-    <div>
+    <div class="hero-copy">
       <span class="kicker-chip"><i></i> MARKETS OPEN · TRADING 24/5</span>
       <h1 id="heroTitle">Trade Global Markets <span>With Confidence</span></h1>
       <p id="heroSub">Access powerful tools, advanced charts and real-time market insight. Trade Forex, Gold, Crypto, Indices and Shares — all in one platform.</p>
-      <a class="btn btn-green" href="register.html">Open Live Account</a>
-      <a class="btn btn-ghost" href="trade.html" style="margin-left:10px">Try Free Demo</a>
+      <div class="hero-cta"><a class="btn btn-green" href="register.html">Open Live Account</a><a class="btn btn-ghost" href="trade.html">Try Free Demo</a></div>
       <div style="display:flex;align-items:center;gap:12px;margin-top:26px">
         <div style="display:flex">
           <span style="width:36px;height:36px;border-radius:50%;background:#12224E;border:2px solid #0A1128;display:flex;align-items:center;justify-content:center;font-size:16px">🧑🏽</span>
@@ -99,7 +98,7 @@
     <div class="hero-visual">
       <div class="hero-chart-frame">
         <div class="hc-head"><span class="tc-dot" style="background:#EA3943"></span><span class="tc-dot" style="background:#F5B544"></span><span class="tc-dot" style="background:#16C784"></span><span style="margin-left:8px;color:#93A1C4;font-size:12px;letter-spacing:.12em;font-weight:700">ORYX WEB TERMINAL — XAU/USD LIVE</span></div>
-        <canvas id="heroChart" style="width:100%;height:500px;display:block"></canvas>
+        <canvas id="heroChart" style="width:100%;height:100%;min-height:440px;display:block;flex:1"></canvas>
       </div>
       <div class="float-card fc1">Gold Position · 0.10 lots<br><b style="color:#16C784">+$128.40</b> <span style="color:#7C88A8">floating</span></div>
       <div class="float-card fc2">Account Equity<br><b>$12,480.22</b> <span style="color:#16C784">▲ 2.4%</span></div>
@@ -370,8 +369,8 @@
 
 <div id="site-footer"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=11"></script>
-<script src="assets/chrome.js?v=11"></script>
+<script src="assets/store.js?v=27"></script>
+<script src="assets/chrome.js?v=12"></script>
 <script src="assets/chart.js?v=12"></script>
 <script>
   const S = Oryx.settings();
@@ -412,7 +411,7 @@
   osRestart(); osPx(); setInterval(osPx, 1000);
   const osBox = document.getElementById('oryxSlider'); if (osBox){ osBox.addEventListener('mouseenter', () => { if (osTimer) clearInterval(osTimer); }); osBox.addEventListener('mouseleave', osRestart); }
 </script>
-<script src="assets/support.js?v=10"></script>
+<script src="assets/support.js?v=11"></script>
 <script src="assets/install.js?v=3"></script>
 </body>
 </html>
