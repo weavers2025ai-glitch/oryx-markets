@@ -207,6 +207,7 @@
   #fsWrap:fullscreen,#fsWrap.fs{position:fixed;inset:0;z-index:9999;background:#070D1D;padding:16px;display:flex;flex-direction:column}
   #fsWrap:fullscreen .chart-box,#fsWrap.fs .chart-box{flex:1;height:auto !important;min-height:0;max-height:none}
   #fsWrap:fullscreen #fsBtns,#fsWrap.fs #fsBtns{display:flex}
+  #fsPrices{display:none;position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;gap:10px}#fsWrap:fullscreen #fsPrices,#fsWrap.fs #fsPrices{display:flex}.fs-price{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:8px 18px;text-align:center;color:#93A1C4;font-size:12px;font-weight:700;letter-spacing:.08em}.fs-price b{display:block;font-size:20px;margin-top:2px}
   #fsWrap:fullscreen .fs-chart-btn,#fsWrap.fs .fs-chart-btn{display:block}
   /* desktop: open positions live at the top of the left column, beside the chart */
   .pos-desk{display:none}
@@ -280,6 +281,7 @@
       <button type="button" id="fsSell" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button>
       <button type="button" id="fsBuy" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button>
       <div class="fs-open-box"><b>Open Entries</b><div id="fsOpen"></div></div>
+    <div id="fsPrices"><div class="fs-price">BID (Sell)<b id="fsBid" style="color:#EA3943">—</b></div><div class="fs-price">ASK (Buy)<b id="fsAsk" style="color:#16C784">—</b></div></div>
     </div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas><button type="button" class="fs-chart-btn" onclick="toggleFs()" title="Exit Full Screen">✕</button></div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
@@ -567,6 +569,7 @@
     const fsB = document.getElementById('fsBuy'), fsS = document.getElementById('fsSell');
     if (fsB) fsB.textContent = '▲ BUY  ' + Oryx.fmtP(cur, Oryx.ask(cur));
     if (fsS) fsS.textContent = '▼ SELL  ' + Oryx.fmtP(cur, Oryx.bid(cur));
+    const fBid = document.getElementById('fsBid'), fAsk = document.getElementById('fsAsk'); if (fBid) fBid.textContent = Oryx.fmtP(cur, Oryx.bid(cur)); if (fAsk) fAsk.textContent = Oryx.fmtP(cur, Oryx.ask(cur));
     const posHtml = open.length ? open.map((t, ix) => {
       const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
       return `<div class="trow">
