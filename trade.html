@@ -152,6 +152,18 @@
   .eq-bar .kpi.g6{background:rgba(14,165,183,.60)}
   .eq-bar .kpi.g5{background:rgba(236,72,153,.60)}
   @media(max-width:900px){ .top-strip .eq-bar{width:auto} .hlbar{width:auto;margin-left:0} }
+  /* live BID/ASK strip right above BUY/SELL */
+  .qt-prices{display:flex;gap:10px;padding:12px 16px 0}
+  .qt-price{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 12px}
+  .qt-price label{font-size:11px;color:#93A1C4;font-weight:700;letter-spacing:.05em}
+  .qt-price b{display:block;font-size:21px;color:#fff;font-variant-numeric:tabular-nums}
+  .qt-price.bid b{color:#F87171}
+  .qt-price.ask b{color:#34D399}
+  html.light .qt-price{background:#F2F5FB;border-color:#DCE3EF}
+  html.light .qt-price label{color:#64748B}
+  html.light .qt-price b{color:#12224E}
+  html.light .qt-price.bid b{color:#DC2626}
+  html.light .qt-price.ask b{color:#059669}
   /* quick BUY/SELL right under the chart */
   .quick-trade{display:flex;gap:10px;padding:12px 16px 4px;align-items:center}
   .qt-btn{flex:1;padding:12px;border:0;border-radius:10px;font-weight:800;font-size:15px;color:#fff;cursor:pointer}
@@ -191,8 +203,6 @@
 <div class="top-strip"><div class="eq-bar" id="eqBar"></div><div class="theme-toggle"><button type="button" id="thDark" onclick="setTheme('dark')">🌙 Dark</button><button type="button" id="thLight" onclick="setTheme('light')">☀️ Light</button></div><div id="hlBar" class="hlbar"></div></div>
 <div class="term">
   <div class="col">
-    <h5>⚡ OPEN POSITIONS — LIVE</h5>
-    <div class="pos-list" id="posBox" style="padding-top:6px"></div>
     <h5 style="margin-top:16px">⏳ PENDING ORDERS — AUTO</h5>
     <div id="ordBox" style="padding-top:6px"></div>
     <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">SELECT INSTRUMENT</h5>
@@ -204,21 +214,11 @@
   <div class="col chart-col">
     <div class="sym-strip" id="symStrip"></div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas></div>
+    <div class="qt-prices"><div class="qt-price bid"><label>BID (Sell)</label><b id="qtBid">—</b></div><div class="qt-price ask"><label>ASK (Buy)</label><b id="qtAsk">—</b></div></div>
     <div class="quick-trade"><button type="button" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button><span class="qt-lots" id="qtLots">0.01 lots</span><button type="button" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button></div>
-    <div class="hist-wrap">
-      <h5 style="padding-left:0">RECENTLY CLOSED</h5>
-      <div id="histBox"></div>
-    </div>
-  </div>
-  <div class="col rail" id="rail">
-    <h5>NEW ORDER</h5>
     <div class="trade-panel">
       <div class="sym" id="tpSym">XAUUSD</div>
       <div style="color:#7C88A8;font-size:12.5px" id="tpName">Gold vs US Dollar</div>
-      <div style="display:flex;gap:10px;margin-top:14px">
-        <div style="flex:1"><label>BID (Sell)</label><div class="big" id="tpBid">—</div></div>
-        <div style="flex:1"><label>ASK (Buy)</label><div class="big" id="tpAsk">—</div></div>
-      </div>
       <label>Volume (lots)</label>
       <input id="tpLots" type="number" step="0.01" min="0.01" value="0.01">
       <div class="lot-chips">
@@ -240,12 +240,16 @@
         <div style="flex:1"><label>Stop Loss (optional)</label><input id="tpSL" type="number" step="any" placeholder="Auto-close price"></div>
         <div style="flex:1"><label>Take Profit (optional)</label><input id="tpTP" type="number" step="any" placeholder="Auto-close price"></div>
       </div>
-      <div class="bs-btns">
-        <button style="background:var(--dn)" onclick="place('SELL')">SELL</button>
-        <button style="background:var(--up)" onclick="place('BUY')">BUY</button>
-      </div>
       <div id="tpMsg" style="margin-top:12px;font-size:13.5px"></div>
     </div>
+    <h5>⚡ OPEN POSITIONS — LIVE</h5>
+    <div class="pos-list" id="posBox" style="padding-top:6px"></div>
+    <div class="hist-wrap">
+      <h5 style="padding-left:0">RECENTLY CLOSED</h5>
+      <div id="histBox"></div>
+    </div>
+  </div>
+  <div class="col rail" id="rail">
     <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">ORDER BOOK</h5>
     <div class="ob-box">
       <div class="ob-head"><span>Price</span><span>Amount</span></div>
@@ -329,15 +333,15 @@
       <button class="btn" style="margin-top:10px;background:#fff;color:#7F1D1D;font-weight:800" onclick="Oryx.markMsgsRead('${u.id}'); render();">✔ OK — I have read this</button></div>`;
   }
   function render(){
-    const q = document.getElementById('qtLots'); if (q) q.textContent = (document.getElementById('tpLot') ? document.getElementById('tpLot').value : '0.01') + ' lots';
+    const q = document.getElementById('qtLots'); if (q) q.textContent = (document.getElementById('tpLots') ? document.getElementById('tpLots').value : '0.01') + ' lots';
     renderMsgs();
     document.getElementById('ddBtn').innerHTML = `<b>${cur}</b><span style="color:#7C88A8;font-size:11.5px">${Oryx.inst(cur).name}</span><span class="px">${Oryx.fmtP(cur, Oryx.bid(cur))}</span><span class="arw">▾</span>`;
     document.getElementById('ddList').innerHTML = INSTRUMENTS.map(i => `
       <div class="inst-row ${i.symbol===cur?'on':''}" onclick="pick('${i.symbol}')"><div><b>${i.symbol}</b><small>${i.type}</small></div><div class="px">${Oryx.fmtP(i.symbol, Oryx.bid(i.symbol))}</div></div>`).join('');
     document.getElementById('tpSym').textContent = cur;
     document.getElementById('tpName').textContent = Oryx.inst(cur).name;
-    document.getElementById('tpBid').textContent = Oryx.fmtP(cur, Oryx.bid(cur));
-    document.getElementById('tpAsk').textContent = Oryx.fmtP(cur, Oryx.ask(cur));
+    document.getElementById('qtBid').textContent = Oryx.fmtP(cur, Oryx.bid(cur));
+    document.getElementById('qtAsk').textContent = Oryx.fmtP(cur, Oryx.ask(cur));
     const lots = parseFloat(document.getElementById('tpLots').value) || 0;
     const need = (lots * Oryx.inst(cur).contract * Oryx.prices[cur]) / acc.leverage;
     document.getElementById('tpMargin').textContent = 'Margin required: $' + need.toFixed(2);
