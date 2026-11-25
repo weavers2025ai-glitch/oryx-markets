@@ -18,6 +18,10 @@
   .ledger-ov{position:fixed;inset:0;background:rgba(3,6,12,.86);display:none;z-index:220;padding:16px;overflow:auto}
   .kpi.clickable{cursor:pointer;transition:filter .15s}
   .kpi.clickable:hover{filter:brightness(1.18)}
+  .kpi.mini.white{background:#fff;color:#0F172A}
+  .kpi.mini.white .kic{background:rgba(15,23,42,.09)}
+  .kpi.mini.white span{color:#475569}
+  .kpi.mini.white small{color:#64748B}
   .match-tag{display:inline-block;padding:5px 11px;border-radius:20px;font-weight:800;font-size:12px;margin-top:8px}
   .match-ok{background:linear-gradient(135deg,#F59E0B,#FDE68A);color:#451A03}
   .match-bad{background:#7F1D1D;color:#FECACA}
@@ -63,6 +67,9 @@
       <a href="#" data-tab="history">📜 Request History</a>
       <a href="#" data-tab="userhist">📜 User History</a>
       <a href="#" data-tab="settings">⚙️ Settings</a>
+      <a href="#" data-tab="kyc">🪪 KYC Verification<span id="kycBadge"></span></a>
+      <a href="#" data-tab="offers">🎁 Offers &amp; Bonuses</a>
+      <a href="../guide.html">📖 User Guide</a>
       <a href="../index.html">↩ Website</a>
       <a href="#" onclick="Oryx.adminLogout();sessionStorage.removeItem('oryx_admin_ok');location.reload();return false;">🚪 Log Out</a>
     </aside>
@@ -106,7 +113,7 @@
 
       <section id="tab-livetraders" style="display:none">
         <h1>🔴 Live Traders</h1><p class="sub"><span id="ltCount">No one is trading right now.</span> Loss-makers come first, then profit-makers — profit rows blink. A white line separates the two groups. Figures update live as prices move — click a row to open that client's ledger.</p>
-        <div class="kpi-row" id="ltKpis" style="grid-template-columns:repeat(2,1fr)"></div>
+        <div class="kpi-row" id="ltKpis" style="grid-template-columns:repeat(4,1fr)"></div>
         <div class="panel"><div id="ltList"></div></div>
       </section>
 
@@ -204,6 +211,35 @@
           <button class="btn btn-line" style="border-color:#EA3943;color:#EA3943" onclick="if(confirm('Delete ALL clients, accounts and trades?')){['oryx_users','oryx_accounts','oryx_trades','oryx_txns','oryx_session'].forEach(k=>localStorage.removeItem(k));alert('All data cleared.');location.reload();}">🗑 Reset Everything</button>
         </div>
       </section>
+
+      <section id="tab-kyc" style="display:none">
+        <h1>KYC Verification</h1><p class="sub">Identity documents submitted by clients — review each photo and verify or reject it.</p>
+        <div id="kycList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px"></div>
+        <div class="panel" style="margin-top:16px"><h3>Verified Clients</h3><div id="kycDone"></div></div>
+      </section>
+
+      <section id="tab-offers" style="display:none">
+        <h1>Offers &amp; Bonuses</h1><p class="sub">Promo codes and volume offers — bonuses are locked trading credits: usable as margin, never withdrawable.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="panel"><h3>🎟 Create Promo Code</h3>
+            <div class="field"><label>Code</label><input id="pmCode" placeholder="e.g. WELCOME20"></div>
+            <div class="field"><label>Type</label><select id="pmKind"><option value="pct">% of next deposit</option><option value="fixed">Fixed bonus ($)</option></select></div>
+            <div class="field"><label>Value</label><input id="pmValue" type="number" placeholder="e.g. 20"></div>
+            <div class="field"><label>Max uses (0 = unlimited)</label><input id="pmMax" type="number" value="0"></div>
+            <div class="field"><label>Note</label><input id="pmNote" placeholder="e.g. 20% bonus on next deposit"></div>
+            <div class="form-err" id="pmErr"></div>
+            <button class="btn btn-gold" style="font-weight:800" onclick="createPromo()">Create Promo Code</button>
+          </div>
+          <div class="panel"><h3>📊 Create Volume Offer</h3>
+            <div class="field"><label>Lots to trade</label><input id="voLots" type="number" placeholder="e.g. 10"></div>
+            <div class="field"><label>Bonus ($)</label><input id="voBonus" type="number" placeholder="e.g. 25"></div>
+            <div class="form-err" id="voErr"></div>
+            <button class="btn btn-gold" style="font-weight:800" onclick="createVOffer()">Create Volume Offer</button>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:16px"><h3>Promo Codes</h3><div id="pmList"></div></div>
+        <div class="panel" style="margin-top:16px"><h3>Volume Offers</h3><div id="voList"></div></div>
+      </section>
     </main>
   </div>
 </div>
@@ -268,7 +304,7 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=20"></script>
+<script src="../assets/store.js?v=23"></script>
 <script src="../assets/cloud.js?v=8"></script>
 <script>
   const mini = (g, ic, label, val, sub, click) => `<div class="kpi mini ${g}${click ? ' clickable' : ''}"${click ? ` onclick="${click}" title="Click to see details"` : ''}><span class="kic" style="width:42px;height:42px;font-size:19px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
@@ -411,6 +447,8 @@
     const apprPend = us.filter(u => u.status === 'pending');
     const apprRej = us.filter(u => u.status === 'rejected');
     const apprOk = us.filter(u => !u.status || u.status === 'approved');
+    const kycPend = [];
+    us.forEach(u2 => { if (u2.kyc) ['id', 'address'].forEach(k => { const d = u2.kyc[k]; if (d && d.status === 'pending') kycPend.push({ u: u2, kind: k, doc: d }); }); });
     document.getElementById('reqBadge').innerHTML = rqPend.length ? `<span class="req-badge blink">${rqPend.length}</span>` : '';
     document.getElementById('apprBadge').innerHTML = apprPend.length ? `<span class="req-badge blink">${apprPend.length}</span>` : '';
     const apprLink = document.querySelector('.side a[data-tab="approvals"]');
@@ -420,19 +458,21 @@
     renderLive();
     document.getElementById('dashAlert').innerHTML =
       (rqPend.length ? `<div class="alert-strip blink" onclick="document.querySelector('[data-tab=reqs]').click()">💸 ${rqPend.length} balance request${rqPend.length > 1 ? 's' : ''} waiting for your approval — click to review</div>` : '') +
-      (apprPend.length ? `<div class="alert-strip blink" style="margin-top:8px" onclick="document.querySelector('[data-tab=approvals]').click()">✅ ${apprPend.length} new account${apprPend.length > 1 ? 's' : ''} waiting for approval — click to review</div>` : '');
+      (apprPend.length ? `<div class="alert-strip blink" style="margin-top:8px" onclick="document.querySelector('[data-tab=approvals]').click()">✅ ${apprPend.length} new account${apprPend.length > 1 ? 's' : ''} waiting for approval — click to review</div>` : '') +
+      (kycPend.length ? `<div class="alert-strip blink" style="margin-top:8px" onclick="document.querySelector('[data-tab=kyc]').click()">🪪 ${kycPend.length} KYC document${kycPend.length > 1 ? 's' : ''} waiting for review — click to verify</div>` : '');
     const rqCard = (r, ix) => {
       const a = ac.find(v => v.id === r.accountId);
       return `<div style="background:${clientGrad(us, a ? a.userId : '')};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <div><b style="font-size:16px">${a ? Oryx.esc(clientName(a.userId)) : 'Unknown client'}</b><div style="opacity:.85;font-size:12.5px">Account ${a ? a.login : '—'} · ${new Date(r.at).toLocaleString()}</div></div>
-          <span class="st-pill st-${r.status}" style="background:rgba(0,0,0,.28);color:#fff;border-color:rgba(255,255,255,.4)">${r.status.toUpperCase()}</span>
+          <span style="display:flex;gap:6px"><span class="st-pill" style="background:${r.kind === 'withdraw' ? '#7C2D12' : '#065F46'};color:#fff;border-color:rgba(255,255,255,.4)">${r.kind === 'withdraw' ? '⬆ WITHDRAW' : '⬇ DEPOSIT'}</span><span class="st-pill st-${r.status}" style="background:rgba(0,0,0,.28);color:#fff;border-color:rgba(255,255,255,.4)">${r.status.toUpperCase()}</span></span>
         </div>
         <div style="font-size:30px;font-weight:800;margin:10px 0 2px">${Oryx.money(r.amount)}</div>
-        <div style="opacity:.92;font-size:13px">Paid via: <b>${Oryx.esc(r.method)}</b>${r.note ? ' · ' + Oryx.esc(r.note) : ''}</div>
+        <div style="opacity:.92;font-size:13px">${r.kind === 'withdraw' ? 'Withdraw via' : 'Paid via'}: <b>${Oryx.esc(r.method)}</b>${r.note ? ' · ' + Oryx.esc(r.note) : ''}</div>
+        ${r.kind === 'withdraw' && r.senderAcct ? `<div style="font-size:13px;margin-top:6px">⬆ Receive at: <b>${Oryx.esc(r.senderAcct)}</b>${r.senderName ? ` · 👤 ${Oryx.esc(r.senderName)}` : ''}</div>` : ''}
         ${r.txnId ? `<div style="font-size:13px;margin-top:6px">🧾 Txn ID: <b>${Oryx.esc(r.txnId)}</b>${r.senderName ? ` · 👤 ${Oryx.esc(r.senderName)}` : ''}${r.senderAcct ? ` · 📱 ${Oryx.esc(r.senderAcct)}` : ''}</div>` : ''}
         ${(() => { const m = Oryx.matchStatus(r);
-          if (r.status !== 'pending') return '';
+          if (r.status !== 'pending' || r.kind === 'withdraw') return '';
           if (m.state === 'matched') return `<span class="match-tag match-ok blink">✓ CHECKED — matches bank entry ${Oryx.esc(m.entry.method)} ${Oryx.money(m.entry.amount)}${m.entry.sender ? ' · ' + Oryx.esc(m.entry.sender) : ''}</span>`;
           if (m.state === 'duplicate') return `<span class="match-tag match-bad">⛔ DUPLICATE — this reference was already credited once</span>`;
           if (m.state === 'mismatch') return `<span class="match-tag match-bad">✗ NOT MATCHED — no bank entry for this reference</span>`;
@@ -443,9 +483,9 @@
         </div>`; })() : ''}
         ${r.proof ? `<div style="margin-top:10px"><img src="${r.proof}" class="proof-thumb" title="Payment proof — click to verify" onclick="viewProof('${r.id}')"><div style="font-size:11.5px;opacity:.85;margin-top:4px">🔍 Click the proof to verify it</div></div>` : '<div style="margin-top:10px;font-size:12.5px;opacity:.85">No proof attached</div>'}
         ${r.status === 'pending' ? (Oryx.matchStatus(r).state === 'duplicate' ? `<div style="margin-top:14px;font-size:13px;font-weight:700;color:#FECACA">⛔ Cannot approve — this proof was already credited once.</div><div style="display:flex;gap:9px;margin-top:10px"><button class="btn" style="background:rgba(0,0,0,.3);color:#fff;font-weight:700" onclick="decideRq('${r.id}', false)">✖ Reject</button></div>` : `<div style="display:flex;gap:9px;margin-top:14px">
-          <button class="btn" style="flex:1;background:#fff;color:#065F46;font-weight:800" onclick="decideRq('${r.id}', true)">✔ Approve &amp; Credit</button>
+          <button class="btn" style="flex:1;background:#fff;color:#065F46;font-weight:800" onclick="decideRq('${r.id}', true)">${r.kind === 'withdraw' ? '✔ Approve &amp; Deduct' : '✔ Approve &amp; Credit'}</button>
           <button class="btn" style="background:rgba(0,0,0,.3);color:#fff;font-weight:700" onclick="decideRq('${r.id}', false)">✖ Reject</button>
-        </div>`) : `<div style="margin-top:12px;font-size:12.5px;opacity:.85">${r.status === 'approved' ? '✔ Credited to the client account' : '✖ Rejected'} · ${r.decidedAt ? new Date(r.decidedAt).toLocaleString() : ''}</div>`}
+        </div>`) : `<div style="margin-top:12px;font-size:12.5px;opacity:.85">${r.status === 'approved' ? (r.kind === 'withdraw' ? '✔ Deducted from the client account' : '✔ Credited to the client account') : '✖ Rejected'} · ${r.decidedAt ? new Date(r.decidedAt).toLocaleString() : ''}</div>`}
       </div>`;
     };
     /* pending only on the Balance Requests page — decided ones live in History */
@@ -457,9 +497,9 @@
       : '<p style="color:#7C88A8">No decided requests yet. Approved and rejected requests will be recorded here permanently.</p>';
     /* ===== per-page KPI strips (same theme as dashboard) ===== */
     document.getElementById('rqHistKpis').innerHTML =
-      mini('g2','✔','Approved', rqApproved.length, 'requests credited') +
-      mini('g4','💰','Total Credited', Oryx.money(rqApproved.reduce((s, r) => s + r.amount, 0)), 'via requests') +
-      mini('g3','✖','Rejected', rqDone.length - rqApproved.length, 'requests declined');
+      mini('g2','✔','Approved', rqApproved.length, 'requests credited', "showKpi('rqApproved')") +
+      mini('g4','💰','Total Credited', Oryx.money(rqApproved.reduce((s, r) => s + r.amount, 0)), 'via requests', "showKpi('rqCredited')") +
+      mini('g3','✖','Rejected', rqDone.length - rqApproved.length, 'requests declined', "showKpi('rqRejected')");
     /* ===== account approvals: pending cards + rejected list ===== */
     const apprCard = (u, ix) => `<div style="background:${clientGrad(us, u.id)};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
@@ -484,8 +524,8 @@
       : '<p style="color:#7C88A8">No rejected registrations.</p>';
     /* ===== user history: approved users, permanent record ===== */
     document.getElementById('uhKpis').innerHTML =
-      mini('g1','👥','Total Users', us.length, 'registered') + mini('g2','✔','Approved', apprOk.length, 'active accounts') +
-      mini('g3','⏳','Pending', apprPend.length, 'waiting approval') + mini('g5','✖','Rejected', apprRej.length, 'declined');
+      mini('g1','👥','Total Users', us.length, 'registered', "showKpi('uhTotal')") + mini('g2','✔','Approved', apprOk.length, 'active accounts', "showKpi('uhApproved')") +
+      mini('g3','⏳','Pending', apprPend.length, 'waiting approval', "showKpi('uhPending')") + mini('g5','✖','Rejected', apprRej.length, 'declined', "showKpi('uhRejected')");
     document.getElementById('uhList').innerHTML = tbl(['Name','Email','Password','Phone','Country','User ID','Account','Balance','Registered','Approved At','Approved By'], apprOk.slice().reverse().map((x, ix) => {
       const a = ac.find(v => v.userId === x.id);
       return `<tr style="background:${ugrads70[ix % ugrads70.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.pass)}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${Oryx.esc(x.id)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td><td>${x.approvedAt ? new Date(x.approvedAt).toLocaleString() : '—'}</td><td>${Oryx.esc(x.approvedBy || '—')}</td></tr>`;
@@ -493,6 +533,22 @@
     document.getElementById('cKpis').innerHTML =
       mini('g1','👥','Total Clients', us.length, 'registered', "showKpi('clients')") + mini('g4','💰','Total Balances', Oryx.money(totalBal), 'all accounts', "showKpi('balances')") +
       mini('g2','🏦','Balance Issued', Oryx.money(issuedPos), 'starter + admin', "showKpi('issued')") + mini('g5','🔥','Open Trades', open.length, 'right now', "showKpi('trades')");
+    /* ===== KYC: pending documents + badge + verified list ===== */
+    document.getElementById('kycBadge').textContent = kycPend.length ? ' ' + kycPend.length : '';
+    document.getElementById('kycList').innerHTML = kycPend.length ? kycPend.map(({ u: u2, kind, doc: d }) => `
+      <div style="background:${clientGrad(us, u2.id)};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
+        <div><b style="font-size:16px">${Oryx.esc(u2.name)}</b><div style="opacity:.85;font-size:12.5px">${Oryx.esc(u2.email)} · ${new Date(d.at).toLocaleString()}</div></div>
+        <div style="margin-top:10px;font-size:13.5px">${kind === 'id' ? '🪪 Identity Document' : '🏠 Proof of Address'} — <b>${Oryx.esc(d.type)}</b></div>
+        ${d.img ? `<img src="${d.img}" class="proof-thumb" title="Click to view full size" onclick="viewKycImg('${u2.id}','${kind}')">` : '<div style="font-size:12.5px;opacity:.85;margin-top:8px">No photo attached</div>'}
+        <div style="display:flex;gap:9px;margin-top:14px">
+          <button class="btn" style="flex:1;background:#fff;color:#065F46;font-weight:800" onclick="decideKycA('${u2.id}','${kind}',true)">✔ Verify</button>
+          <button class="btn" style="background:rgba(0,0,0,.3);color:#fff;font-weight:700" onclick="decideKycA('${u2.id}','${kind}',false)">✖ Reject</button>
+        </div>
+      </div>`).join('') : '<p style="color:#7C88A8">No documents waiting for review.</p>';
+    document.getElementById('kycDone').innerHTML = tbl(['Client','Email','Identity','Address','Status'], us.filter(u2 => Oryx.kycStatus(u2) === 'verified').map(u2 => `<tr style="background:${clientGrad70(us, u2.id)};color:#fff"><td><b>${Oryx.esc(u2.name)}</b></td><td>${Oryx.esc(u2.email)}</td><td>${Oryx.esc(u2.kyc.id.type)}</td><td>${Oryx.esc(u2.kyc.address.type)}</td><td>✓ Verified</td></tr>`).join(''), 'No verified clients yet.');
+    /* ===== offers: promo codes + volume offers ===== */
+    document.getElementById('pmList').innerHTML = tbl(['Code','Type','Value','Used','Status'], Oryx.promos().slice().reverse().map(p => `<tr><td><b>${Oryx.esc(p.code)}</b></td><td>${p.kind === 'fixed' ? 'Fixed bonus' : '% of deposit'}</td><td>${p.kind === 'fixed' ? Oryx.money(p.value) : p.value + '%'}</td><td>${p.used}${p.maxUses ? ' / ' + p.maxUses : ''}</td><td>${p.active ? 'Active' : 'Off'}</td></tr>`).join(''), 'No promo codes yet.');
+    document.getElementById('voList').innerHTML = tbl(['Lots','Bonus','Status'], Oryx.volumeOffers().slice().reverse().map(o => `<tr><td>${o.lots} lots</td><td>${Oryx.money(o.bonus)}</td><td>${o.active ? 'Active' : 'Off'}</td></tr>`).join(''), 'No volume offers yet.');
     const wins = closed.filter(t => t.pnl > 0).length;
     document.getElementById('tKpis').innerHTML =
       mini('g3','📈','Total Trades', tr.length, 'all time', "showKpi('alltrades')") + mini('g5','🔥','Open Now', open.length, 'live positions', "showKpi('trades')") +
@@ -561,6 +617,33 @@
         { clientId: a ? a.userId : null, amount: r ? r.amount : null });
     }
     renderAll();
+  }
+  function decideKycA(userId, kind, ok){ Oryx.decideKyc(userId, kind, ok); renderAll(); }
+  function viewKycImg(userId, kind){
+    const u2 = Oryx.users().find(x => x.id === userId); if (!u2 || !u2.kyc || !u2.kyc[kind]) return;
+    const d = u2.kyc[kind];
+    document.getElementById('pfName').textContent = u2.name + ' — ' + (kind === 'id' ? 'Identity Document' : 'Proof of Address');
+    document.getElementById('pfMeta').textContent = u2.email + ' · ' + d.type + ' · Sent ' + new Date(d.at).toLocaleString() + ' · Status: ' + d.status.toUpperCase();
+    document.getElementById('pfAmt').textContent = 'KYC Document';
+    document.getElementById('pfMethod').innerHTML = 'Check the photo carefully — the name on the document should match the client.';
+    document.getElementById('pfImg').src = d.img || '';
+    document.getElementById('pfActions').innerHTML = d.status === 'pending' ? `
+      <button class="btn btn-green" style="flex:1" onclick="decideKycA('${userId}','${kind}',true); closeProof();">✔ Verify</button>
+      <button class="btn" style="background:rgba(234,57,67,.18);color:#EA3943;border:1px solid rgba(234,57,67,.5)" onclick="decideKycA('${userId}','${kind}',false); closeProof();">✖ Reject</button>`
+      : `<span style="color:#93A1C4;font-size:13px">${d.status === 'verified' ? '✔ Already verified' : '✖ Already rejected'}</span>`;
+    document.getElementById('proofOv').classList.add('open');
+  }
+  function createPromo(){
+    const err = document.getElementById('pmErr');
+    const ok = Oryx.addPromo({ code: document.getElementById('pmCode').value, kind: document.getElementById('pmKind').value, value: document.getElementById('pmValue').value, maxUses: document.getElementById('pmMax').value, note: document.getElementById('pmNote').value });
+    if (!ok){ err.textContent = 'Could not create — the code is empty or already exists.'; return; }
+    err.textContent = ''; renderAll();
+  }
+  function createVOffer(){
+    const err = document.getElementById('voErr');
+    const lots = parseFloat(document.getElementById('voLots').value), bonus = parseFloat(document.getElementById('voBonus').value);
+    if (!lots || !bonus){ err.textContent = 'Enter both the lots and the bonus.'; return; }
+    Oryx.addVolumeOffer(lots, bonus); err.textContent = ''; renderAll();
   }
   function approveU(id){
     const me = Oryx.currentAdmin();
@@ -644,9 +727,13 @@
     const rows = liveTraders();
     const profit = rows.filter(r => r.pl > 0).reduce((s, r) => s + r.pl, 0);
     const loss = Math.abs(rows.filter(r => r.pl < 0).reduce((s, r) => s + r.pl, 0));
+    const txAll = Oryx.txns();
+    const depOf = rs => rs.reduce((s, r) => s + txAll.filter(t => t.accountId === r.account.id && t.amount > 0).reduce((a, t) => a + t.amount, 0), 0);
     document.getElementById('ltKpis').innerHTML =
-      mini('g2','📈','Total Live Profit', Oryx.money(profit), rows.filter(r => r.pl > 0).length + ' user(s) in profit') +
-      mini('g5','📉','Total Live Loss', Oryx.money(loss), rows.filter(r => r.pl < 0).length + ' user(s) in loss');
+      mini('g2','📈','Total Live Profit', Oryx.money(profit), rows.filter(r => r.pl > 0).length + ' user(s) in profit', "showKpi('liveProfit')") +
+      mini('white','💰','Profit Users Deposits', Oryx.money(depOf(rows.filter(r => r.pl > 0))), 'total deposited', "showKpi('liveProfitDep')") +
+      mini('g5','📉','Total Live Loss', Oryx.money(loss), rows.filter(r => r.pl < 0).length + ' user(s) in loss', "showKpi('liveLoss')") +
+      mini('white','💰','Loss Users Deposits', Oryx.money(depOf(rows.filter(r => r.pl < 0))), 'total deposited', "showKpi('liveLossDep')");
     document.getElementById('ltCount').textContent = rows.length ? `${rows.length} user${rows.length > 1 ? 's' : ''} trading live right now` : 'No one is trading right now.';
     const rowHtml = r => {
       const syms = r.trades.map(t => t.symbol).filter((v, i, a) => a.indexOf(v) === i).join(', ');
@@ -712,6 +799,44 @@
       title = kind === 'closedtrades' ? `Closed Trades — ${list.length} completed` : `Total Trades — ${list.length} all time`;
       sub = kind === 'closedtrades' ? 'Every completed trade with its final profit/loss, newest first.' : 'Every trade on the platform, open and closed, newest first.';
       body = tbl(['Client','Symbol','Side','Lots','Open Price','Status','P/L','Opened'], list.slice().reverse().map(t => trRow(t)).join(''));
+    } else if (kind === 'rqApproved' || kind === 'rqCredited' || kind === 'rqRejected'){
+      const done = Oryx.requests().filter(r => r.status !== 'pending');
+      const list = kind === 'rqRejected' ? done.filter(r => r.status === 'rejected') : done.filter(r => r.status === 'approved');
+      const tot = list.reduce((s, r) => s + r.amount, 0);
+      title = kind === 'rqRejected' ? `Rejected Requests — ${list.length} declined` : kind === 'rqCredited' ? `Total Credited — ${Oryx.money(tot)} · ${list.length} requests` : `Approved Requests — ${list.length} credited · ${Oryx.money(tot)}`;
+      sub = 'Every decided balance request in this group, newest first.';
+      body = tbl(['Client','Account','Amount','Method','Txn ID','Decided'], list.slice().reverse().map(r => {
+        const a = ac.find(v => v.id === r.accountId);
+        return `<tr style="background:${a ? clientGrad70(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td><b>${a ? Oryx.esc(clientName(a.userId)) : '—'}</b></td><td>${a ? a.login : '—'}</td><td>${Oryx.money(r.amount)}</td><td>${Oryx.esc(r.method)}</td><td>${Oryx.esc(r.txnId || '—')}</td><td>${r.decidedAt ? new Date(r.decidedAt).toLocaleString() : '—'}</td></tr>`;
+      }).join(''));
+    } else if (kind === 'uhTotal' || kind === 'uhApproved' || kind === 'uhPending' || kind === 'uhRejected'){
+      const list = kind === 'uhTotal' ? us : kind === 'uhApproved' ? us.filter(u => !u.status || u.status === 'approved') : kind === 'uhPending' ? us.filter(u => u.status === 'pending') : us.filter(u => u.status === 'rejected');
+      title = kind === 'uhTotal' ? `Total Users — ${list.length} registered` : kind === 'uhApproved' ? `Approved Users — ${list.length} active accounts` : kind === 'uhPending' ? `Pending Users — ${list.length} waiting approval` : `Rejected Users — ${list.length} declined`;
+      sub = 'Everyone in this group, with their account and balance.';
+      body = tbl(['Name','Email','Account','Balance','Phone','Country','Joined'], list.slice().reverse().map((x, ix) => {
+        const a = ac.find(v => v.userId === x.id);
+        return `<tr style="background:${ugrads70[ix % ugrads70.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
+      }).join(''));
+    } else if (kind === 'liveProfit' || kind === 'liveLoss' || kind === 'liveProfitDep' || kind === 'liveLossDep'){
+      const live = liveTraders();
+      const grp = kind.indexOf('Profit') >= 0 ? live.filter(r => r.pl > 0) : live.filter(r => r.pl < 0);
+      const txs = Oryx.txns();
+      const dep = r => txs.filter(t => t.accountId === r.account.id && t.amount > 0).reduce((s, t) => s + t.amount, 0);
+      if (kind === 'liveProfitDep' || kind === 'liveLossDep'){
+        const tot = grp.reduce((s, r) => s + dep(r), 0);
+        title = kind === 'liveProfitDep' ? `Profit Users Deposits — ${Oryx.money(tot)}` : `Loss Users Deposits — ${Oryx.money(tot)}`;
+        sub = 'Total deposited by the users in this group (all credits: starter + deposits).';
+        body = tbl(['Client','Account','Deposits','Balance','Live P/L'], grp.map(r => `<tr style="background:${clientGrad70(us, r.user.id)};color:#fff"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${Oryx.money(dep(r))}</td><td>${Oryx.money(r.account.balance)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(r.pl)}</td></tr>`).join(''));
+      } else {
+        const tot = grp.reduce((s, r) => s + r.pl, 0);
+        title = kind === 'liveProfit' ? `Live Profit Users — ${grp.length} · ${Oryx.money(tot)}` : `Live Loss Users — ${grp.length} · ${Oryx.money(Math.abs(tot))}`;
+        sub = 'Everyone trading live in this group, with their live profit/loss.';
+        body = tbl(['Client','Account','Open Trades','Symbols','Total Lots','Live P/L'], grp.map(r => {
+          const syms = r.trades.map(t => t.symbol).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+          const lots = r.trades.reduce((s, t) => s + (+t.lots || 0), 0);
+          return `<tr style="background:${clientGrad70(us, r.user.id)};color:#fff"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(r.pl)}</td></tr>`;
+        }).join(''));
+      }
     } else {
       const open = tr.filter(t => t.status === 'open');
       title = `Open Trades — ${open.length} right now`;
