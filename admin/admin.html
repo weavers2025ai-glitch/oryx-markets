@@ -215,6 +215,7 @@
 <script src="../assets/store.js?v=19"></script>
 <script src="../assets/cloud.js?v=8"></script>
 <script>
+  window.addEventListener('error', function(e){ try { var d = document.getElementById('jsErr'); if (!d) { d = document.createElement('div'); d.id = 'jsErr'; d.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;background:#7F1D1D;color:#fff;padding:10px 14px;border-radius:10px;font:12px monospace;max-width:90vw;white-space:pre-wrap'; document.body.appendChild(d); } d.textContent += (d.textContent ? '\n' : '') + 'JS ERROR: ' + e.message + ' @ line ' + (e.lineno || '?'); } catch(_){} });
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function tryLogin(){
     const r = Oryx.adminLogin(document.getElementById('gEmail').value.trim(), document.getElementById('gPass').value);
