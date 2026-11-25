@@ -449,12 +449,12 @@
       mini('g2','🏦','Balance Issued', Oryx.money(issuedPos), 'starter + admin', "showKpi('issued')") + mini('g5','🔥','Open Trades', open.length, 'right now', "showKpi('trades')");
     const wins = closed.filter(t => t.pnl > 0).length;
     document.getElementById('tKpis').innerHTML =
-      mini('g3','📈','Total Trades', tr.length, 'all time') + mini('g5','🔥','Open Now', open.length, 'live positions') +
-      mini('g4','✔','Closed', closed.length, 'completed') + mini('g2','🎯','Client Win Rate', closed.length ? Math.round(wins / closed.length * 100) + '%' : '—', wins + ' winning trades');
+      mini('g3','📈','Total Trades', tr.length, 'all time', "showKpi('alltrades')") + mini('g5','🔥','Open Now', open.length, 'live positions', "showKpi('trades')") +
+      mini('g4','✔','Closed', closed.length, 'completed', "showKpi('closedtrades')") + mini('g2','🎯','Client Win Rate', closed.length ? Math.round(wins / closed.length * 100) + '%' : '—', wins + ' winning trades', "showKpi('closedtrades')");
     const wdAbs = Math.abs(tx.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0));
     document.getElementById('xKpis').innerHTML =
-      mini('g2','🏦','Total Issued', Oryx.money(issuedPos), 'credits in') + mini('g5','💸','Withdrawals', Oryx.money(wdAbs), 'debits out') +
-      mini('g4','⚖️','Net Flow', Oryx.money(issuedPos - wdAbs), 'in minus out') + mini('g1','🧾','Transactions', tx.length, 'records');
+      mini('g2','🏦','Total Issued', Oryx.money(issuedPos), 'credits in', "showKpi('issued')") + mini('g5','💸','Withdrawals', Oryx.money(wdAbs), 'debits out', "showKpi('wd')") +
+      mini('g4','⚖️','Net Flow', Oryx.money(issuedPos - wdAbs), 'in minus out', "showKpi('netflow')") + mini('g1','🧾','Transactions', tx.length, 'records', "showKpi('txall')");
     document.getElementById('ibAcc').innerHTML = ac.map(a => `<option value="${a.id}">${a.login} — ${Oryx.esc(clientName(a.userId))} (${Oryx.esc(clientEmail(a.userId))}) · Balance ${Oryx.money(a.balance)}</option>`).join('') || '<option value="">No clients yet</option>';
     document.getElementById('cList').innerHTML = us.length ? `<div class="ucards">${us.slice().reverse().map((x, ix) => {
       const a = ac.find(v => v.userId === x.id);
@@ -601,6 +601,11 @@
   function showKpi(kind){
     const us = Oryx.users(), ac = Oryx.accounts(), tr = Oryx.trades(), tx = Oryx.txns();
     let title = '', sub = '', body = '';
+    const txnRow = t => { const a = ac.find(v => v.id === t.accountId);
+      return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td style="color:${t.amount >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(t.amount)}</td></tr>`; };
+    const trRow = t => { const a = ac.find(v => v.id === t.accountId);
+      const p = t.status === 'open' ? Oryx.pnlOf(t) : t.pnl;
+      return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${Oryx.esc(t.symbol)}</b></td><td>${Oryx.esc(t.side)}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td>${t.status}</td><td style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</td><td>${new Date(t.openAt).toLocaleString()}</td></tr>`; };
     if (kind === 'clients'){
       title = `Total Clients — ${us.length} registered`;
       sub = 'Everyone who signed up, with their account and balance.';
@@ -625,6 +630,23 @@
         const a = ac.find(v => v.id === t.accountId);
         return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td>${Oryx.money(t.amount)}</td></tr>`;
       }).join(''));
+    } else if (kind === 'wd'){
+      const neg = tx.filter(t => t.amount < 0);
+      const tot = neg.reduce((s, t) => s + t.amount, 0);
+      title = `Withdrawals — ${Oryx.money(tot)}`;
+      sub = 'Every debit: withdrawals and deductions taken out, newest first.';
+      body = tbl(['Date','Client','Type','Note','Amount'], neg.slice().reverse().map(t => txnRow(t)).join(''));
+    } else if (kind === 'txall' || kind === 'netflow'){
+      const pos = tx.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+      const neg = tx.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+      title = kind === 'netflow' ? `Net Flow — ${Oryx.money(pos + neg)}` : `Transactions — ${tx.length} records`;
+      sub = kind === 'netflow' ? 'All movements: credits in minus debits out, newest first.' : 'Every transaction on the platform, newest first.';
+      body = tbl(['Date','Client','Type','Note','Amount'], tx.slice().reverse().map(t => txnRow(t)).join(''));
+    } else if (kind === 'alltrades' || kind === 'closedtrades'){
+      const list = kind === 'closedtrades' ? tr.filter(t => t.status === 'closed') : tr;
+      title = kind === 'closedtrades' ? `Closed Trades — ${list.length} completed` : `Total Trades — ${list.length} all time`;
+      sub = kind === 'closedtrades' ? 'Every completed trade with its final profit/loss, newest first.' : 'Every trade on the platform, open and closed, newest first.';
+      body = tbl(['Client','Symbol','Side','Lots','Open Price','Status','P/L','Opened'], list.slice().reverse().map(t => trRow(t)).join(''));
     } else {
       const open = tr.filter(t => t.status === 'open');
       title = `Open Trades — ${open.length} right now`;
