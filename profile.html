@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Profile — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css?v=15">
+<style>
+  body{background:#0B1220}
+  .p-wrap{max-width:920px;margin:0 auto;padding:24px 18px 60px}
+  .p-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .p-head h1{color:#fff;margin:0;font-size:26px}
+  .p-card{background:#0D1730;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px;margin-top:16px}
+  .p-card h3{color:#fff;margin:0 0 12px;font-size:16px}
+  .p-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid rgba(255,255,255,.07);font-size:14px}
+  .p-row:first-of-type{border-top:0}
+  .p-row span:first-child{color:#93A1C4}
+  .p-row span:last-child{color:#fff;text-align:right}
+  .p-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#F5B544,#E8A020);color:#171106;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800}
+  .p-pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px}
+  .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.p-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="p-wrap">
+  <div class="p-head">
+    <a href="dashboard.html" class="btn btn-ghost">← Dashboard</a>
+    <h1>My Profile</h1>
+  </div>
+
+  <div class="p-card">
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <div class="p-av" id="pfAv">?</div>
+      <div>
+        <div style="color:#fff;font-size:20px;font-weight:800" id="pfName">—</div>
+        <div style="color:#93A1C4;font-size:13.5px" id="pfEmail">—</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap" id="pfPills"></div>
+      </div>
+      <div style="margin-left:auto;text-align:right;color:#93A1C4;font-size:13px" id="pfSince"></div>
+    </div>
+  </div>
+
+  <div class="p-grid">
+    <div class="p-card">
+      <h3>👤 Account Details</h3>
+      <div id="pfDetails"></div>
+    </div>
+    <div class="p-card">
+      <h3>📊 Account Activity</h3>
+      <div id="pfActivity"></div>
+    </div>
+  </div>
+
+  <div class="p-grid">
+    <div class="p-card">
+      <h3>🏦 Bank Details</h3>
+      <p style="color:#93A1C4;font-size:13px;margin:0 0 10px">Where Admin sends your withdrawals. The Withdraw form fills itself from here.</p>
+      <div id="pfBankNow" style="font-size:13.5px;color:#D7DEEF;margin-bottom:12px"></div>
+      <div class="field"><label>Method</label><select id="bkMethod"><option>Easypaisa</option><option>JazzCash</option><option>Online Bank Transfer</option></select></div>
+      <div class="field"><label>Account Number</label><input id="bkAccount" placeholder="e.g. 0333-xxxxxxx"></div>
+      <div class="field"><label>Account Title</label><input id="bkTitle" placeholder="e.g. Waheed Ahmad"></div>
+      <div class="form-err" id="bkErr"></div>
+      <button class="btn btn-gold" style="font-weight:800" onclick="saveBankF()">Save Bank Details</button>
+      <span id="bkOk" style="margin-left:10px;color:#16C784;font-weight:700;font-size:13px"></span>
+    </div>
+    <div class="p-card">
+      <h3>✏️ Edit Profile</h3>
+      <div class="field"><label>Full Name</label><input id="edName"></div>
+      <div class="field"><label>Phone</label><input id="edPhone"></div>
+      <div class="field"><label>Country</label><input id="edCountry"></div>
+      <button class="btn btn-gold" style="font-weight:800" onclick="saveProfileF()">Save Changes</button>
+      <span id="edOk" style="margin-left:10px;color:#16C784;font-weight:700;font-size:13px"></span>
+      <h3 style="margin-top:22px">🔑 Change Password</h3>
+      <div class="field"><label>Current Password</label><input id="pwOld" type="password"></div>
+      <div class="field"><label>New Password</label><input id="pwNew" type="password"></div>
+      <div class="field"><label>Confirm New Password</label><input id="pwNew2" type="password"></div>
+      <div class="form-err" id="pwErr"></div>
+      <button class="btn btn-gold" style="font-weight:800" onclick="changePwF()">Change Password</button>
+      <span id="pwOk" style="margin-left:10px;color:#16C784;font-weight:700;font-size:13px"></span>
+    </div>
+  </div>
+
+  <div class="p-card">
+    <h3>🔗 Quick Links</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn btn-gold" href="dashboard.html#kycPanel" style="font-weight:800">🪪 KYC Verification</a>
+      <a class="btn btn-ghost" href="guide.html">📖 User Guide</a>
+      <a class="btn btn-ghost" href="trade.html">📈 Web Terminal</a>
+      <a class="btn btn-ghost" href="https://wa.me/923349001195" target="_blank">💬 Contact Support</a>
+    </div>
+  </div>
+</div>
+<script src="data/instruments.js?v=10"></script>
+<script src="assets/store.js?v=23"></script>
+<script src="assets/cloud.js?v=8"></script>
+<script>
+  const u = Oryx.currentUser();
+  if (!u){ location.href = 'login.html'; }
+  const acc = Oryx.myAccounts()[0];
+  const row = (k, v) => `<div class="p-row"><span>${k}</span><span>${v}</span></div>`;
+  function render(){
+    const a = Oryx.accountById(acc.id);
+    document.getElementById('pfAv').textContent = (u.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    document.getElementById('pfName').textContent = u.name;
+    document.getElementById('pfEmail').textContent = u.email;
+    const kyc = Oryx.kycStatus(u);
+    const kycPill = kyc === 'verified' ? '<span class="p-pill" style="background:#16C784;color:#fff">✓ KYC Verified</span>'
+      : kyc === 'pending' ? '<span class="p-pill" style="background:#F59E0B;color:#451A03">KYC Pending Review</span>'
+      : '<span class="p-pill" style="background:#EA3943;color:#fff">KYC Not Submitted</span>';
+    const stPill = (!u.status || u.status === 'approved') ? '<span class="p-pill" style="background:#16C784;color:#fff">● Active</span>' : '<span class="p-pill" style="background:#F59E0B;color:#451A03">Pending Approval</span>';
+    document.getElementById('pfPills').innerHTML = stPill + kycPill + '<span class="p-pill" style="background:rgba(255,255,255,.12);color:#fff">Client</span>';
+    document.getElementById('pfSince').innerHTML = 'Member Since<br><b style="color:#fff">' + new Date(u.created).toLocaleDateString() + '</b>';
+    document.getElementById('pfDetails').innerHTML =
+      row('Full Name', Oryx.esc(u.name)) + row('Email', Oryx.esc(u.email)) +
+      row('Phone', Oryx.esc(u.phone || '—')) + row('Country', Oryx.esc(u.country || '—')) +
+      row('User ID', Oryx.esc(u.id)) + row('Account No.', a ? a.login : '—') +
+      row('Leverage', a ? '1:' + a.leverage : '—') + row('Balance', a ? Oryx.money(a.balance) : '—');
+    const tx = Oryx.txns().filter(t => t.accountId === a.id);
+    const trs = Oryx.trades().filter(t => t.accountId === a.id);
+    const dep = Oryx.requests().filter(r => r.accountId === a.id && r.kind !== 'withdraw' && r.status === 'approved').reduce((s, r) => s + r.amount, 0);
+    const wd = Math.abs(tx.filter(t => /Withdraw/.test(t.type)).reduce((s, t) => s + t.amount, 0));
+    document.getElementById('pfActivity').innerHTML =
+      row('Last Login', u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '—') +
+      row('Account Type', 'Client') + row('Status', (!u.status || u.status === 'approved') ? 'Active' : u.status) +
+      row('Total Trades', trs.length) + row('Total Deposits', Oryx.money(dep)) + row('Total Withdrawals', Oryx.money(wd));
+    document.getElementById('pfBankNow').innerHTML = u.bank && u.bank.account
+      ? `<b style="color:#F5B544">${Oryx.esc(u.bank.method)}</b> — ${Oryx.esc(u.bank.account)}${u.bank.title ? ' (' + Oryx.esc(u.bank.title) + ')' : ''}`
+      : '<span style="color:#7C88A8">No bank account saved yet.</span>';
+    document.getElementById('bkMethod').value = (u.bank && u.bank.method) || 'Easypaisa';
+    document.getElementById('bkAccount').value = (u.bank && u.bank.account) || '';
+    document.getElementById('bkTitle').value = (u.bank && u.bank.title) || '';
+    document.getElementById('edName').value = u.name;
+    document.getElementById('edPhone').value = u.phone || '';
+    document.getElementById('edCountry').value = u.country || '';
+  }
+  function saveBankF(){
+    const acct = document.getElementById('bkAccount').value.trim();
+    if (!acct){ document.getElementById('bkErr').textContent = 'Enter your account number first.'; return; }
+    document.getElementById('bkErr').textContent = '';
+    Oryx.saveBank(u.id, { method: document.getElementById('bkMethod').value, account: acct, title: document.getElementById('bkTitle').value.trim() });
+    document.getElementById('bkOk').textContent = '✓ Saved'; render();
+  }
+  function saveProfileF(){
+    const name = document.getElementById('edName').value.trim();
+    if (!name) return;
+    Oryx.updateProfile(u.id, { name, phone: document.getElementById('edPhone').value.trim(), country: document.getElementById('edCountry').value.trim() });
+    document.getElementById('edOk').textContent = '✓ Saved'; render();
+  }
+  function changePwF(){
+    const err = document.getElementById('pwErr');
+    const nw = document.getElementById('pwNew').value, nw2 = document.getElementById('pwNew2').value;
+    if (nw !== nw2){ err.textContent = 'New passwords do not match.'; return; }
+    const r = Oryx.changePassword(u.id, document.getElementById('pwOld').value, nw);
+    if (r.error){ err.textContent = r.error; return; }
+    err.textContent = ''; document.getElementById('pwOk').textContent = '✓ Password changed';
+    document.getElementById('pwOld').value = ''; document.getElementById('pwNew').value = ''; document.getElementById('pwNew2').value = '';
+  }
+  render();
+</script>
+</body>
+</html>
