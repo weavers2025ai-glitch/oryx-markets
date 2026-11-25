@@ -30,7 +30,7 @@ img{max-width:100%}
 @keyframes tickmove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* header */
-.site-head{position:sticky;top:0;z-index:60;background:rgba(10,17,40,.96);backdrop-filter:blur(8px);display:flex;align-items:center;gap:26px;padding:14px 26px}
+.site-head{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#0B2A5B,#123E7D);backdrop-filter:blur(8px);border-bottom:2px solid rgba(245,181,68,.5);display:flex;align-items:center;gap:26px;padding:14px 26px}
 .brand{display:flex;align-items:center;gap:10px;color:#fff;font-size:21px;letter-spacing:.14em;font-weight:300}
 .brand b{color:var(--gold);font-weight:800}
 .brand.light{color:#fff}
@@ -43,8 +43,8 @@ img{max-width:100%}
 html,body{overflow-x:clip}
 /* hero */
 .hero{background:radial-gradient(1000px 480px at 85% -10%,rgba(216,169,78,.22),transparent 60%),linear-gradient(140deg,var(--navy) 0%,var(--navy2) 55%,var(--navy3) 100%);color:#fff;overflow:hidden;position:relative}
-.hero-inner{max-width:1600px;margin:0 auto;padding:48px 20px 56px;display:grid;grid-template-columns:.92fr 1.28fr;gap:48px;align-items:stretch;position:relative;z-index:2}.hero-copy{display:flex;flex-direction:column;justify-content:center}.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
-.hero h1{font-size:66px;line-height:1.08;font-weight:800;letter-spacing:-.5px}
+.hero-inner{max-width:1600px;margin:0 auto;padding:40px 20px 48px;display:grid;grid-template-columns:.92fr 1.28fr;gap:48px;align-items:stretch;position:relative;z-index:2}.hero-copy{display:flex;flex-direction:column;justify-content:center}.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero h1{font-size:56px;line-height:1.08;font-weight:800;letter-spacing:-.5px}
 .hero h1 span{color:var(--gold)}
 .hero p{color:#C4CEE6;font-size:20px;margin:20px 0 30px;max-width:520px}
 .hero-badges{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:34px;padding-top:22px;border-top:1px solid rgba(255,255,255,.12)}@media(max-width:600px){.hero-badges{grid-template-columns:1fr 1fr}}
@@ -287,6 +287,8 @@ table.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid v
 .float-card b{color:#fff;font-size:16px}
 .float-card.fc1{right:-8px;top:26px}
 .float-card.fc2{left:-14px;bottom:34px;border-color:rgba(216,169,78,.45)}
+.float-card.fc3{left:-10px;top:74px;border-color:rgba(78,168,255,.45)}
+.float-card.fc4{right:-6px;bottom:96px;border-color:rgba(192,132,252,.45)}
 .hero-chart-frame{border:1px solid rgba(216,169,78,.28);border-radius:18px;overflow:hidden;background:#0A0F1E;box-shadow:0 40px 90px rgba(0,0,0,.55);display:flex;flex-direction:column;width:100%}
 .hero-chart-frame .hc-head{display:flex;gap:7px;align-items:center;padding:10px 14px;background:rgba(255,255,255,.04);border-bottom:1px solid var(--line2)}
 .mkt-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
@@ -408,6 +410,8 @@ body.dark-dash{background:var(--deep);color:#D7DEEF}
 .rv.in{opacity:1;transform:none}
 .float-card{animation:floaty 5.5s ease-in-out infinite}
 .float-card.fc2{animation-delay:1.4s}
+.float-card.fc3{animation-delay:.7s}
+.float-card.fc4{animation-delay:2.1s}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
 .hero h1{background:linear-gradient(100deg,#fff 20%,#F5D48B 40%,#fff 60%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;animation:shine 7s linear infinite}
 @keyframes shine{0%{background-position:120% 0}100%{background-position:-120% 0}}
