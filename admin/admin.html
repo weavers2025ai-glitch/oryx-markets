@@ -113,7 +113,7 @@
 
       <section id="tab-livetraders" style="display:none">
         <h1>🔴 Live Traders</h1><p class="sub"><span id="ltCount">No one is trading right now.</span> Loss-makers come first, then profit-makers — profit rows blink. A white line separates the two groups. Figures update live as prices move — click a row to open that client's ledger.</p>
-        <div class="kpi-row" id="ltKpis" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="kpi-row" id="ltKpis" style="grid-template-columns:repeat(2,1fr)"></div>
         <div class="panel"><div id="ltList"></div></div>
       </section>
 
@@ -305,7 +305,7 @@
 </div>
 
 <script src="../data/instruments.js?v=10"></script>
-<script src="../assets/store.js?v=25"></script>
+<script src="../assets/store.js?v=26"></script>
 <script src="../assets/cloud.js?v=8"></script>
 <script>
   const mini = (g, ic, label, val, sub, click) => `<div class="kpi mini ${g}${click ? ' clickable' : ''}"${click ? ` onclick="${click}" title="Click to see details"` : ''}><span class="kic" style="width:42px;height:42px;font-size:19px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
@@ -731,25 +731,24 @@
     }).filter(Boolean).sort((x, y) => x.pl - y.pl);
   }
   function renderLive(){
+    try { Oryx.checkStopOutAll(); } catch(e){}
     const rows = liveTraders();
     const profit = rows.filter(r => r.pl > 0).reduce((s, r) => s + r.pl, 0);
     const loss = Math.abs(rows.filter(r => r.pl < 0).reduce((s, r) => s + r.pl, 0));
-    const txAll = Oryx.txns();
-    const depOf = rs => rs.reduce((s, r) => s + txAll.filter(t => t.accountId === r.account.id && t.amount > 0).reduce((a, t) => a + t.amount, 0), 0);
+    const depOf = rs => rs.reduce((s, r) => s + Oryx.depositTotal(r.account.id), 0);
+    const ltBox = (grad, icon, label, val, sub, dep, kind, depKind) => `<div class="kpi mini ${grad}" style="cursor:pointer" onclick="showKpi('${kind}')"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:15px;font-weight:700">${label}</div><div style="font-size:30px;font-weight:900;line-height:1.15">${val}</div><div style="font-size:13px;opacity:.85">${sub}</div></div><div style="font-size:19px;background:rgba(255,255,255,.18);border-radius:10px;padding:6px 8px">${icon}</div></div><div style="background:#fff;color:#0F172A;border-radius:10px;padding:6px 12px;margin-top:10px;display:inline-block;font-weight:900;font-size:16px;cursor:pointer" onclick="event.stopPropagation();showKpi('${depKind}')">${dep}</div></div>`;
     document.getElementById('ltKpis').innerHTML =
-      mini('g2','📈','Total Live Profit', Oryx.money(profit), rows.filter(r => r.pl > 0).length + ' user(s) in profit', "showKpi('liveProfit')") +
-      mini('white','💰','Profit Users Deposits', Oryx.money(depOf(rows.filter(r => r.pl > 0))), 'total deposited', "showKpi('liveProfitDep')") +
-      mini('g5','📉','Total Live Loss', Oryx.money(loss), rows.filter(r => r.pl < 0).length + ' user(s) in loss', "showKpi('liveLoss')") +
-      mini('white','💰','Loss Users Deposits', Oryx.money(depOf(rows.filter(r => r.pl < 0))), 'total deposited', "showKpi('liveLossDep')");
+      ltBox('g2','📈','Total Live Profit', Oryx.money(profit), rows.filter(r => r.pl > 0).length + ' user(s) in profit', Oryx.money(depOf(rows.filter(r => r.pl > 0))), 'liveProfit', 'liveProfitDep') +
+      ltBox('g5','📉','Total Live Loss', Oryx.money(loss), rows.filter(r => r.pl < 0).length + ' user(s) in loss', Oryx.money(depOf(rows.filter(r => r.pl < 0))), 'liveLoss', 'liveLossDep');
     document.getElementById('ltCount').textContent = rows.length ? `${rows.length} user${rows.length > 1 ? 's' : ''} trading live right now` : 'No one is trading right now.';
     const rowHtml = r => {
       const syms = r.trades.map(t => t.symbol).filter((v, i, a) => a.indexOf(v) === i).join(', ');
       const lots = r.trades.reduce((s, t) => s + (+t.lots || 0), 0);
-      return `<tr class="${r.pl > 0 ? 'blink' : ''}" style="background:${clientGrad70(Oryx.users(), r.user.id)};color:#fff;cursor:pointer" onclick="openLedger('${r.user.id}')"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'};font-weight:800">${r.pl >= 0 ? '+' : ''}${Oryx.money(r.pl)}</td></tr>`;
+      return `<tr class="${r.pl > 0 ? 'blink' : ''}" style="background:${clientGrad70(Oryx.users(), r.user.id)};color:#fff;cursor:pointer" onclick="openLedger('${r.user.id}')"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td>${Oryx.money(Oryx.depositTotal(r.account.id))}</td><td>${Oryx.money(Oryx.companyTotal(r.account.id))}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'};font-weight:800">${r.pl >= 0 ? '+' : ''}${Oryx.money(r.pl)}</td></tr>`;
     };
     const lossRows = rows.filter(r => r.pl < 0), profitRows = rows.filter(r => r.pl >= 0);
-    const sep = (lossRows.length && profitRows.length) ? `<tr class="lt-sep"><td colspan="6" style="padding:12px 0 8px;background:transparent;border:none"><div style="height:3px;background:#fff;border-radius:2px"></div></td></tr>` : '';
-    document.getElementById('ltList').innerHTML = rows.length ? tbl(['Client','Account','Open Trades','Symbols','Total Lots','Live P/L'], [...lossRows.map(rowHtml), sep, ...profitRows.map(rowHtml)].join('')) : '<p style="color:#7C88A8">No open trades right now. When a client opens a position, they appear here live.</p>';
+    const sep = (lossRows.length && profitRows.length) ? `<tr class="lt-sep"><td colspan="8" style="padding:12px 0 8px;background:transparent;border:none"><div style="height:3px;background:#fff;border-radius:2px"></div></td></tr>` : '';
+    document.getElementById('ltList').innerHTML = rows.length ? tbl(['Client','Account','Open Trades','Symbols','Total Lots','Deposit','Company','Live P/L'], [...lossRows.map(rowHtml), sep, ...profitRows.map(rowHtml)].join('')) : '<p style="color:#7C88A8">No open trades right now. When a client opens a position, they appear here live.</p>';
   }
   function showKpi(kind){
     const us = Oryx.users(), ac = Oryx.accounts(), tr = Oryx.trades(), tx = Oryx.txns();
