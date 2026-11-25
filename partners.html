@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partners — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css?v=24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+.pt-hero{background:linear-gradient(rgba(7,13,29,.88),rgba(7,13,29,.94)),url('images/banner-app.webp') center/cover;border-bottom:1px solid var(--line)}
+.pt-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:30px}
+.pt-card{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:18px;padding:26px 22px;text-align:center}
+.pt-card .ic{font-size:30px;margin-bottom:10px}
+.pt-card h3{color:#fff;font-size:19px;margin-bottom:8px}
+.pt-card p{color:#C7D2F0;font-size:15.5px;line-height:1.6}
+.pt-card a{color:#F5B544;font-weight:800;text-decoration:none}
+.pt-form{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:30px;max-width:760px;margin:0 auto}
+.pt-form h3{color:#fff;font-size:22px;margin-bottom:6px}
+.pt-form .sub{color:#93A1C4;font-size:14.5px;margin-bottom:20px}
+.pt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pt-grid .full{grid-column:1/-1}
+.pt-form textarea{width:100%;min-height:130px;resize:vertical}
+.pt-note{color:#93A1C4;font-size:13px;margin-top:14px;text-align:center}
+@media(max-width:820px){.pt-cards{grid-template-columns:1fr}.pt-grid{grid-template-columns:1fr}.pt-form{padding:22px}}
+</style>
+</head>
+<body data-root="" class="dark-page">
+<div id="site-header"></div>
+<section class="sec pt-hero">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Partners</div>
+      <h2 style="color:#fff">List Your Services Today</h2>
+      <p>Offer your trading services, tools or expertise to Oryx Markets clients. Send us a message — we usually reply within one business day.</p>
+    </div>
+  </div>
+</section>
+<section class="sec">
+  <div class="wrap">
+    <div class="pt-cards">
+      <div class="pt-card"><div class="ic">📞</div><h3>Call Us</h3><p>WhatsApp: <a href="https://wa.me/971582145708" target="_blank" rel="noopener">+971 58 214 5708</a><br>Mon–Fri, while markets are open</p></div>
+      <div class="pt-card"><div class="ic">✉️</div><h3>Mail Us</h3><p><a href="mailto:info@oryx.com">info@oryx.com</a><br><a href="mailto:sales@oryx.com">sales@oryx.com</a></p></div>
+      <div class="pt-card"><div class="ic">📍</div><h3>Find Us</h3><p>Oryx Markets<br>Dubai, United Arab Emirates</p></div>
+    </div>
+    <div class="pt-form">
+      <h3>Send Us a Message</h3>
+      <p class="sub">Tell us about your service and our partnerships team will get back to you.</p>
+      <div class="pt-grid">
+        <div class="field"><label>Your Name</label><input id="pName" placeholder="Full name"></div>
+        <div class="field"><label>Email Address</label><input id="pEmail" placeholder="you@email.com"></div>
+        <div class="field"><label>Your Phone</label><input id="pPhone" placeholder="+971 ..."></div>
+        <div class="field"><label>Subject</label><input id="pSubject" placeholder="e.g. List my trading service"></div>
+        <div class="field full"><label>Message</label><textarea id="pMsg" placeholder="Describe your service, pricing and how clients can use it..."></textarea></div>
+      </div>
+      <div class="form-err" id="pErr"></div>
+      <button class="btn btn-gold" style="width:100%;margin-top:16px" onclick="sendPartner()">Send Message</button>
+      <p class="pt-note">Your message opens in WhatsApp, ready to send to our partnerships team.</p>
+    </div>
+  </div>
+</section>
+<div id="site-footer"></div>
+<script src="assets/store.js?v=27"></script>
+<script src="assets/chrome.js?v=12"></script>
+<script src="assets/support.js?v=11"></script>
+<script>
+function sendPartner(){
+  const name = document.getElementById('pName').value.trim();
+  const email = document.getElementById('pEmail').value.trim();
+  const phone = document.getElementById('pPhone').value.trim();
+  const subject = document.getElementById('pSubject').value.trim();
+  const msg = document.getElementById('pMsg').value.trim();
+  const err = document.getElementById('pErr');
+  if (!name || !email || !msg) { err.textContent = 'Please fill your name, email and message.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  const text = 'Partner enquiry — Oryx Markets\nName: ' + name + '\nEmail: ' + email + (phone ? '\nPhone: ' + phone : '') + (subject ? '\nSubject: ' + subject : '') + '\nMessage: ' + msg;
+  window.open('https://wa.me/971582145708?text=' + encodeURIComponent(text), '_blank');
+}
+</script>
+<script src="assets/install.js?v=3"></script>
+</body>
+</html>
