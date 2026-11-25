@@ -184,7 +184,7 @@
     .tp-sl-tp{grid-column:1/span 2;grid-row:2}
     .tp-right #tpMargin{grid-column:3;grid-row:2;align-self:end;margin-top:0;padding-bottom:9px}
     .tp-right #tpMsg{grid-column:1/-1;grid-row:3;margin-top:0}
-    .chart-box{height:calc(100vh - 490px);min-height:280px;max-height:520px}
+    .chart-box{height:calc(100vh - 430px);min-height:380px;max-height:560px}
     .trade-bar{padding:8px 16px 4px}
   }
   /* desktop: open positions live at the top of the left column, beside the chart */
@@ -253,6 +253,12 @@
   <div class="col chart-col">
     <div class="sym-strip" id="symStrip"></div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+      <span style="color:var(--mut);font-size:12px;white-space:nowrap">◀ History</span>
+      <input type="range" id="chartScroll" min="0" max="60" value="60" step="1" style="flex:1;accent-color:#F5B544;cursor:pointer" aria-label="Scroll chart history">
+      <span style="color:var(--mut);font-size:12px;white-space:nowrap">Latest ▶</span>
+      <button type="button" class="btn btn-line" id="chartLatest" style="padding:5px 12px;white-space:nowrap">⟲ Latest</button>
+    </div>
     <div class="trade-bar">
       <div class="qt-prices"><div class="qt-price bid"><label>BID (Sell)</label><b id="qtBid">—</b></div><div class="qt-price ask"><label>ASK (Buy)</label><b id="qtAsk">—</b></div></div>
       <div class="ot-desk">
@@ -321,12 +327,19 @@
 <script src="data/instruments.js?v=10"></script>
 <script src="assets/store.js?v=19"></script>
 <script src="assets/cloud.js?v=8"></script>
-<script src="assets/chart.js?v=13"></script>
+<script src="assets/chart.js?v=14"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
   const acc = Oryx.myAccounts()[0];
   let cur = 'XAUUSD';
+  const CHART_N = 30; /* candles on screen at once — big and clear */
+  let chartOff = 0; /* 0 = live latest; more = further back in history */
+  document.getElementById('chartScroll').addEventListener('input', e => {
+    const total = Oryx.candles(cur).length, maxStart = Math.max(0, total - CHART_N);
+    chartOff = maxStart - (+e.target.value); render();
+  });
+  document.getElementById('chartLatest').addEventListener('click', () => { chartOff = 0; render(); });
   document.getElementById('whoLine').textContent = u.name + ' · Account ' + acc.login + ' · 1:' + acc.leverage;
   document.getElementById('tpLev').value = '1:' + acc.leverage;
 
@@ -410,7 +423,11 @@
     document.getElementById('hlBar').innerHTML =
       `<div class="hl-box hi"><span>Today High · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayHigh(cur))}</b></div>` +
       `<div class="hl-box lo"><span>Today Low · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>`;
-    try { drawLiveChart(document.getElementById('tvchart'), cur); } catch(e){}
+    const totalC = Oryx.candles(cur).length, maxStart = Math.max(0, totalC - CHART_N);
+    if (chartOff > maxStart) chartOff = maxStart;
+    const sc = document.getElementById('chartScroll');
+    if (sc){ sc.max = maxStart; sc.value = maxStart - chartOff; }
+    try { drawLiveChart(document.getElementById('tvchart'), cur, Math.max(0, totalC - CHART_N - chartOff), CHART_N); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
     const posHtml = open.length ? open.map((t, ix) => {
       const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
