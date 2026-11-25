@@ -48,6 +48,7 @@
       <div class="who" id="adminWho">Broker control panel<br>Balances are issued here only.</div>
       <a href="#" data-tab="dash" class="on">📊 Dashboard</a>
       <a href="#" data-tab="clients">👥 Clients &amp; Balances</a>
+      <a href="#" data-tab="livetraders">🔴 Live Traders<span id="ltBadge"></span></a>
       <a href="#" data-tab="approvals">✅ Account Approvals<span id="apprBadge"></span></a>
       <a href="#" data-tab="trades">📈 All Trades</a>
       <a href="#" data-tab="txns">💳 Transactions</a>
@@ -94,6 +95,12 @@
         <div class="panel"><h3>All Clients</h3>
           <input id="clientSearch" placeholder="🔍 Search by name, email, account no. (e.g. 880008), phone or country…" oninput="filterClients()" style="width:100%;margin-bottom:14px">
           <div id="cList"></div></div>
+      </section>
+
+      <section id="tab-livetraders" style="display:none">
+        <h1>🔴 Live Traders</h1><p class="sub"><span id="ltCount">No one is trading right now.</span> Loss-makers blink and come first, then profit-makers. Figures update live as prices move — click a row to open that client's ledger.</p>
+        <div class="kpi-row" id="ltKpis" style="grid-template-columns:repeat(2,1fr)"></div>
+        <div class="panel"><div id="ltList"></div></div>
       </section>
 
       <section id="tab-approvals" style="display:none">
@@ -227,6 +234,11 @@
 <script src="../assets/store.js?v=19"></script>
 <script src="../assets/cloud.js?v=8"></script>
 <script>
+  const mini = (g, ic, label, val, sub, click) => `<div class="kpi mini ${g}${click ? ' clickable' : ''}"${click ? ` onclick="${click}" title="Click to see details"` : ''}><span class="kic" style="width:42px;height:42px;font-size:19px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
+  const ugrads = ['linear-gradient(135deg,#6D28D9,#8B5CF6)','linear-gradient(135deg,#065F46,#10B981)','linear-gradient(135deg,#B45309,#F59E0B)','linear-gradient(135deg,#1D4ED8,#38BDF8)','linear-gradient(135deg,#BE185D,#F472B6)','linear-gradient(135deg,#0F766E,#2DD4BF)','linear-gradient(135deg,#3730A3,#818CF8)','linear-gradient(135deg,#9A3412,#FB923C)'];
+  /* One colour per client, the same everywhere: the card, every table row, every popup. Position in the newest-first list decides it. */
+  function clientGrad(us, userId){ const ix = us.slice().reverse().findIndex(x => x.id === userId); return ugrads[ix < 0 ? 0 : ix % ugrads.length]; }
+  let ltTimer = null;
   window.addEventListener('error', function(e){ try { var d = document.getElementById('jsErr'); if (!d) { d = document.createElement('div'); d.id = 'jsErr'; d.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;background:#7F1D1D;color:#fff;padding:10px 14px;border-radius:10px;font:12px monospace;max-width:90vw;white-space:pre-wrap'; document.body.appendChild(d); } d.textContent += (d.textContent ? '\n' : '') + 'JS ERROR: ' + e.message + ' @ line ' + (e.lineno || '?'); } catch(_){} });
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
   function tryLogin(){
@@ -251,6 +263,7 @@
     document.querySelectorAll('.side a[data-tab]').forEach(x => x.classList.remove('on')); a.classList.add('on');
     document.querySelectorAll('main section[id^="tab-"]').forEach(s => s.style.display = s.id === 'tab-' + a.dataset.tab ? 'block' : 'none');
     renderAll();
+    if (a.dataset.tab === 'livetraders') startLiveTimer(); else stopLiveTimer();
   }));
   (function(){ try { const t = localStorage.getItem('oryx_admin_tab'); if (t && t !== 'dash'){ const l = document.querySelector('.side a[data-tab="' + t + '"]'); if (l) l.click(); } } catch(err){} })();
 
@@ -349,9 +362,9 @@
       const a = ac.find(v => v.id === t.accountId);
       return `<div class="act-row"><span class="act-ic" style="background:rgba(34,197,94,.12)">💳</span><div style="flex:1">${t.type} — ${a ? Oryx.esc(clientName(a.userId)) : '—'}<div style="color:#7C88A8;font-size:12px">${new Date(t.at).toLocaleString()}${t.note ? ' · ' + Oryx.esc(t.note) : ''}</div></div><b style="color:${t.amount >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(t.amount)}</b></div>`;
     }).join('') || '<p style="color:#7C88A8;font-size:13.5px">No transactions yet.</p>';
-    document.getElementById('dLatest').innerHTML = tbl(['Name','Email','Account','Balance','Joined'], us.slice().reverse().slice(0, 6).map(x => {
+    document.getElementById('dLatest').innerHTML = tbl(['Name','Email','Account','Balance','Joined'], us.slice().reverse().slice(0, 6).map((x, ix) => {
       const a = ac.find(v => v.userId === x.id);
-      return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
+      return `<tr style="background:${ugrads[ix % ugrads.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
     }).join(''));
     /* ===== balance requests: badge, alert, cards ===== */
     const rqAll = Oryx.requests();
@@ -363,13 +376,15 @@
     document.getElementById('apprBadge').innerHTML = apprPend.length ? `<span class="req-badge blink">${apprPend.length}</span>` : '';
     const apprLink = document.querySelector('.side a[data-tab="approvals"]');
     if (apprLink) apprLink.classList.toggle('blink', apprPend.length > 0);
+    const liveCount = liveTraders().length;
+    document.getElementById('ltBadge').innerHTML = liveCount ? `<span class="req-badge">${liveCount}</span>` : '';
+    renderLive();
     document.getElementById('dashAlert').innerHTML =
       (rqPend.length ? `<div class="alert-strip blink" onclick="document.querySelector('[data-tab=reqs]').click()">💸 ${rqPend.length} balance request${rqPend.length > 1 ? 's' : ''} waiting for your approval — click to review</div>` : '') +
       (apprPend.length ? `<div class="alert-strip blink" style="margin-top:8px" onclick="document.querySelector('[data-tab=approvals]').click()">✅ ${apprPend.length} new account${apprPend.length > 1 ? 's' : ''} waiting for approval — click to review</div>` : '');
-    const grads = ['linear-gradient(135deg,#6D28D9,#8B5CF6)','linear-gradient(135deg,#065F46,#10B981)','linear-gradient(135deg,#B45309,#F59E0B)','linear-gradient(135deg,#1D4ED8,#38BDF8)','linear-gradient(135deg,#BE185D,#F472B6)','linear-gradient(135deg,#0F766E,#2DD4BF)'];
     const rqCard = (r, ix) => {
       const a = ac.find(v => v.id === r.accountId);
-      return `<div style="background:${grads[ix % 6]};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
+      return `<div style="background:${clientGrad(us, a ? a.userId : '')};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <div><b style="font-size:16px">${a ? Oryx.esc(clientName(a.userId)) : 'Unknown client'}</b><div style="opacity:.85;font-size:12.5px">Account ${a ? a.login : '—'} · ${new Date(r.at).toLocaleString()}</div></div>
           <span class="st-pill st-${r.status}" style="background:rgba(0,0,0,.28);color:#fff;border-color:rgba(255,255,255,.4)">${r.status.toUpperCase()}</span>
@@ -395,13 +410,12 @@
     document.getElementById('rqHistory').innerHTML = rqDone.length ? rqDone.slice().reverse().map(rqCard).join('')
       : '<p style="color:#7C88A8">No decided requests yet. Approved and rejected requests will be recorded here permanently.</p>';
     /* ===== per-page KPI strips (same theme as dashboard) ===== */
-    const mini = (g, ic, label, val, sub, click) => `<div class="kpi mini ${g}${click ? ' clickable' : ''}"${click ? ` onclick="${click}" title="Click to see details"` : ''}><span class="kic" style="width:42px;height:42px;font-size:19px">${ic}</span><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
     document.getElementById('rqHistKpis').innerHTML =
       mini('g2','✔','Approved', rqApproved.length, 'requests credited') +
       mini('g4','💰','Total Credited', Oryx.money(rqApproved.reduce((s, r) => s + r.amount, 0)), 'via requests') +
       mini('g3','✖','Rejected', rqDone.length - rqApproved.length, 'requests declined');
     /* ===== account approvals: pending cards + rejected list ===== */
-    const apprCard = (u, ix) => `<div style="background:${grads[ix % 6]};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
+    const apprCard = (u, ix) => `<div style="background:${clientGrad(us, u.id)};border-radius:16px;padding:18px;color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.35)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <div><b style="font-size:16px">${Oryx.esc(u.name)}</b><div style="opacity:.85;font-size:12.5px">${Oryx.esc(u.email)} · ${new Date(u.created).toLocaleString()}</div></div>
           <span class="st-pill st-pending" style="background:rgba(0,0,0,.28);color:#fff;border-color:rgba(255,255,255,.4)">PENDING</span>
@@ -426,9 +440,9 @@
     document.getElementById('uhKpis').innerHTML =
       mini('g1','👥','Total Users', us.length, 'registered') + mini('g2','✔','Approved', apprOk.length, 'active accounts') +
       mini('g3','⏳','Pending', apprPend.length, 'waiting approval') + mini('g5','✖','Rejected', apprRej.length, 'declined');
-    document.getElementById('uhList').innerHTML = tbl(['Name','Email','Password','Phone','Country','User ID','Account','Balance','Registered','Approved At','Approved By'], apprOk.slice().reverse().map(x => {
+    document.getElementById('uhList').innerHTML = tbl(['Name','Email','Password','Phone','Country','User ID','Account','Balance','Registered','Approved At','Approved By'], apprOk.slice().reverse().map((x, ix) => {
       const a = ac.find(v => v.userId === x.id);
-      return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.pass)}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${Oryx.esc(x.id)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td><td>${x.approvedAt ? new Date(x.approvedAt).toLocaleString() : '—'}</td><td>${Oryx.esc(x.approvedBy || '—')}</td></tr>`;
+      return `<tr style="background:${ugrads[ix % ugrads.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${Oryx.esc(x.pass)}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${Oryx.esc(x.id)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${new Date(x.created).toLocaleDateString()}</td><td>${x.approvedAt ? new Date(x.approvedAt).toLocaleString() : '—'}</td><td>${Oryx.esc(x.approvedBy || '—')}</td></tr>`;
     }).join(''));
     document.getElementById('cKpis').innerHTML =
       mini('g1','👥','Total Clients', us.length, 'registered', "showKpi('clients')") + mini('g4','💰','Total Balances', Oryx.money(totalBal), 'all accounts', "showKpi('balances')") +
@@ -442,7 +456,6 @@
       mini('g2','🏦','Total Issued', Oryx.money(issuedPos), 'credits in') + mini('g5','💸','Withdrawals', Oryx.money(wdAbs), 'debits out') +
       mini('g4','⚖️','Net Flow', Oryx.money(issuedPos - wdAbs), 'in minus out') + mini('g1','🧾','Transactions', tx.length, 'records');
     document.getElementById('ibAcc').innerHTML = ac.map(a => `<option value="${a.id}">${a.login} — ${Oryx.esc(clientName(a.userId))} (${Oryx.esc(clientEmail(a.userId))}) · Balance ${Oryx.money(a.balance)}</option>`).join('') || '<option value="">No clients yet</option>';
-    const ugrads = ['linear-gradient(135deg,#6D28D9,#8B5CF6)','linear-gradient(135deg,#065F46,#10B981)','linear-gradient(135deg,#B45309,#F59E0B)','linear-gradient(135deg,#1D4ED8,#38BDF8)','linear-gradient(135deg,#BE185D,#F472B6)','linear-gradient(135deg,#0F766E,#2DD4BF)','linear-gradient(135deg,#3730A3,#818CF8)','linear-gradient(135deg,#9A3412,#FB923C)'];
     document.getElementById('cList').innerHTML = us.length ? `<div class="ucards">${us.slice().reverse().map((x, ix) => {
       const a = ac.find(v => v.userId === x.id);
       if (!a) return '';
@@ -557,15 +570,43 @@
     clearInterval(ldTimer); ldTimer = null;
   }
   function closeKpi(){ document.getElementById('kpiOv').classList.remove('open'); }
+  function startLiveTimer(){ stopLiveTimer(); ltTimer = setInterval(renderLive, 2000); }
+  function stopLiveTimer(){ if (ltTimer){ clearInterval(ltTimer); ltTimer = null; } }
+  /* Live Traders: users with open positions, loss-makers first (blinking) */
+  function liveTraders(){
+    const byAcc = {};
+    Oryx.trades().filter(t => t.status === 'open').forEach(t => { (byAcc[t.accountId] = byAcc[t.accountId] || []).push(t); });
+    return Object.keys(byAcc).map(accId => {
+      const a = Oryx.accounts().find(v => v.id === accId);
+      if (!a) return null;
+      const u = Oryx.users().find(x => x.id === a.userId) || {};
+      const trades = byAcc[accId];
+      return { user:u, account:a, trades, pl: trades.reduce((s, t) => s + Oryx.pnlOf(t), 0) };
+    }).filter(Boolean).sort((x, y) => x.pl - y.pl);
+  }
+  function renderLive(){
+    const rows = liveTraders();
+    const profit = rows.filter(r => r.pl > 0).reduce((s, r) => s + r.pl, 0);
+    const loss = Math.abs(rows.filter(r => r.pl < 0).reduce((s, r) => s + r.pl, 0));
+    document.getElementById('ltKpis').innerHTML =
+      mini('g2','📈','Total Live Profit', Oryx.money(profit), rows.filter(r => r.pl > 0).length + ' user(s) in profit') +
+      mini('g5','📉','Total Live Loss', Oryx.money(loss), rows.filter(r => r.pl < 0).length + ' user(s) in loss');
+    document.getElementById('ltCount').textContent = rows.length ? `${rows.length} user${rows.length > 1 ? 's' : ''} trading live right now` : 'No one is trading right now.';
+    document.getElementById('ltList').innerHTML = rows.length ? tbl(['Client','Account','Open Trades','Symbols','Total Lots','Live P/L'], rows.map(r => {
+      const syms = r.trades.map(t => t.symbol).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+      const lots = r.trades.reduce((s, t) => s + (+t.lots || 0), 0);
+      return `<tr class="${r.pl < 0 ? 'blink' : ''}" style="background:${clientGrad(Oryx.users(), r.user.id)};color:#fff;cursor:pointer" onclick="openLedger('${r.user.id}')"><td><b>${Oryx.esc(r.user.name || '—')}</b></td><td>${r.account.login}</td><td>${r.trades.length}</td><td>${Oryx.esc(syms)}</td><td>${lots.toFixed(2)}</td><td style="color:${r.pl >= 0 ? '#16C784' : '#EA3943'};font-weight:800">${r.pl >= 0 ? '+' : ''}${Oryx.money(r.pl)}</td></tr>`;
+    }).join('')) : '<p style="color:#7C88A8">No open trades right now. When a client opens a position, they appear here live.</p>';
+  }
   function showKpi(kind){
     const us = Oryx.users(), ac = Oryx.accounts(), tr = Oryx.trades(), tx = Oryx.txns();
     let title = '', sub = '', body = '';
     if (kind === 'clients'){
       title = `Total Clients — ${us.length} registered`;
       sub = 'Everyone who signed up, with their account and balance.';
-      body = tbl(['Name','Email','Account','Balance','Phone','Country','Joined'], us.slice().reverse().map(x => {
+      body = tbl(['Name','Email','Account','Balance','Phone','Country','Joined'], us.slice().reverse().map((x, ix) => {
         const a = ac.find(v => v.userId === x.id);
-        return `<tr><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
+        return `<tr style="background:${ugrads[ix % ugrads.length]};color:#fff"><td><b>${Oryx.esc(x.name)}</b></td><td>${Oryx.esc(x.email)}</td><td>${a ? a.login : '—'}</td><td>${a ? Oryx.money(a.balance) : '—'}</td><td>${Oryx.esc(x.phone || '—')}</td><td>${Oryx.esc(x.country || '—')}</td><td>${new Date(x.created).toLocaleDateString()}</td></tr>`;
       }).join(''));
     } else if (kind === 'balances'){
       const totalBal = ac.reduce((s, a) => s + a.balance, 0);
@@ -573,7 +614,7 @@
       sub = 'Balance of every trading account, highest first.';
       body = tbl(['Client','Account','Balance','Floating'], ac.slice().sort((p, q) => q.balance - p.balance).map(a => {
         const fl = Oryx.floating(a.id);
-        return `<tr><td><b>${Oryx.esc(clientName(a.userId))}</b></td><td>${a.login}</td><td>${Oryx.money(a.balance)}</td><td style="color:${fl >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(fl)}</td></tr>`;
+        return `<tr style="background:${clientGrad(us, a.userId)};color:#fff"><td><b>${Oryx.esc(clientName(a.userId))}</b></td><td>${a.login}</td><td>${Oryx.money(a.balance)}</td><td style="color:${fl >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(fl)}</td></tr>`;
       }).join(''));
     } else if (kind === 'issued'){
       const pos = tx.filter(t => t.amount > 0);
@@ -582,7 +623,7 @@
       sub = 'Every credit ever issued: $10 starter credits plus admin deposits.';
       body = tbl(['Date','Client','Type','Note','Amount'], pos.slice().reverse().map(t => {
         const a = ac.find(v => v.id === t.accountId);
-        return `<tr><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td>${Oryx.money(t.amount)}</td></tr>`;
+        return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${new Date(t.at).toLocaleString()}</td><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td>${Oryx.esc(t.type || '')}</td><td>${Oryx.esc(t.note || '')}</td><td>${Oryx.money(t.amount)}</td></tr>`;
       }).join(''));
     } else {
       const open = tr.filter(t => t.status === 'open');
@@ -591,7 +632,7 @@
       body = tbl(['Client','Symbol','Side','Lots','Open Price','Live P/L','Opened'], open.map(t => {
         const a = ac.find(v => v.id === t.accountId);
         const p = Oryx.pnlOf(t);
-        return `<tr><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${Oryx.esc(t.symbol)}</b></td><td>${Oryx.esc(t.side)}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</td><td>${new Date(t.openAt).toLocaleString()}</td></tr>`;
+        return `<tr style="background:${a ? clientGrad(us, a.userId) : 'rgba(255,255,255,.06)'};color:#fff"><td>${a ? Oryx.esc(clientName(a.userId)) : '—'}</td><td><b>${Oryx.esc(t.symbol)}</b></td><td>${Oryx.esc(t.side)}</td><td>${t.lots}</td><td>${Oryx.fmtP(t.symbol, t.open)}</td><td style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</td><td>${new Date(t.openAt).toLocaleString()}</td></tr>`;
       }).join(''));
     }
     document.getElementById('kpiTitle').textContent = title;
