@@ -42,7 +42,7 @@
   </div>
 </div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=19"></script>
+<script src="assets/store.js?v=25"></script>
 <script src="assets/cloud.js?v=8"></script>
 <script>
   if (Oryx.currentUser()) location.href = 'dashboard.html';
@@ -57,7 +57,11 @@
       const ok = await OryxCloud.tryLogin(email, pass);
       if (ok) r = Oryx.login(email, pass);
     }
-    if (r.error){ err.textContent = r.error; err.style.display = 'block'; return; }
+    if (r.error){
+      if (r.needsOtp) err.innerHTML = r.error + ' <a href="register.html?u=' + encodeURIComponent(r.needsOtp) + '" style="color:#F5B544;font-weight:700">Complete verification →</a>';
+      else err.textContent = r.error;
+      err.style.display = 'block'; return;
+    }
     location.href = 'dashboard.html';
   }
   document.getElementById('lPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });

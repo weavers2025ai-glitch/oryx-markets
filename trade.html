@@ -76,6 +76,9 @@
   #indPanel{position:absolute;right:0;bottom:44px;z-index:30;display:none;background:#0E1626;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);width:min(310px,92vw)}
   #indPanel.open{display:block}
   #indPanel .ind-grid{display:flex;flex-wrap:wrap;gap:6px}
+  #tvchart{cursor:grab;touch-action:none}
+  #tvchart.dragging{cursor:grabbing}
+  #tvchart.drawing{cursor:crosshair}
   /* compact trade ROWS (one row per trade) + instrument dropdown */
   .trow{background:#12224E;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:3px 8px;margin:0 12px 4px;display:flex;flex-direction:column;gap:2px}
   .tr-main{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;line-height:1.15;height:20px;overflow:hidden}
@@ -297,6 +300,15 @@
         <button type="button" class="tf-btn" data-tf="86400" onclick="setTF(86400)">1D</button>
       </div>
       <button type="button" class="tf-btn" id="indBtn" onclick="toggleIndPanel(event)">Indicators ▾</button>
+      <span style="color:var(--mut);font-size:12px;white-space:nowrap">Zoom</span>
+      <button type="button" class="tf-btn" onclick="zoomChart(-5)" title="Bigger candles">+</button>
+      <button type="button" class="tf-btn" onclick="zoomChart(5)" title="Smaller candles">−</button>
+      <button type="button" class="tf-btn" onclick="resetZoom()" title="Reset zoom">30</button>
+      <button type="button" class="tf-btn" data-draw="line" onclick="setDrawMode('line')" title="Draw a line on the chart">✏️ Line</button>
+      <button type="button" class="tf-btn" data-draw="mark" onclick="setDrawMode('mark')" title="Place a mark on the chart">📍 Mark</button>
+      <button type="button" class="tf-btn" data-draw="fib" onclick="setDrawMode('fib')" title="Draw a Fibonacci retracement">Fibonacci</button>
+      <button type="button" class="tf-btn" data-draw="hline" onclick="setDrawMode('hline')" title="Place a horizontal line at a price">H-Line</button>
+      <button type="button" class="tf-btn" onclick="clearDrawings()" title="Remove your lines and marks">🧹 Clear</button>
       <span style="color:var(--mut);font-size:12px;white-space:nowrap">◀ History</span>
       <input type="range" id="chartScroll" min="0" max="60" value="60" step="1" style="flex:1;min-width:120px;accent-color:#F5B544;cursor:pointer" aria-label="Scroll chart history">
       <span style="color:var(--mut);font-size:12px;white-space:nowrap">Latest ▶</span>
@@ -310,9 +322,10 @@
         <button type="button" class="ind-btn" data-ind="bb" onclick="setInd('bb')">Bollinger</button>
         <button type="button" class="ind-btn" data-ind="rsi" onclick="setInd('rsi')">RSI</button>
         <button type="button" class="ind-btn" data-ind="macd" onclick="setInd('macd')">MACD</button>
+        <button type="button" class="ind-btn" data-ind="stoch" onclick="setInd('stoch')">Stochastic</button>
         <button type="button" class="ind-btn" data-ind="pat" onclick="setInd('pat')">Patterns</button>
       </div>
-      <p style="color:var(--mut);font-size:12px;margin:8px 0 0">Choose any combination. MA + Patterns are on by default.</p>
+      <p style="color:var(--mut);font-size:12px;margin:8px 0 0">Choose any combination. MA + Patterns are on by default. Stochastic is under Indicators; Fibonacci and H-Line are drawing tools.</p>
     </div>
     </div>
     <div class="trade-bar">
@@ -382,29 +395,68 @@
 <div id="msgBox" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:300;width:min(680px,92vw)"></div>
 <div class="toast" id="toast"></div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=24"></script>
+<script src="assets/store.js?v=25"></script>
 <script src="assets/cloud.js?v=8"></script>
-<script src="assets/chart.js?v=15"></script>
+<script src="assets/chart.js?v=16"></script>
 <script>
   const u = Oryx.currentUser();
   if (!u) location.href = 'login.html';
   const acc = Oryx.myAccounts()[0];
   let cur = 'XAUUSD';
-  const CHART_N = 30; /* candles on screen at once — big and clear */
+  let chartN = 30; /* candles on screen at once — user can zoom smaller/bigger */
+  try { const savedN = parseInt(localStorage.getItem('oryx_chartn'), 10); if (savedN >= 12 && savedN <= 90) chartN = savedN; } catch(e){}
   let chartOff = 0; /* 0 = live latest; more = further back in history */
+  let drawMode = '', tempDraw = null, drawings = [];
+  try { drawings = JSON.parse(localStorage.getItem('oryx_drawings') || '[]'); if (!Array.isArray(drawings)) drawings = []; } catch(e){ drawings = []; }
   const TF_LIST = [5, 15, 30, 60, 300, 900, 1800, 3600, 14400, 86400];
   let chartTF = 5;
   try { const savedTF = parseInt(localStorage.getItem('oryx_tf'), 10); if (TF_LIST.includes(savedTF)) chartTF = savedTF; } catch(e){}
-  let chartInd = { ma:true, ema:false, bb:false, rsi:false, macd:false, pat:true };
+  let chartInd = { ma:true, ema:false, bb:false, rsi:false, macd:false, stoch:false, pat:true };
   try { const savedInd = JSON.parse(localStorage.getItem('oryx_ind') || 'null'); if (savedInd) chartInd = Object.assign(chartInd, savedInd); } catch(e){}
   function chartData(){ return Oryx.candlesTF ? Oryx.candlesTF(cur, chartTF) : Oryx.candles(cur); }
   function setTF(sec){ chartTF = sec; chartOff = 0; try { localStorage.setItem('oryx_tf', String(sec)); } catch(e){} render(); }
   function setInd(key){ chartInd[key] = !chartInd[key]; try { localStorage.setItem('oryx_ind', JSON.stringify(chartInd)); } catch(e){} render(); }
   function toggleIndPanel(e){ if (e) e.stopPropagation(); document.getElementById('indPanel').classList.toggle('open'); }
+  function zoomChart(delta){ chartN = Math.max(12, Math.min(90, chartN + delta)); try { localStorage.setItem('oryx_chartn', String(chartN)); } catch(e){} render(); }
+  function resetZoom(){ chartN = 30; try { localStorage.setItem('oryx_chartn', '30'); } catch(e){} render(); }
+  function saveDrawings(){ try { localStorage.setItem('oryx_drawings', JSON.stringify(drawings)); } catch(e){} }
+  function drawingsForChart(){ const list = drawings.filter(d => d.symbol === cur && d.tf === chartTF); return tempDraw ? list.concat([tempDraw]) : list; }
+  function setDrawMode(mode){ drawMode = drawMode === mode ? '' : mode; render(); }
+  function clearDrawings(){ drawings = drawings.filter(d => !(d.symbol === cur && d.tf === chartTF)); saveDrawings(); render(); }
+  function pointToChart(e){
+    const cv = document.getElementById('tvchart'); const sc = cv && cv._oryxScale; if (!sc) return null;
+    const r = cv.getBoundingClientRect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (x < 0 || x > sc.plotW || y < sc.padT || y > sc.mainBottom) return null;
+    return { idx:sc.start + Math.floor(x / sc.step), price:sc.max - (y - sc.padT) / sc.plotH * (sc.max - sc.min) };
+  }
   document.getElementById('chartScroll').addEventListener('input', e => {
-    const total = chartData().length, maxStart = Math.max(0, total - CHART_N);
+    const total = chartData().length, maxStart = Math.max(0, total - chartN);
     chartOff = maxStart - (+e.target.value); render();
   });
+  const chartCv = document.getElementById('tvchart');
+  let chartDrag = null;
+  chartCv.addEventListener('pointerdown', e => {
+    const pt = pointToChart(e);
+    if (drawMode === 'mark' && pt){ drawings.push({ type:'mark', symbol:cur, tf:chartTF, x:pt.idx, y:pt.price }); saveDrawings(); render(); return; }
+    if (drawMode === 'hline' && pt){ drawings.push({ type:'hline', symbol:cur, tf:chartTF, y:pt.price }); saveDrawings(); render(); return; }
+    if ((drawMode === 'line' || drawMode === 'fib') && pt){ tempDraw = { type:drawMode, symbol:cur, tf:chartTF, x1:pt.idx, y1:pt.price, x2:pt.idx, y2:pt.price }; try { chartCv.setPointerCapture(e.pointerId); } catch(err){} render(); return; }
+    chartDrag = { x:e.clientX, off:chartOff }; try { chartCv.setPointerCapture(e.pointerId); } catch(err){} chartCv.classList.add('dragging');
+  });
+  chartCv.addEventListener('pointermove', e => {
+    if (tempDraw){ const pt = pointToChart(e); if (pt){ tempDraw.x2 = pt.idx; tempDraw.y2 = pt.price; render(); } return; }
+    if (!chartDrag) return;
+    const total = chartData().length, maxStart = Math.max(0, total - chartN);
+    const stepPx = chartCv.clientWidth / Math.max(chartN, 1);
+    const moved = Math.round((e.clientX - chartDrag.x) / Math.max(stepPx, 1));
+    chartOff = Math.max(0, Math.min(maxStart, chartDrag.off + moved)); render();
+  });
+  function endChartPointer(){
+    if (tempDraw){ if (tempDraw.x1 !== tempDraw.x2 || tempDraw.y1 !== tempDraw.y2){ drawings.push(tempDraw); saveDrawings(); } tempDraw = null; render(); }
+    chartDrag = null; chartCv.classList.remove('dragging');
+  }
+  chartCv.addEventListener('pointerup', endChartPointer);
+  chartCv.addEventListener('pointercancel', endChartPointer);
+  chartCv.addEventListener('wheel', e => { e.preventDefault(); zoomChart(e.deltaY < 0 ? -5 : 5); }, { passive:false });
   document.getElementById('chartLatest').addEventListener('click', () => { chartOff = 0; render(); });
   function toggleFs(){
     const w = document.getElementById('fsWrap');
@@ -500,13 +552,15 @@
     document.getElementById('hlBar').innerHTML =
       `<div class="hl-box hi"><span>Today High · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayHigh(cur))}</b></div>` +
       `<div class="hl-box lo"><span>Today Low · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>`;
-    const totalC = chartData().length, maxStart = Math.max(0, totalC - CHART_N);
+    const totalC = chartData().length, maxStart = Math.max(0, totalC - chartN);
     if (chartOff > maxStart) chartOff = maxStart;
     const sc = document.getElementById('chartScroll');
     if (sc){ sc.max = maxStart; sc.value = maxStart - chartOff; }
     document.querySelectorAll('.tf-btn[data-tf]').forEach(b => b.classList.toggle('on', +b.dataset.tf === chartTF));
     document.querySelectorAll('.ind-btn[data-ind]').forEach(b => b.classList.toggle('on', !!chartInd[b.dataset.ind]));
-    try { drawLiveChart(document.getElementById('tvchart'), cur, Math.max(0, totalC - CHART_N - chartOff), CHART_N, chartTF, chartInd); } catch(e){}
+    document.querySelectorAll('[data-draw]').forEach(b => b.classList.toggle('on', b.dataset.draw === drawMode));
+    const cvEl = document.getElementById('tvchart'); if (cvEl) cvEl.classList.toggle('drawing', !!drawMode);
+    try { drawLiveChart(cvEl, cur, Math.max(0, totalC - chartN - chartOff), chartN, chartTF, chartInd, drawingsForChart()); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
     const fsOpen = document.getElementById('fsOpen');
     if (fsOpen) fsOpen.innerHTML = open.length ? open.map(t => { const p = Oryx.pnlOf(t);

@@ -17,10 +17,10 @@
     <a class="brand" href="index.html"><svg viewBox="0 0 48 48" class="logo-mark"><path d="M14 6 C16 16, 17 24, 16 34 L11 34 C13 24, 12 15, 10 6 Z" fill="#D8A94E"/><path d="M34 6 C32 16, 31 24, 32 34 L37 34 C35 24, 36 15, 38 6 Z" fill="#D8A94E"/><circle cx="24" cy="30" r="7.5" fill="none" stroke="#F3E5C0" stroke-width="3"/></svg><span>ORYX <b>MARKETS</b></span></a>
     <div>
       <h2>Your first trade is <span>60 seconds</span> away.</h2>
-      <p>Create your free account — we verify every account within 24 hours, then your $10 welcome credit is added. Learn the platform, practise on live charts, and grow at your own pace.</p>
+      <p>Create your free account — verify your mobile and email with OTP, then our team approves your account within 24 hours and your $10 welcome credit is added.</p>
       <div class="auth-points">
         <div><b>$10</b> Welcome credit once your account is approved</div>
-        <div><b>⚡</b> No documents needed — approval within 24 hours</div>
+        <div><b>📱</b> Mobile + email OTP verification — no fake numbers</div>
         <div><b>🔒</b> Further balance issued personally by our team</div>
       </div>
     </div>
@@ -29,46 +29,171 @@
   <div class="auth-form-side">
     <div class="auth-form">
       <h1>Create your free account</h1>
-      <p class="sub">Fill in your details — your account is verified within 24 hours, then it opens with a <b>$10 welcome credit</b>.</p>
+      <p class="sub">Fill in your details — verify your mobile and email with OTP, then your account is approved within 24 hours and opens with a <b>$10 welcome credit</b>.</p>
       <div class="form-err" id="err"></div>
-      <div class="field"><label>Full Name</label><input id="rName" placeholder="e.g. Ahmed Khan"></div>
-      <div class="field"><label>Email Address</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
-      <div class="field"><label>Phone / WhatsApp</label><input id="rPhone" placeholder="+92 ..."></div>
-      <div class="field"><label>Country</label><input id="rCountry" placeholder="e.g. Pakistan"></div>
-      <div class="field"><label>Create Password</label>
-        <div class="pw-wrap"><input id="rPass" type="password" placeholder="At least 6 characters"><button type="button" class="pw-eye" onclick="togglePw('rPass', this)" title="Show password">👁️</button></div>
+      <div id="stepForm">
+        <div class="field"><label>Full Name</label><input id="rName" placeholder="e.g. Ahmed Khan" autocomplete="name"></div>
+        <div class="field"><label>Email Address</label><input id="rEmail" type="email" placeholder="you@email.com" autocomplete="email"></div>
+        <div class="field"><label>Country</label>
+          <select id="rCountry" onchange="setCountryCode(this)">
+            <option value="">Select your country</option>
+            <option value="Pakistan" data-code="+92">Pakistan (+92)</option>
+            <option value="United Arab Emirates" data-code="+971">United Arab Emirates (+971)</option>
+            <option value="India" data-code="+91">India (+91)</option>
+            <option value="Bangladesh" data-code="+880">Bangladesh (+880)</option>
+            <option value="Saudi Arabia" data-code="+966">Saudi Arabia (+966)</option>
+            <option value="Qatar" data-code="+974">Qatar (+974)</option>
+            <option value="Kuwait" data-code="+965">Kuwait (+965)</option>
+            <option value="Oman" data-code="+968">Oman (+968)</option>
+            <option value="Bahrain" data-code="+973">Bahrain (+973)</option>
+            <option value="United Kingdom" data-code="+44">United Kingdom (+44)</option>
+            <option value="United States" data-code="+1">United States (+1)</option>
+            <option value="Other" data-code="+">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Mobile / WhatsApp Number</label><input id="rPhone" type="tel" placeholder="+92 3xx xxxxxxx" autocomplete="tel">
+          <div style="font-size:12px;color:var(--mut);margin-top:5px">Use a real mobile number with country code — an OTP will be sent for verification.</div>
+        </div>
+        <div class="field"><label>Create Password</label>
+          <div class="pw-wrap"><input id="rPass" type="password" placeholder="At least 8 characters, letters + numbers" autocomplete="new-password" oninput="pwStrength()"><button type="button" class="pw-eye" onclick="togglePw('rPass', this)" title="Show password">👁️</button></div>
+          <div style="height:6px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:7px;overflow:hidden"><div id="pwBar" style="height:100%;width:0%;background:#EA3943;transition:width .2s"></div></div>
+          <div id="pwText" style="font-size:12px;color:var(--mut);margin-top:4px">Password strength: —</div>
+        </div>
+        <div class="field"><label>Confirm Password</label>
+          <div class="pw-wrap"><input id="rPass2" type="password" placeholder="Repeat your password" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togglePw('rPass2', this)" title="Show password">👁️</button></div>
+        </div>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--mut);margin:12px 0 8px;cursor:pointer"><input id="rAge" type="checkbox" style="margin-top:2px"> <span>I confirm I am 18 years or older.</span></label>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--mut);margin:0 0 14px;cursor:pointer"><input id="rTerms" type="checkbox" style="margin-top:2px"> <span>I agree to the <a href="#" onclick="openTerms(event)" style="color:#F5B544">Terms, Privacy Policy &amp; Risk Disclosure</a>.</span></label>
+        <button class="btn btn-gold" style="width:100%;padding:14px" onclick="doRegister()">Send OTP &amp; Continue →</button>
+        <p class="auth-alt">Already have an account? <a href="login.html">Log in</a></p>
+        <p style="font-size:12px;color:var(--mut);margin-top:12px;text-align:center">Your mobile and email must be verified before approval. Demo accounts hold virtual funds only.</p>
       </div>
-      <button class="btn btn-gold" style="width:100%;padding:14px" onclick="doRegister()">Open My Account →</button>
-      <p class="auth-alt">Already have an account? <a href="login.html">Log in</a></p>
-      <p style="font-size:12px;color:var(--mut);margin-top:12px;text-align:center">By opening an account you accept the risk warning in the footer. Demo accounts hold virtual funds only.</p>
+      <div id="stepOtp" style="display:none">
+        <h2 style="margin:4px 0 8px">Verify your mobile &amp; email</h2>
+        <p class="sub" id="otpTarget" style="font-size:14px;line-height:1.6">We sent 6-digit codes to your mobile and email. Codes expire in 5 minutes.</p>
+        <div class="form-err" id="otpErr"></div>
+        <div id="demoOtp" style="display:none;background:rgba(245,181,68,.12);border:1px solid rgba(245,181,68,.45);color:#FDE68A;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin:10px 0"></div>
+        <div class="field"><label>📱 Mobile OTP <span id="mobilePill" style="color:#F5B544;font-size:12px">• waiting</span></label>
+          <div style="display:flex;gap:8px"><input id="mobileOtp" inputmode="numeric" maxlength="6" placeholder="6-digit code" style="flex:1"><button type="button" class="btn btn-gold" id="mobileVerifyBtn" style="padding:10px 16px" onclick="verifyOtp('mobile')">Verify</button></div>
+          <button type="button" id="mobileResend" onclick="resendOtp('mobile')" style="background:none;border:none;color:#F5B544;font-weight:700;cursor:pointer;padding:6px 0 0">Resend mobile OTP</button>
+        </div>
+        <div class="field"><label>✉️ Email OTP <span id="emailPill" style="color:#F5B544;font-size:12px">• waiting</span></label>
+          <div style="display:flex;gap:8px"><input id="emailOtp" inputmode="numeric" maxlength="6" placeholder="6-digit code" style="flex:1"><button type="button" class="btn btn-gold" id="emailVerifyBtn" style="padding:10px 16px" onclick="verifyOtp('email')">Verify</button></div>
+          <button type="button" id="emailResend" onclick="resendOtp('email')" style="background:none;border:none;color:#F5B544;font-weight:700;cursor:pointer;padding:6px 0 0">Resend email OTP</button>
+        </div>
+        <p style="font-size:12.5px;color:var(--mut);line-height:1.6">Both codes must be verified. After verification, your account goes to our team for approval within 24 hours.</p>
+      </div>
     </div>
   </div>
 </div>
+<div id="termsModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(3,7,18,.72);padding:18px;overflow:auto">
+  <div style="max-width:640px;margin:40px auto;background:#0E1626;border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:22px;color:#D7DEEF">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Terms, Privacy &amp; Risk</h2><button type="button" onclick="closeTerms()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">✕</button></div>
+    <h3>Terms</h3><p style="line-height:1.7;color:#AAB6D3">Oryx Markets demo accounts hold virtual funds only. New accounts require mobile and email verification, then admin approval before login is activated. The $10 welcome credit is added only after approval. Further balance is issued by Admin only.</p>
+    <h3>Privacy</h3><p style="line-height:1.7;color:#AAB6D3">Your name, email, mobile number and country are used for account verification, approval and support. Do not share your password or OTP with anyone.</p>
+    <h3>Risk Disclosure</h3><p style="line-height:1.7;color:#AAB6D3">Trading involves risk and prices can move quickly. Demo results do not guarantee real-market results. Only trade with money you can afford to lose.</p>
+    <button class="btn btn-gold" style="width:100%;padding:12px;margin-top:10px" onclick="closeTerms()">I Understand</button>
+  </div>
+</div>
 <script src="data/instruments.js?v=10"></script>
-<script src="assets/store.js?v=19"></script>
+<script src="assets/store.js?v=25"></script>
 <script src="assets/cloud.js?v=8"></script>
 <script>
   if (Oryx.currentUser()) location.href = 'dashboard.html';
+  let signupId = null, demoOtps = {}, cooldowns = {};
   function togglePw(id, btn){ const i = document.getElementById(id); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; btn.textContent = show ? '🙈' : '👁️'; }
+  function setCountryCode(sel){ const code = sel.options[sel.selectedIndex].dataset.code || ''; const p = document.getElementById('rPhone'); if (code && (!p.value.trim() || p.value.trim() === '+')) p.value = code + ' '; }
+  function pwStrength(){
+    const v = document.getElementById('rPass').value;
+    let score = 0; if (v.length >= 8) score++; if (/[A-Za-z]/.test(v)) score++; if (/\d/.test(v)) score++; if (/[^A-Za-z0-9]/.test(v) || /[A-Z]/.test(v)) score++;
+    const labels = ['—', 'Weak', 'Fair', 'Good', 'Strong']; const colors = ['#EA3943', '#EA3943', '#F5B544', '#38BDF8', '#16C784'];
+    document.getElementById('pwBar').style.width = (score * 25) + '%'; document.getElementById('pwBar').style.background = colors[score];
+    document.getElementById('pwText').textContent = 'Password strength: ' + labels[score] + ' (minimum 8 characters with letters + numbers)';
+  }
+  function openTerms(e){ if (e) e.preventDefault(); document.getElementById('termsModal').style.display = 'block'; }
+  function closeTerms(){ document.getElementById('termsModal').style.display = 'none'; }
+  function showErr(msg){ const err = document.getElementById('err'); err.textContent = msg; err.style.display = 'block'; }
+  function showOtpErr(msg){ const err = document.getElementById('otpErr'); err.textContent = msg; err.style.display = 'block'; }
+  function updateDemo(){
+    const box = document.getElementById('demoOtp');
+    if (demoOtps.mobile || demoOtps.email){
+      box.style.display = 'block';
+      box.innerHTML = 'Demo mode: SMS/email gateway is not connected yet, so for testing your codes are — Mobile: <b>' + (demoOtps.mobile || '—') + '</b> · Email: <b>' + (demoOtps.email || '—') + '</b>. Connect an SMS/email gateway to send real OTPs.';
+    }
+  }
+  function startCooldown(channel){
+    const btn = document.getElementById(channel + 'Resend'); if (!btn) return;
+    let left = 30; btn.disabled = true; btn.style.opacity = '.55';
+    btn.textContent = 'Resend in ' + left + 's';
+    clearInterval(cooldowns[channel]);
+    cooldowns[channel] = setInterval(() => { left--; if (left <= 0){ clearInterval(cooldowns[channel]); btn.disabled = false; btn.style.opacity = '1'; btn.textContent = channel === 'email' ? 'Resend email OTP' : 'Resend mobile OTP'; } else btn.textContent = 'Resend in ' + left + 's'; }, 1000);
+  }
+  function markVerified(channel){
+    const pill = document.getElementById(channel + 'Pill'); if (pill){ pill.textContent = '• ✔ Verified'; pill.style.color = '#16C784'; }
+    const input = document.getElementById(channel + 'Otp'); if (input) input.disabled = true;
+    const btn = document.getElementById(channel + 'VerifyBtn'); if (btn) btn.disabled = true;
+    const resend = document.getElementById(channel + 'Resend'); if (resend) resend.disabled = true;
+  }
+  function showOtpStep(targetText){
+    document.getElementById('stepForm').style.display = 'none';
+    document.getElementById('stepOtp').style.display = 'block';
+    if (targetText) document.getElementById('otpTarget').textContent = targetText;
+    updateDemo();
+  }
+  function showSuccess(firstName){
+    document.querySelector('.auth-form').innerHTML = `<div style="text-align:center;padding:18px 0 6px">
+      <div style="font-size:44px">✔</div>
+      <h1 style="margin:10px 0 6px">Verification complete!</h1>
+      <p class="sub" style="font-size:15px;line-height:1.6">Thank you${firstName ? ', ' + firstName : ''}. Your mobile and email are verified.<br>Your account will now be approved <b>within 24 hours</b>. Once approved, you can log in and your <b>$10 welcome credit</b> will be added.</p>
+      <a class="btn btn-gold" style="display:inline-block;margin-top:14px;padding:12px 26px;text-decoration:none" href="login.html">Go to Login →</a>
+      <p style="font-size:12.5px;color:var(--mut);margin-top:16px">No further action is needed from you.</p>
+    </div>`;
+  }
   function doRegister(){
     const name = document.getElementById('rName').value.trim();
     const email = document.getElementById('rEmail').value.trim();
     const pass = document.getElementById('rPass').value;
+    const pass2 = document.getElementById('rPass2').value;
     const phone = document.getElementById('rPhone').value.trim();
     const country = document.getElementById('rCountry').value.trim();
-    const err = document.getElementById('err');
-    if (!name || !email || !pass){ err.textContent = 'Please fill your name, email and password.'; err.style.display = 'block'; return; }
-    if (pass.length < 6){ err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
-    const r = Oryx.register(name, email, pass, phone, country);
-    if (r.error){ err.textContent = r.error; err.style.display = 'block'; return; }
-    document.querySelector('.auth-form').innerHTML = `<div style="text-align:center;padding:18px 0 6px">
-      <div style="font-size:44px">✔</div>
-      <h1 style="margin:10px 0 6px">Registration received!</h1>
-      <p class="sub" style="font-size:15px;line-height:1.6">Thank you, ${name.split(' ')[0]}. Your account will be verified <b>within 24 hours</b>.<br>Once approved, you can log in and your <b>$10 welcome credit</b> will be added to your account.</p>
-      <a class="btn btn-gold" style="display:inline-block;margin-top:14px;padding:12px 26px;text-decoration:none" href="login.html">Go to Login →</a>
-      <p style="font-size:12.5px;color:var(--mut);margin-top:16px">We will verify your details and activate your account. No further action is needed from you.</p>
-    </div>`;
+    if (name.length < 3){ showErr('Please enter your full name.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ showErr('Please enter a valid email address.'); return; }
+    if (!country){ showErr('Please select your country.'); return; }
+    if (!/^\+[1-9][\d\s()-]{6,18}$/.test(phone)){ showErr('Please enter a real mobile number with country code (e.g. +92 3xx xxxxxxx).'); return; }
+    if (pass.length < 8 || !/[A-Za-z]/.test(pass) || !/\d/.test(pass)){ showErr('Password must be at least 8 characters and include letters and numbers.'); return; }
+    if (pass !== pass2){ showErr('Passwords do not match.'); return; }
+    if (!document.getElementById('rAge').checked){ showErr('Please confirm you are 18 years or older.'); return; }
+    if (!document.getElementById('rTerms').checked){ showErr('Please agree to the Terms, Privacy Policy & Risk Disclosure.'); return; }
+    const r = Oryx.startSignup({ name, email, pass, phone, country });
+    if (r.error){ showErr(r.error); return; }
+    signupId = r.userId; demoOtps = r.demoOtps || {};
+    showOtpStep('We sent 6-digit codes to ' + r.maskedPhone + ' and ' + r.maskedEmail + '. Codes expire in 5 minutes.');
+    startCooldown('mobile'); startCooldown('email');
   }
+  function verifyOtp(channel){
+    const code = document.getElementById(channel + 'Otp').value.trim();
+    if (!/^\d{6}$/.test(code)){ showOtpErr('Please enter the 6-digit OTP.'); return; }
+    const r = Oryx.verifySignupOtp(signupId, channel, code);
+    if (r.error){ showOtpErr(r.error); return; }
+    markVerified(channel); showOtpErr(channel === 'email' ? 'Email verified.' : 'Mobile verified.');
+    if (r.status === 'pending') showSuccess('');
+  }
+  function resendOtp(channel){
+    const r = Oryx.resendSignupOtp(signupId, channel);
+    if (r.error){ showOtpErr(r.error); return; }
+    demoOtps[channel] = r.demoCode; updateDemo(); startCooldown(channel); showOtpErr('New code sent.');
+  }
+  (function resume(){
+    const uid = new URLSearchParams(location.search).get('u');
+    if (!uid || !Oryx.signupStatus) return;
+    const st = Oryx.signupStatus(uid);
+    if (!st || st.status !== 'unverified') return;
+    signupId = uid;
+    showOtpStep('Complete your verification — codes were sent to ' + st.maskedPhone + ' and ' + st.maskedEmail + '. Tap Resend if a code has expired.');
+    if (st.phoneVerified) markVerified('mobile');
+    if (st.emailVerified) markVerified('email');
+    const box = document.getElementById('demoOtp'); box.style.display = 'block'; box.textContent = 'Demo mode: tap Resend to get a fresh testing code.';
+  })();
 </script>
 <script src="assets/support.js?v=10"></script>
 <script src="assets/install.js?v=3"></script>
