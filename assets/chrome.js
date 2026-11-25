@@ -67,5 +67,10 @@
     <a href="${u ? root + 'dashboard.html' : root + 'login.html'}"><span>👤</span>${u ? 'Dashboard' : 'Log In'}</a>
   </nav>`;
   const h = document.getElementById('site-header'); if (h) h.innerHTML = header;
+  const curPage = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  document.querySelectorAll('.main-nav a').forEach(a => {
+    const p = (a.getAttribute('href') || '').split('/').pop().toLowerCase();
+    if (p === curPage) { a.style.color = '#F5B544'; a.style.fontWeight = '800'; a.style.borderBottom = '2px solid #F5B544'; }
+  });
   const f = document.getElementById('site-footer'); if (f) f.innerHTML = footer;
 })();
