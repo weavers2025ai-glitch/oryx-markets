@@ -30,7 +30,7 @@ img{max-width:100%}
 @keyframes tickmove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* header */
-.site-head{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#0B2A5B,#123E7D);backdrop-filter:blur(8px);border-bottom:2px solid rgba(245,181,68,.5);display:flex;align-items:center;gap:26px;padding:14px 26px}
+.site-head{position:sticky;top:0;z-index:60;background:rgba(10,17,40,.96);backdrop-filter:blur(8px);display:flex;align-items:center;gap:26px;padding:14px 26px}
 .brand{display:flex;align-items:center;gap:10px;color:#fff;font-size:21px;letter-spacing:.14em;font-weight:300}
 .brand b{color:var(--gold);font-weight:800}
 .brand.light{color:#fff}
