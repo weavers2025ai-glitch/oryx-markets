@@ -35,6 +35,22 @@
   .os-dots button{width:11px;height:11px;border-radius:50%;border:0;background:rgba(255,255,255,.35);cursor:pointer;padding:0}
   .os-dots button.on{background:#F5B544}
   @media(max-width:760px){.os-slide{height:280px}.os-cap{padding:22px}.os-cap h2{font-size:25px}}
+  .ad-banner h2,.wide-banner h2,.split-banner h2,.os-cap h2{color:#fff}
+  .ad-banner p{color:#D7DEEF}
+  .how-grid h3{color:#fff}
+  .ad-banner{margin:12px 0 46px}
+  .wide-banner{margin:12px 0 46px}
+  .split-banner{margin:12px 0 46px}
+  .pkg-wrap{overflow:hidden;padding:6px 0}
+  .pkg-track{display:flex;gap:18px;width:max-content;animation:pkgMove 30s linear infinite}
+  .pkg-wrap:hover .pkg-track{animation-play-state:paused}
+  @keyframes pkgMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .pkg-card{width:262px;flex:none;background:#0D1730;border:1px solid rgba(255,255,255,.12);border-radius:18px;overflow:hidden}
+  .pkg-card img{width:100%;height:150px;object-fit:cover;display:block}
+  .pkg-body{padding:16px}
+  .pkg-body h3{color:#fff;font-size:18px;margin:0 0 4px}
+  .pkg-price{color:#F5B544;font-weight:900;font-size:22px}
+  .pkg-body p{color:#C4CEE6;font-size:13.5px;line-height:1.55;margin:8px 0 14px}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -195,6 +211,17 @@
         <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08)"><a href="trade.html" style="color:var(--grn);font-weight:700;font-size:14px">Open the full trading terminal →</a></div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="sec rv" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Trading Packages</div>
+      <h2>Choose Your Package</h2>
+      <p style="color:var(--mut)">Pick a package and start trading. Hover to pause and read.</p>
+    </div>
+    <div class="pkg-wrap"><div class="pkg-track"><div class="pkg-card"><img src="images/banner-welcome.webp" alt="Starter Package package"><div class="pkg-body"><h3>Starter Package</h3><div class="pkg-price">$10.00</div><p>Free $10 welcome credit on approval. Learn the terminal with live prices.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/news-gold.webp" alt="Bronze Package package"><div class="pkg-body"><h3>Bronze Package</h3><div class="pkg-price">$50.00</div><p>Start with gold and forex majors, leverage up to 1:1000.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-markets.webp" alt="Silver Package package"><div class="pkg-body"><h3>Silver Package</h3><div class="pkg-price">$100.00</div><p>Gold, forex, crypto and indices from one account.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/broker-desk.webp" alt="Gold Package package"><div class="pkg-body"><h3>Gold Package</h3><div class="pkg-price">$250.00</div><p>Full indicators, Fibonacci and drawing tools with priority support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/how-oryx.webp" alt="Platinum Package package"><div class="pkg-body"><h3>Platinum Package</h3><div class="pkg-price">$500.00</div><p>Advanced chart tools, full-screen trading and faster approvals.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-app.webp" alt="VIP Package package"><div class="pkg-body"><h3>VIP Package</h3><div class="pkg-price">$1,000.00</div><p>Trade anywhere with the app terminal and dedicated support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-welcome.webp" alt="Starter Package package"><div class="pkg-body"><h3>Starter Package</h3><div class="pkg-price">$10.00</div><p>Free $10 welcome credit on approval. Learn the terminal with live prices.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/news-gold.webp" alt="Bronze Package package"><div class="pkg-body"><h3>Bronze Package</h3><div class="pkg-price">$50.00</div><p>Start with gold and forex majors, leverage up to 1:1000.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-markets.webp" alt="Silver Package package"><div class="pkg-body"><h3>Silver Package</h3><div class="pkg-price">$100.00</div><p>Gold, forex, crypto and indices from one account.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/broker-desk.webp" alt="Gold Package package"><div class="pkg-body"><h3>Gold Package</h3><div class="pkg-price">$250.00</div><p>Full indicators, Fibonacci and drawing tools with priority support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/how-oryx.webp" alt="Platinum Package package"><div class="pkg-body"><h3>Platinum Package</h3><div class="pkg-price">$500.00</div><p>Advanced chart tools, full-screen trading and faster approvals.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div><div class="pkg-card"><img src="images/banner-app.webp" alt="VIP Package package"><div class="pkg-body"><h3>VIP Package</h3><div class="pkg-price">$1,000.00</div><p>Trade anywhere with the app terminal and dedicated support.</p><a class="btn btn-gold" href="register.html">Choose Package</a></div></div></div></div>
   </div>
 </section>
 
