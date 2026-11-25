@@ -203,7 +203,7 @@
   }
   /* fullscreen chart: chart fills the page, white glass column on the left */
   #fsWrap{position:relative}
-  #fsBtns{display:none;position:absolute;right:16px;bottom:64px;z-index:6;flex-direction:column;gap:8px}#fsBtns .qt-btn{padding:8px 14px;font-size:13px;min-width:150px}
+  #fsBtns{display:none;position:absolute;left:16px;top:16px;z-index:6;flex-direction:column;gap:8px}#fsBtns .qt-btn{padding:12px 18px;font-size:15px;min-width:190px}.fs-open-box{background:rgba(7,13,29,.88);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 12px;color:#fff;width:230px}.fs-open-box>b{font-size:13px}
   #fsWrap:fullscreen,#fsWrap.fs{position:fixed;inset:0;z-index:9999;background:#070D1D;padding:16px;display:flex;flex-direction:column}
   #fsWrap:fullscreen .chart-box,#fsWrap.fs .chart-box{flex:1;height:auto !important;min-height:0;max-height:none}
   #fsWrap:fullscreen #fsBtns,#fsWrap.fs #fsBtns{display:flex}
@@ -279,6 +279,7 @@
     <div id="fsBtns">
       <button type="button" id="fsSell" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button>
       <button type="button" id="fsBuy" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button>
+      <div class="fs-open-box"><b>Open Entries</b><div id="fsOpen"></div></div>
     </div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas><button type="button" class="fs-chart-btn" onclick="toggleFs()" title="Exit Full Screen">✕</button></div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
@@ -562,7 +563,7 @@
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
     const fsOpen = document.getElementById('fsOpen');
     if (fsOpen) fsOpen.innerHTML = open.length ? open.map(t => { const p = Oryx.pnlOf(t);
-      return `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 4px;border-bottom:1px solid rgba(15,23,42,.08);font-size:13px"><span><b>${t.symbol}</b> ${t.side} ${t.lots}</span><b style="color:${p >= 0 ? '#15803D' : '#DC2626'}">${Oryx.money(p)}</b></div>`; }).join('') : '<div style="color:#64748B;font-size:13px;padding:8px 4px">No open positions.</div>';
+      return `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px"><span><b>${t.symbol}</b> ${t.side} ${t.lots}</span><b style="color:${p >= 0 ? '#16C784' : '#EA3943'}">${Oryx.money(p)}</b></div>`; }).join('') : '<div style="color:#93A1C4;font-size:13px;padding:8px 4px">No open positions.</div>';
     const fsB = document.getElementById('fsBuy'), fsS = document.getElementById('fsSell');
     if (fsB) fsB.textContent = '▲ BUY  ' + Oryx.fmtP(cur, Oryx.ask(cur));
     if (fsS) fsS.textContent = '▼ SELL  ' + Oryx.fmtP(cur, Oryx.bid(cur));
