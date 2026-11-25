@@ -70,7 +70,7 @@
   const curPage = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   document.querySelectorAll('.main-nav a').forEach(a => {
     const p = (a.getAttribute('href') || '').split('/').pop().toLowerCase();
-    if (p === curPage) { a.style.color = '#F5B544'; a.style.fontWeight = '800'; a.style.borderBottom = '2px solid #F5B544'; }
+    if (p === curPage) { a.classList.add('nav-active'); a.style.setProperty('color', '#F5B544', 'important'); a.style.fontWeight = '800'; a.style.borderBottom = '2px solid #F5B544'; }
   });
   const f = document.getElementById('site-footer'); if (f) f.innerHTML = footer;
 })();

@@ -458,3 +458,5 @@ body.dark-page .tag{background:rgba(216,169,78,.16);color:#F5B544}
 }
 
 @media(max-width:1280px) and (min-width:1021px){.hero-inner{grid-template-columns:1fr 1.15fr;gap:36px}.hero h1{font-size:52px}}
+
+.main-nav a.nav-active{color:#F5B544 !important;font-weight:800;border-bottom:2px solid #F5B544}
