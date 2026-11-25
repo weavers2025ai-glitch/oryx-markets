@@ -77,7 +77,7 @@
   #indPanel.open{display:block}
   #indPanel .ind-grid{display:flex;flex-wrap:wrap;gap:6px}
   .chart-box{position:relative}
-  .fs-chart-btn{position:absolute;top:10px;right:10px;z-index:8;background:rgba(14,22,38,.88);color:#F5B544;border:1px solid rgba(245,181,68,.5);border-radius:10px;padding:7px 11px;font-weight:800;font-size:14px;cursor:pointer}
+  .fs-chart-btn{position:absolute;top:12px;right:12px;z-index:8;background:#F5B544;color:#171106;border:2px solid #FFE1A1;border-radius:12px;padding:11px 18px;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4)}
   .fs-chart-btn:hover{background:#F5B544;color:#171106}
   #tvchart{cursor:grab;touch-action:none}
   #tvchart.dragging{cursor:grabbing}
@@ -287,7 +287,7 @@
       </div>
       <p style="margin-top:12px;font-size:11.5px;color:#64748B">Buttons show the live price. ESC exits full screen.</p>
     </div>
-    <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas><button type="button" class="fs-chart-btn" onclick="toggleFs()" title="Full Screen Chart">⛶ Full Screen</button></div>
+    <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas><button type="button" class="fs-chart-btn" onclick="toggleFs()" title="Full Screen Chart">⛶ FULL SCREEN</button></div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
       <span style="color:var(--mut);font-size:12px;white-space:nowrap">TF</span>
       <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap" aria-label="Chart timeframe">
