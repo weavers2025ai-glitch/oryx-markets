@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affiliate Program — Oryx Markets</title>
+<link rel="stylesheet" href="assets/style.css?v=24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+.af-hero{background:linear-gradient(rgba(7,13,29,.9),rgba(7,13,29,.95)),url('images/banner-journey-team.webp') center/cover;border-bottom:1px solid var(--line)}
+.af-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:34px;align-items:center}
+.af-badge{display:inline-block;border:1px solid rgba(245,181,68,.6);color:#F5B544;border-radius:999px;padding:6px 14px;font-size:11.5px;font-weight:800;letter-spacing:.14em}
+.af-tiers{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.af-tier{background:linear-gradient(160deg,#12224E,#0A1128);border:1px solid var(--line);border-radius:16px;padding:20px}
+.af-tier b{color:#F5B544;font-size:30px;display:block}
+.af-tier h3{color:#fff;font-size:16px;margin:4px 0}
+.af-tier p{color:#93A1C4;font-size:13px}
+.af-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+.af-strip div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:20px;text-align:center}
+.af-strip b{color:#F5B544;font-size:26px;display:block}.af-strip span{color:#C7D2F0;font-size:13px}
+.af-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.af-step{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:18px;padding:24px}
+.af-step .n{width:40px;height:40px;border-radius:50%;background:#F5B544;color:#231600;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px}
+.af-step h3{color:#fff;font-size:18px;margin-bottom:8px}.af-step p{color:#C7D2F0;font-size:14.5px;line-height:1.6}
+.af-table{width:100%;border-collapse:collapse;background:linear-gradient(160deg,#101D42,#0A1128);border-radius:16px;overflow:hidden}
+.af-table th,.af-table td{padding:14px 16px;text-align:left;color:#D7DEEF;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.07)}
+.af-table th{color:#F5B544;font-size:12.5px;letter-spacing:.1em}
+.af-calc{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:28px;max-width:820px;margin:0 auto}
+.af-calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.af-out{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.af-out div{background:rgba(245,181,68,.1);border:1px solid rgba(245,181,68,.35);border-radius:14px;padding:18px;text-align:center}
+.af-out b{color:#F5B544;font-size:28px;display:block}.af-out span{color:#93A1C4;font-size:12.5px}
+.af-feats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.af-feat{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:18px;padding:24px}
+.af-feat h3{color:#fff;font-size:17.5px;margin-bottom:8px}.af-feat p{color:#C7D2F0;font-size:14.5px;line-height:1.65}
+.af-join{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:20px;padding:28px;max-width:640px;margin:0 auto}
+.af-faq{max-width:820px;margin:0 auto}
+.af-faq details{background:linear-gradient(160deg,#101D42,#0A1128);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:12px}
+.af-faq summary{color:#fff;font-weight:800;cursor:pointer;font-size:16px}
+.af-faq p{color:#C7D2F0;font-size:14.5px;line-height:1.65;margin-top:10px}
+@media(max-width:900px){.af-grid,.af-steps,.af-feats,.af-calc-grid,.af-strip,.af-tiers{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-root="" class="dark-page">
+<div id="site-header"></div>
+<section class="sec af-hero">
+  <div class="wrap af-grid">
+    <div>
+      <span class="af-badge">UP TO 30% RECURRING</span>
+      <h2 style="color:#fff;font-size:44px;line-height:1.15;margin:16px 0 14px">Earn recurring income as an Oryx affiliate</h2>
+      <p style="color:#C7D2F0;font-size:17px;line-height:1.65">Refer traders to Oryx Markets and earn commission month after month while they stay active. Free to join, with tiered rewards and your own referral link.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px">
+        <a class="btn btn-gold" href="#join">Join Now</a>
+        <a class="btn btn-ghost" href="#calculator">Try the Calculator</a>
+      </div>
+    </div>
+    <div class="af-tiers">
+      <div class="af-tier"><b>10%</b><h3>Bronze</h3><p>Everyone starts here</p></div>
+      <div class="af-tier"><b>15%</b><h3>Silver</h3><p>After 5 active clients</p></div>
+      <div class="af-tier"><b>20%</b><h3>Gold</h3><p>After 25 active clients</p></div>
+      <div class="af-tier"><b>30%</b><h3>Platinum</h3><p>Top performers</p></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="af-strip">
+      <div><b>Up to 30%</b><span>commission rate</span></div>
+      <div><b>Lifetime</b><span>recurring payouts</span></div>
+      <div><b>90 days</b><span>cookie duration</span></div>
+      <div><b>$0</b><span>cost to join</span></div>
+    </div>
+  </div>
+</section>
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Simple Process</div><h2 style="color:#fff">How It Works</h2><p>Four simple steps to start earning recurring commissions.</p></div>
+    <div class="af-steps">
+      <div class="af-step"><div class="n">1</div><h3>Sign Up Free</h3><p>Register for the affiliate program in minutes — no fees, no commitment.</p></div>
+      <div class="af-step"><div class="n">2</div><h3>Share Your Link</h3><p>Get your unique referral link and share it on your site, socials or directly with traders.</p></div>
+      <div class="af-step"><div class="n">3</div><h3>They Join &amp; Trade</h3><p>When someone registers through your link, they are tracked to your affiliate account.</p></div>
+      <div class="af-step"><div class="n">4</div><h3>You Earn</h3><p>Earn recurring commission on their trading activity, for as long as they stay active.</p></div>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Commission Structure</div><h2 style="color:#fff">Earn More As You Grow</h2><p>Your commission rate increases automatically as you refer more active clients.</p></div>
+    <div style="overflow-x:auto">
+    <table class="af-table">
+      <tr><th>TIER</th><th>ACTIVE CLIENTS</th><th>COMMISSION</th><th>EXAMPLE (AVG $199/MO PER CLIENT)</th></tr>
+      <tr><td><b>Bronze</b></td><td>1 – 5</td><td>10%</td><td>3 clients → $60/mo · $716/yr</td></tr>
+      <tr><td><b>Silver</b></td><td>6 – 25</td><td>15%</td><td>15 clients → $448/mo · $5,373/yr</td></tr>
+      <tr><td><b>Gold</b></td><td>26 – 50</td><td>20%</td><td>40 clients → $1,592/mo · $19,104/yr</td></tr>
+      <tr><td><b>Platinum</b></td><td>51+</td><td>30%</td><td>75 clients → $4,478/mo · $53,730/yr</td></tr>
+    </table>
+    </div>
+  </div>
+</section>
+<section class="sec" id="calculator" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Estimate Your Earnings</div><h2 style="color:#fff">See What Your Network Could Earn</h2></div>
+    <div class="af-calc">
+      <div class="af-calc-grid">
+        <div class="field"><label>Referred Clients</label><input id="afClients" type="number" value="10" min="1" oninput="afCalc()"></div>
+        <div class="field"><label>Avg. Monthly Value / Client ($)</label><input id="afSpend" type="number" value="199" min="1" oninput="afCalc()"></div>
+        <div class="field"><label>Your Tier</label><select id="afTier" onchange="afCalc()"><option value="10">Bronze — 10%</option><option value="15">Silver — 15%</option><option value="20" selected>Gold — 20%</option><option value="30">Platinum — 30%</option></select></div>
+      </div>
+      <div class="af-out">
+        <div><b id="afMonth">$398</b><span>estimated per month</span></div>
+        <div><b id="afYear">$4,776</b><span>estimated per year, recurring</span></div>
+      </div>
+      <p style="color:#93A1C4;font-size:12.5px;margin-top:14px;text-align:center">Estimate only. Your actual rate is set by your tier and confirmed in your affiliate agreement.</p>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Benefits</div><h2 style="color:#fff">Why Promote Oryx Markets?</h2></div>
+    <div class="af-feats">
+      <div class="af-feat"><h3>♾️ Lifetime Recurring</h3><p>Earn on your referrals' activity month after month — not just the first month — for as long as they stay active.</p></div>
+      <div class="af-feat"><h3>📈 Tiered Rates</h3><p>Start at 10% and climb to 30%. The more active clients you refer, the more you earn per client.</p></div>
+      <div class="af-feat"><h3>🎯 Real Trading Value</h3><p>Live charts, fast execution and a $10 welcome credit make Oryx easy for new traders to start with.</p></div>
+      <div class="af-feat"><h3>🎨 Marketing Kit</h3><p>Banners, landing pages and copy to help you promote effectively on any channel.</p></div>
+      <div class="af-feat"><h3>🧑‍💼 Affiliate Manager</h3><p>Gold and Platinum affiliates get a dedicated manager to grow campaigns and earnings.</p></div>
+      <div class="af-feat"><h3>💸 Monthly Payouts</h3><p>Commissions are calculated and paid every month — reliable, on-time payments.</p></div>
+    </div>
+  </div>
+</section>
+<section class="sec" id="join" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Become an Affiliate</div><h2 style="color:#fff">Create Your Free Account</h2><p>Get your referral link and start earning. Free to join · Recurring commission · Real-time tracking.</p></div>
+    <div class="af-join">
+      <div class="field"><label>Full Name</label><input id="jName" placeholder="Full name"></div>
+      <div class="field"><label>Email Address</label><input id="jEmail" placeholder="you@email.com"></div>
+      <div class="field"><label>Your Phone</label><input id="jPhone" placeholder="+971 ..."></div>
+      <div class="form-err" id="jErr"></div>
+      <button class="btn btn-gold" style="width:100%;margin-top:16px" onclick="joinAff()">Become an Affiliate</button>
+      <p style="color:#93A1C4;font-size:13px;margin-top:14px;text-align:center">Your application opens in WhatsApp, ready to send to our partnerships team.</p>
+    </div>
+  </div>
+</section>
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="kicker">Got Questions?</div><h2 style="color:#fff">Frequently Asked Questions</h2></div>
+    <div class="af-faq">
+      <details><summary>How much can I earn as an affiliate?</summary><p>There is no limit. You earn 10% with 1–5 active clients, 15% with 6–25, 20% with 26–50 and 30% with 51+, recurring for as long as your clients stay active.</p></details>
+      <details><summary>When and how do I get paid?</summary><p>Commissions are calculated monthly and paid within the first 10 business days of the following month. Minimum payout is $100, by bank transfer or local wallet.</p></details>
+      <details><summary>Is there a cost to join?</summary><p>No. The program is completely free — no setup fees and no monthly charges.</p></details>
+      <details><summary>How long is the cookie duration?</summary><p>90 days. If someone clicks your link and registers within 90 days, they are tracked to your account.</p></details>
+      <details><summary>Do I earn on ongoing activity?</summary><p>Yes. Your commission is recurring — you earn on your clients' continuing activity, not only their first month.</p></details>
+      <details><summary>Who can join the affiliate program?</summary><p>Anyone — bloggers, influencers, educators, consultants, community leaders and existing Oryx clients.</p></details>
+    </div>
+  </div>
+</section>
+<div id="site-footer"></div>
+<script src="data/instruments.js?v=11"></script>
+<script src="assets/store.js?v=27"></script>
+<script src="assets/chrome.js?v=15"></script>
+<script src="assets/support.js?v=11"></script>
+<script>
+function afCalc(){
+  const c = Math.max(0, parseFloat(document.getElementById('afClients').value) || 0);
+  const s = Math.max(0, parseFloat(document.getElementById('afSpend').value) || 0);
+  const t = parseFloat(document.getElementById('afTier').value) || 0;
+  const m = c * s * t / 100;
+  const fmt = v => '$' + Math.round(v).toLocaleString('en-US');
+  document.getElementById('afMonth').textContent = fmt(m);
+  document.getElementById('afYear').textContent = fmt(m * 12);
+}
+function joinAff(){
+  const name = document.getElementById('jName').value.trim();
+  const email = document.getElementById('jEmail').value.trim();
+  const phone = document.getElementById('jPhone').value.trim();
+  const err = document.getElementById('jErr');
+  if (!name || !email) { err.textContent = 'Please fill your name and email.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  const text = 'Affiliate Program application — Oryx Markets\nName: ' + name + '\nEmail: ' + email + (phone ? '\nPhone: ' + phone : '');
+  window.open('https://wa.me/971582145708?text=' + encodeURIComponent(text), '_blank');
+}
+afCalc();
+</script>
+<script src="assets/install.js?v=3"></script>
+</body>
+</html>
