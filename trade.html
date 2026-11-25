@@ -171,6 +171,17 @@
   .qt-buy{background:linear-gradient(135deg,#16C784,#0E9F6E)}
   .qt-lots{color:#93A1C4;font-size:12px;font-weight:700;white-space:nowrap}
   html.light .qt-lots{color:#5B6B8C}
+  /* desktop trade bar: prices left, Market/Pending stacked middle, BUY/SELL right */
+  .trade-bar{display:flex;flex-direction:column}
+  @media(min-width:901px){
+    .trade-bar{flex-direction:row;align-items:stretch;gap:10px;padding:12px 16px 4px}
+    .trade-bar .qt-prices{flex:0 0 330px;padding:0}
+    .trade-bar .ot-desk{flex:0 0 168px;display:flex;flex-direction:column;gap:6px}
+    .trade-bar .ot-desk .ot-btn{flex:1;padding:6px 10px;font-size:12.5px}
+    .trade-bar .quick-trade{flex:1;padding:0}
+    .trade-panel .ot-row,.trade-panel .ot-label{display:none}
+  }
+  @media(max-width:900px){ .ot-desk{display:none} }
   /* ===== mobile friendly terminal ===== */
   @media(max-width:900px){
     .top-strip{grid-template-columns:1fr;gap:10px;margin:10px 10px 0}
@@ -214,15 +225,21 @@
   <div class="col chart-col">
     <div class="sym-strip" id="symStrip"></div>
     <div class="chart-box"><canvas id="tvchart" style="width:100%;height:100%;display:block"></canvas></div>
-    <div class="qt-prices"><div class="qt-price bid"><label>BID (Sell)</label><b id="qtBid">—</b></div><div class="qt-price ask"><label>ASK (Buy)</label><b id="qtAsk">—</b></div></div>
-    <div class="quick-trade"><button type="button" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button><span class="qt-lots" id="qtLots">0.01 lots</span><button type="button" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button></div>
+    <div class="trade-bar">
+      <div class="qt-prices"><div class="qt-price bid"><label>BID (Sell)</label><b id="qtBid">—</b></div><div class="qt-price ask"><label>ASK (Buy)</label><b id="qtAsk">—</b></div></div>
+      <div class="ot-desk">
+        <button type="button" class="ot-btn on" data-ot="market" onclick="setOtype('market')">⚡ Market — now</button>
+        <button type="button" class="ot-btn" data-ot="pending" onclick="setOtype('pending')">⏳ Pending — at price</button>
+      </div>
+      <div class="quick-trade"><button type="button" class="qt-btn qt-sell" onclick="quickTrade('SELL')">▼ SELL</button><span class="qt-lots" id="qtLots">0.01 lots</span><button type="button" class="qt-btn qt-buy" onclick="quickTrade('BUY')">▲ BUY</button></div>
+    </div>
     <div class="trade-panel">
       <div class="sym" id="tpSym">XAUUSD</div>
       <div style="color:#7C88A8;font-size:12.5px" id="tpName">Gold vs US Dollar</div>
-      <label>Order Type</label>
+      <label class="ot-label">Order Type</label>
       <div class="ot-row">
-        <button type="button" id="otMarket" class="ot-btn on" onclick="setOtype('market')">⚡ Market — now</button>
-        <button type="button" id="otPending" class="ot-btn" onclick="setOtype('pending')">⏳ Pending — at price</button>
+        <button type="button" id="otMarket" class="ot-btn on" data-ot="market" onclick="setOtype('market')">⚡ Market — now</button>
+        <button type="button" id="otPending" class="ot-btn" data-ot="pending" onclick="setOtype('pending')">⏳ Pending — at price</button>
       </div>
       <div id="priceRow" style="display:none">
         <label>Trigger Price — the trade opens BY ITSELF when the market reaches it</label>
@@ -291,8 +308,7 @@
   let otype = 'market';
   function setOtype(t){
     otype = t;
-    document.getElementById('otMarket').classList.toggle('on', t === 'market');
-    document.getElementById('otPending').classList.toggle('on', t === 'pending');
+    document.querySelectorAll('.ot-btn').forEach(b => b.classList.toggle('on', b.dataset.ot === t));
     document.getElementById('priceRow').style.display = t === 'pending' ? 'block' : 'none';
   }
   function place(side){
