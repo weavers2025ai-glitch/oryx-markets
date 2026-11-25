@@ -12,9 +12,9 @@
   /* slimmer side columns + smaller top boxes, so the chart owns the screen */
   .term{grid-template-columns:214px 1fr 250px;gap:12px;padding:12px}
   .eq-bar{gap:10px;margin:0 12px 12px}
-  .eq-bar .kpi{padding:8px 10px;border-radius:13px}
-  .eq-bar .kpi b{font-size:15.5px;margin:2px 0 1px}
-  .eq-bar .kpi span{font-size:10.5px}
+  .eq-bar .kpi{padding:6px 10px;border-radius:13px}
+  .eq-bar .kpi b{font-size:14px;margin:1px 0}
+  .eq-bar .kpi span{font-size:10px}
   /* compact right rail, so BUY / SELL stay on the screen */
   .trade-panel{padding:2px 14px 12px}
   .trade-panel .sym{font-size:19px}
@@ -24,7 +24,7 @@
   .bs-btns{margin-top:10px}
   .bs-btns button{padding:10px}
   .lot-chips button{padding:4px 0}
-  .hl-box{padding:7px 11px}
+  .hl-box{padding:5px 11px}
   .pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.03em}
   .pill.g{background:rgba(22,199,132,.16);color:#16C784;border:1px solid rgba(22,199,132,.45)}
   .pill.r{background:rgba(234,57,67,.16);color:#EA3943;border:1px solid rgba(234,57,67,.45)}
@@ -38,11 +38,11 @@
   .close-btn{display:inline-block;width:auto;background:linear-gradient(135deg,#EA3943,#C22530);color:#fff;border:0;border-radius:8px;padding:7px 16px;font-weight:800;font-size:12.5px;cursor:pointer;letter-spacing:.03em}
   .close-btn:hover{filter:brightness(1.12)}
   .close-btn.win{background:linear-gradient(135deg,#16C784,#0E9F6E)}
-  .sym-strip{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
-  .ss-main b{color:#fff;font-size:19px;display:block}
+  .sym-strip{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding:7px 16px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+  .ss-main b{color:#fff;font-size:17px;display:block}
   .ss-main span{color:#7C88A8;font-size:12px}
   .ss-it span{display:block;color:#7C88A8;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
-  .ss-it b{color:#fff;font-size:15.5px}
+  .ss-it b{color:#fff;font-size:14px}
   .ob-box{padding:2px 16px 14px}
   .ob-head{display:flex;justify-content:space-between;color:#7C88A8;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:4px 0 6px}
   .ob-row{position:relative;display:flex;justify-content:space-between;padding:3.5px 6px;font-size:12.5px;font-variant-numeric:tabular-nums}
@@ -52,14 +52,14 @@
   .ob-spread{text-align:center;color:#7C88A8;font-size:12.5px;padding:8px 0;border-top:1px dashed rgba(255,255,255,.1);border-bottom:1px dashed rgba(255,255,255,.1);margin:6px 0}
   /* dashboard-style top boxes + chart fitted to the screen */
   .eq-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;background:none;border:0;border-radius:0;padding:0;margin:0 14px 14px}
-  .chart-box{flex:none;height:460px;min-height:0}
+  .chart-box{flex:none;height:410px;min-height:0}
   .pos-rows{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:9px 0 10px}
   .pos-rows div{background:rgba(255,255,255,.05);border-radius:8px;padding:6px 9px}
   .pos-rows span{display:block;color:#7C88A8;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
   .pos-rows b{color:#fff;font-size:13px}
   @media(max-width:900px){ .chart-box{height:340px} .eq-bar{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:900px){ .top-strip{flex-direction:column} .hlbar{width:auto} }
-  .top-strip{display:flex;gap:10px;margin:0 12px 12px;align-items:stretch}
+  .top-strip{display:flex;gap:10px;margin:0 12px 8px;align-items:stretch}
   .top-strip .eq-bar{flex:1;margin:0}
   .hlbar{display:flex;flex-direction:row;gap:8px;width:312px;flex:none;margin:0}
   .hl-box{flex:1;border-radius:12px;padding:7px 11px;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:1px;box-shadow:0 6px 14px rgba(0,0,0,.22)}
@@ -171,6 +171,14 @@
   .qt-buy{background:linear-gradient(135deg,#16C784,#0E9F6E)}
   .qt-lots{color:#93A1C4;font-size:12px;font-weight:700;white-space:nowrap}
   html.light .qt-lots{color:#5B6B8C}
+  /* desktop: open positions live at the top of the left column, beside the chart */
+  .pos-desk{display:none}
+  @media(min-width:901px){
+    .term{grid-template-columns:300px 1fr 250px}
+    .pos-wrap{display:none}
+    .pos-desk{display:block}
+    #posBoxDesk{max-height:600px;overflow-y:auto;padding-right:2px;scrollbar-width:thin}
+  }
   /* desktop trade bar: prices left, Market/Pending stacked middle, BUY/SELL right */
   .trade-bar{display:flex;flex-direction:column}
   @media(min-width:901px){
@@ -214,6 +222,10 @@
 <div class="top-strip"><div class="eq-bar" id="eqBar"></div><div class="theme-toggle"><button type="button" id="thDark" onclick="setTheme('dark')">🌙 Dark</button><button type="button" id="thLight" onclick="setTheme('light')">☀️ Light</button></div><div id="hlBar" class="hlbar"></div></div>
 <div class="term">
   <div class="col">
+    <div class="pos-desk">
+      <h5>⚡ OPEN POSITIONS — LIVE</h5>
+      <div class="pos-list" id="posBoxDesk" style="padding-top:6px"></div>
+    </div>
     <h5 style="margin-top:16px">⏳ PENDING ORDERS — AUTO</h5>
     <div id="ordBox" style="padding-top:6px"></div>
     <h5 style="border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:16px">SELECT INSTRUMENT</h5>
@@ -259,8 +271,10 @@
       <div style="font-size:12.5px;color:#93A1C4;margin-top:10px" id="tpMargin"></div>
       <div id="tpMsg" style="margin-top:12px;font-size:13.5px"></div>
     </div>
-    <h5>⚡ OPEN POSITIONS — LIVE</h5>
-    <div class="pos-list" id="posBox" style="padding-top:6px"></div>
+    <div class="pos-wrap">
+      <h5>⚡ OPEN POSITIONS — LIVE</h5>
+      <div class="pos-list" id="posBox" style="padding-top:6px"></div>
+    </div>
     <div class="hist-wrap">
       <h5 style="padding-left:0">RECENTLY CLOSED</h5>
       <div id="histBox"></div>
@@ -374,7 +388,7 @@
       `<div class="hl-box lo"><span>Today Low · ${cur}</span><b>${Oryx.fmtP(cur, Oryx.todayLow(cur))}</b></div>`;
     try { drawLiveChart(document.getElementById('tvchart'), cur); } catch(e){}
     const open = Oryx.trades().filter(t => t.accountId === acc.id && t.status === 'open');
-    document.getElementById('posBox').innerHTML = open.length ? open.map((t, ix) => {
+    const posHtml = open.length ? open.map((t, ix) => {
       const p = Oryx.pnlOf(t); const now = t.side === 'BUY' ? Oryx.bid(t.symbol) : Oryx.ask(t.symbol);
       return `<div class="trow">
         <div class="tr-main"><span style="color:#7C88A8;font-size:11px">${ix + 1}</span><b>${t.symbol}</b><span class="tr-pl" style="color:${p>=0?'#16C784':'#EA3943'}">${p>=0?'+':''}${Oryx.money(p).replace('-','−')}</span></div>
@@ -382,6 +396,8 @@
         <div class="tr-foot"><span class="pill ${t.side==='BUY'?'g':'r'}">${t.side} · ${t.lots}</span><button class="tr-close2 ${p>=0?'win':''}" onclick="closeT('${t.id}')">✕ CLOSE</button></div>
       </div>`;
     }).join('') : '<p style="color:#7C88A8;font-size:13px;padding:2px 12px 12px">No open positions yet. Place a BUY or SELL order — it will appear here as one compact row.</p>';
+    document.getElementById('posBox').innerHTML = posHtml;
+    const pd = document.getElementById('posBoxDesk'); if (pd) pd.innerHTML = posHtml;
     const pends = Oryx.orders().filter(o => o.accountId === acc.id && o.status === 'pending');
     document.getElementById('ordBox').innerHTML = pends.length ? pends.map((o, ix) => `
       <div class="trow">
