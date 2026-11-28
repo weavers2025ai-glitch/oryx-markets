@@ -11,9 +11,10 @@ const Oryx = (() => {
     brand:'Oryx Markets', tagline:'Trade Global Markets with Confidence',
     starter:10, leverage:1000,
     whatsapp:'971582145708', email:'info@oryx.com',
-    heroTitle:'Trade the World Markets', heroSub:'Forex, Gold, Oil, Crypto and Global Indices — one account, one powerful platform, spreads from 0.1 pips.'
+    heroTitle:'Trade the World Markets', heroSub:'Gold, forex, crypto and indices in one cinematic terminal — live charts, pro tools and total account control, without the clutter.'
   };
-  const settings = () => { const s = Object.assign({}, DEFAULT_SETTINGS, load(K.settings, {})); if (s.whatsapp === '923349001195') s.whatsapp = '971582145708'; if (s.email === 'weavers2025ai@gmail.com') s.email = 'info@oryx.com'; return s; };
+  const settings = () => { const s = Object.assign({}, DEFAULT_SETTINGS, load(K.settings, {})); if (s.whatsapp === '923349001195') s.whatsapp = '971582145708';
+    if (s.heroSub === 'Forex, Gold, Oil, Crypto and Global Indices — one account, one powerful platform, spreads from 0.1 pips.' || s.heroSub === 'Access powerful tools, advanced charts and real-time market insight. Trade Forex, Gold, Crypto, Indices and Shares — all in one platform.') s.heroSub = 'Gold, forex, crypto and indices in one cinematic terminal — live charts, pro tools and total account control, without the clutter.'; if (s.email === 'weavers2025ai@gmail.com') s.email = 'info@oryx.com'; return s; };
   const saveSettings = s => save(K.settings, Object.assign(settings(), s));
 
   const users    = () => load(K.users, []);
